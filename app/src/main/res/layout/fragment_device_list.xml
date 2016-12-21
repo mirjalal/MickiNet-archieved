@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:textStyle="bold"
+            android:text="@string/label_me"/>
+
+    <android.support.v7.widget.CardView
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/this_device"
+            android:gravity="center"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:elevation="5dp"
+            android:layout_gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:cardCornerRadius="5dp"
+            app:cardElevation="5dp">
+
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            <ImageView
+                    android:id="@+id/icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/machine"
+                    android:paddingStart="5dp"
+                    android:layout_alignParentTop="true"
+                    android:paddingTop="18dp"
+                    android:paddingEnd="5dp"
+                    android:contentDescription="@string/my_machine"/>
+
+            <TextView
+                    android:id="@+id/name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/name"
+                    android:paddingTop="5dp"
+                    android:textStyle="bold"
+                    android:layout_toEndOf="@+id/icon"
+                    android:gravity="center_vertical"/>
+
+            <TextView
+                    android:id="@+id/my_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
+                    android:layout_toEndOf="@+id/name"
+                    android:gravity="center_vertical"/>
+
+            <TextView
+                    android:id="@+id/status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/status"
+                    android:paddingTop="5dp"
+                    android:textStyle="bold"
+                    android:layout_toEndOf="@+id/icon"
+                    android:layout_below="@+id/name"
+                    android:gravity="center_vertical"/>
+
+            <TextView
+                    android:id="@+id/my_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
+                    android:layout_below="@id/my_name"
+                    android:layout_toEndOf="@+id/status"
+                    android:gravity="center_vertical"/>
+
+            <TextView
+                    android:id="@+id/address"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mac_address"
+                    android:paddingTop="5dp"
+                    android:textStyle="bold"
+                    android:layout_toEndOf="@+id/icon"
+                    android:layout_below="@+id/status"
+                    android:gravity="center_vertical"/>
+
+            <TextView
+                    android:id="@+id/my_address"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
+                    android:layout_below="@id/my_status"
+                    android:layout_toEndOf="@+id/address"
+                    android:gravity="center_vertical"/>
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+
+    <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:textStyle="bold"
+            android:text="@string/label_peers"/>
+
+    <!-- Available peers -->
+    <ListView
+            android:id="@id/android:list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:drawSelectorOnTop="false"/>
+
+    <TextView
+            android:id="@id/android:empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="7dp"
+            android:text="@string/empty_message"/>
+</LinearLayout>

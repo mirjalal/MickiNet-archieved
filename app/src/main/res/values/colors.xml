@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimaryDark">#004E8E</color>
+    <color name="colorPrimary">#004E8E</color>
+    <color name="colorAccent">#FFD713</color>
+    <color name="colorSlide1">#9575CD</color>
+    <color name="colorSlide2">#7986CB</color>
+    <color name="colorSlide3">#64B5F6</color>
+    <color name="colorSlide4">#4FC3F7</color>
+    <color name="colorSlide5">#4DD0E1</color>
+    <color name="status_bar_color">#FF000000</color>
+    <color name="layout_border_color">#FF111111</color>
+    <color name="white">#FFFFFF</color>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+            android:id="@+id/atn_direct_enable"
+            android:icon="@drawable/ic_power_settings_new_cyan_200_18dp"
+            android:title="@string/enable_p2p_button"
+            app:showAsAction="ifRoom" />
+
+    <item
+            android:id="@+id/atn_direct_discover"
+            android:icon="@drawable/ic_settings_input_antenna_black_18dp"
+            android:title="@string/discover_peers_button"
+            app:showAsAction="ifRoom" />
+</menu>
