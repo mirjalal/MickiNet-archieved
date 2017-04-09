@@ -20,7 +20,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
- /**
+/**
  * A simple server socket that accepts connection and writes some data on
  * the stream.
  */
@@ -29,7 +29,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
     private TextView statusText;
 
     /**
-     * @param context {@link HomeActivity}
+     * @param context    {@link HomeActivity}
      * @param statusText status of the {@link View}
      */
     public FileSenderAsyncTask(Context context, View statusText) {
@@ -38,10 +38,27 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
     }
 
     @SuppressLint("LongLogTag")
+    public static boolean copyFile(InputStream inputStream, OutputStream out) {
+        byte buf[] = new byte[1024];
+        int len;
+        try {
+            while ((len = inputStream.read(buf)) != -1)
+                out.write(buf, 0, len);
+
+            out.close();
+            inputStream.close();
+            return true;
+        } catch (IOException e) {
+            Log.d(HomeActivity.TAG, e.toString());
+            return false;
+        }
+    }
+
+    @SuppressLint("LongLogTag")
     @Override
     protected String doInBackground(Void... params) {
         try {
-            ServerSocket serverSocket = new ServerSocket(8988);
+            ServerSocket serverSocket = new ServerSocket(4126);
             Log.d(HomeActivity.TAG, "Server: Socket opened");
             Socket client = serverSocket.accept();
 
@@ -70,6 +87,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
             serverSocket.close();
             return f.getAbsolutePath();
         } catch (IOException e) {
+            Log.e("burdakidi", e.getMessage());
             Log.e(HomeActivity.TAG, e.getMessage());
             return null;
         }
@@ -100,22 +118,4 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
     protected void onPreExecute() {
         statusText.setText("Opening a server socket");
     }
-
-
-     @SuppressLint("LongLogTag")
-     public static boolean copyFile(InputStream inputStream, OutputStream out) {
-         byte buf[] = new byte[1024];
-         int len;
-         try {
-             while ((len = inputStream.read(buf)) != -1)
-                 out.write(buf, 0, len);
-
-             out.close();
-             inputStream.close();
-             return true;
-         } catch (IOException e) {
-             Log.d(HomeActivity.TAG, e.toString());
-             return false;
-         }
-     }
 }
