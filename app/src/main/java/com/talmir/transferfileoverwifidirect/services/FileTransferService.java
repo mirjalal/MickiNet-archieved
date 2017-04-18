@@ -28,7 +28,8 @@ import java.net.Socket;
 public class FileTransferService extends IntentService {
 
     public static final String ACTION_SEND_FILE = "com.talmir.filesharer.SEND_FILE";
-    public static final String EXTRAS_FILE_PATH = "file_url";
+    public static final String EXTRAS_FILE_PATH = "file_uri";
+    public static final String EXTRAS_FILE_NAME = "file_name_and_extension";
     public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
     private static final int SOCKET_TIMEOUT = 5000;
@@ -41,10 +42,6 @@ public class FileTransferService extends IntentService {
         super("FileTransferService");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see android.app.IntentService#onHandleIntent(android.content.Intent)
-     */
     @SuppressLint("LongLogTag")
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -53,18 +50,21 @@ public class FileTransferService extends IntentService {
         if (intent.getAction().equals(ACTION_SEND_FILE)) {
             String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
             String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
-            Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
+            String fileNameAndExtension = intent.getExtras().getString(EXTRAS_FILE_NAME);
+
+            Socket socket = new Socket();
 
             try {
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
                 OutputStream stream = socket.getOutputStream();
+//                stream.write(fileNameAndExtension.getBytes("UTF-8"));
                 ContentResolver cr = context.getContentResolver();
-                InputStream is = null;
+                InputStream inputStream = null;
                 try {
-                    is = cr.openInputStream(Uri.parse(fileUri));
+                    inputStream = cr.openInputStream(Uri.parse(fileUri));
 //                    Toast.makeText(context, Uri.parse(fileUri).toString(), Toast.LENGTH_SHORT).show();
 //                    BufferedOutputStream out = new BufferedOutputStream(stream);
 //                    try (DataOutputStream d = new DataOutputStream(out)) {
@@ -74,7 +74,7 @@ public class FileTransferService extends IntentService {
                 } catch (FileNotFoundException e) {
                     Log.d(HomeActivity.TAG, e.toString());
                 }
-                FileSenderAsyncTask.copyFile(is, stream);
+                FileSenderAsyncTask.copyFile(inputStream, stream, fileNameAndExtension);
                 Log.d(HomeActivity.TAG, "Client: Data written");
             } catch (IOException e) {
                 Log.e(HomeActivity.TAG, e.getMessage());

@@ -30,9 +30,7 @@ import com.talmir.transferfileoverwifidirect.fragments.DeviceListFragment;
 import com.talmir.transferfileoverwifidirect.helpers.IDeviceActionListener;
 import com.talmir.transferfileoverwifidirect.helpers.WiFiDirectBroadcastReceiver;
 
-public class HomeActivity extends AppCompatActivity implements
-        WifiP2pManager.ChannelListener,
-        IDeviceActionListener
+public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener
 {
     /** ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ */
     private static final String[] INITIAL_PERMISSIONS = {
@@ -52,7 +50,9 @@ public class HomeActivity extends AppCompatActivity implements
     private static final int STORAGE_REQUEST = INITIAL_REQUEST + 2;
 
     private boolean canAccessCamera() {
-        return (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
+        // holy crap! WTF ? why I wrote Location thing instead of CAMERA ?
+        // return (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
+        return (hasPermission(Manifest.permission.CAMERA));
     }
 
     private boolean canReadExternalStorage() {
@@ -69,7 +69,6 @@ public class HomeActivity extends AppCompatActivity implements
         return true;
     }
     /** -------------------------------- Permissions ------------------------------------ */
-
 
 
     /** +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++ */
@@ -198,7 +197,6 @@ public class HomeActivity extends AppCompatActivity implements
     }
     /** --------------------------- WiFi Direct specific -------------------------------- */
 
-
     @SuppressLint("LongLogTag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -215,9 +213,9 @@ public class HomeActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-//            if (!canAccessCamera() || !canReadExternalStorage() || !canWriteExternalStorage())
-//                requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            if (!canAccessCamera() || !canReadExternalStorage() || !canWriteExternalStorage())
+                requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
 
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -313,11 +311,17 @@ public class HomeActivity extends AppCompatActivity implements
         registerReceiver(receiver, intentFilter);
     }
 
+//    public native String stringFromJNI();
+
     @Override
     public void onPause() {
         super.onPause();
 //        try {
             unregisterReceiver(receiver);
 //        } catch (Exception ignored) {}
+    }
+
+    public void myFunc(View view) {
+        startActivity(new Intent(this, SearchMimeTypeActivity.class));
     }
 }

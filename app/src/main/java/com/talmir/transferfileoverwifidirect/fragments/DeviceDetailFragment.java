@@ -3,12 +3,15 @@ package com.talmir.transferfileoverwifidirect.fragments;
 import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +19,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.talmir.transferfileoverwifidirect.R;
-import com.talmir.transferfileoverwifidirect.activities.HomeActivity;
 import com.talmir.transferfileoverwifidirect.helpers.FileSenderAsyncTask;
 import com.talmir.transferfileoverwifidirect.helpers.IDeviceActionListener;
 import com.talmir.transferfileoverwifidirect.services.FileTransferService;
@@ -27,6 +29,22 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     private WifiP2pDevice device;
     private WifiP2pInfo info;
     public ProgressDialog progressDialog = null;
+
+    private static String getRealPathFromUri(Context context, Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        }
+        finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -121,12 +139,13 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         Uri uri = data.getData();
 //        TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
 //        statusText.setText("Sending: " + uri);
-        Log.d(HomeActivity.TAG, "Intent----------- " + uri);
+        Log.e("uri", "Intent----------- " + uri);
         Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
         serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
         serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS, info.groupOwnerAddress.getHostAddress());
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getRealPathFromUri(getActivity(), uri));
         getActivity().startService(serviceIntent);
     }
 
