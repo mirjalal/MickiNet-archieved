@@ -1,4 +1,4 @@
-package com.talmir.transferfileoverwifidirect.fragments;
+package com.talmir.mickinet.fragments;
 
 /**
  * @author mirjalal

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.talmir.transferfileoverwifidirect.helpers;
+package com.talmir.mickinet.helpers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,12 +24,11 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
-import android.widget.Toast;
 
-import com.talmir.transferfileoverwifidirect.R;
-import com.talmir.transferfileoverwifidirect.activities.HomeActivity;
-import com.talmir.transferfileoverwifidirect.fragments.DeviceDetailFragment;
-import com.talmir.transferfileoverwifidirect.fragments.DeviceListFragment;
+import com.talmir.mickinet.R;
+import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.fragments.DeviceDetailFragment;
+import com.talmir.mickinet.fragments.DeviceListFragment;
 
 /**
  * A BroadcastReceiver that notifies of important wifi p2p events.

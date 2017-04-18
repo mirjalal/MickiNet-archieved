@@ -11,4 +11,6 @@
     <color name="status_bar_color">#FF000000</color>
     <color name="layout_border_color">#FF111111</color>
     <color name="white">#FFFFFF</color>
+    <color name="shade_of_gray">#FF999999</color>
+    <color name="mime_type_name">#FF222222</color>
 </resources>

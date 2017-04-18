@@ -1,4 +1,4 @@
-package com.talmir.transferfileoverwifidirect.fragments;
+package com.talmir.mickinet.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.ListFragment;
@@ -10,8 +10,8 @@ import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
@@ -24,9 +24,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.talmir.transferfileoverwifidirect.R;
-import com.talmir.transferfileoverwifidirect.activities.HomeActivity;
-import com.talmir.transferfileoverwifidirect.helpers.IDeviceActionListener;
+import com.talmir.mickinet.R;
+import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.helpers.IDeviceActionListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,54 +110,71 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
      * Initiate a connection with the peer.
      */
     @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
+    public void onListItemClick(ListView listView, View view, int position, long id) {
         final WifiP2pDevice device = (WifiP2pDevice) getListAdapter().getItem(position);
 //        ((IDeviceActionListener) getActivity()).showDetails(device);
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
         alertDialogBuilder.setTitle("Connect to device?");
-        alertDialogBuilder
-                .setMessage(
-                        Html.fromHtml(
-                                String.format(
-                                "<b>Name</b>: %1$s<br><b>Status</b>: %2$s<br><b>MAC Address</b>: %3$s<br><b>Is group owner</b>: %4$s",
-                                device.deviceName,
-                                getDeviceStatus(device.status),
-                                device.deviceAddress,
-                                device.isGroupOwner() ? "Yes" : "No"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            alertDialogBuilder
+                    .setMessage(
+                            Html.fromHtml(
+                                    String.format(
+                                    "<b>Name</b>: %1$s<br><b>Status</b>: %2$s<br><b>MAC Address</b>: %3$s<br><b>Is group owner</b>: %4$s",
+                                    device.deviceName,
+                                    getDeviceStatus(device.status),
+                                    device.deviceAddress,
+                                    device.isGroupOwner() ? "Yes" : "No"
+                                ), Html.FROM_HTML_MODE_LEGACY, null, null
                             )
-                        )
-                )
-                .setCancelable(false)
-                .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        final WifiP2pConfig config = new WifiP2pConfig();
-                        config.deviceAddress = device.deviceAddress;
-                        config.wps.setup = WpsInfo.PBC;
-                        if (progressDialog != null && progressDialog.isShowing()) {
-                            progressDialog.dismiss();
+                    )
+                    .setCancelable(false)
+                    .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            final WifiP2pConfig config = new WifiP2pConfig();
+                            config.deviceAddress = device.deviceAddress;
+                            config.wps.setup = WpsInfo.PBC;
+                            // connect to device
+                            ((IDeviceActionListener) getActivity()).connect(config);
                         }
-                        progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
-                                "Please wait.\nConnecting to: " + device.deviceName + "...", true, true,
-                                new DialogInterface.OnCancelListener() {
-                                    @Override
-                                    public void onCancel(DialogInterface dialog) {
-                                        ((IDeviceActionListener) getActivity()).cancelDisconnect();
-                                    }
-                                }
-                        );
-
-                        // connect to remote device after 2 sec
-                        // more information: http://stackoverflow.com/a/14615606/4057688
-                        SystemClock.sleep(2000);
-                        ((IDeviceActionListener) getActivity()).connect(config);
-                    }
-                })
-                .setNegativeButton("Close", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
+                    })
+                    .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                        }
+                    });
+        }
+        else {
+            alertDialogBuilder
+                    .setMessage(
+                            Html.fromHtml(
+                                    String.format(
+                                            "<b>Name</b>: %1$s<br><b>Status</b>: %2$s<br><b>MAC Address</b>: %3$s<br><b>Is group owner</b>: %4$s",
+                                            device.deviceName,
+                                            getDeviceStatus(device.status),
+                                            device.deviceAddress,
+                                            device.isGroupOwner() ? "Yes" : "No"
+                                    )
+                            )
+                    )
+                    .setCancelable(false)
+                    .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            final WifiP2pConfig config = new WifiP2pConfig();
+                            config.deviceAddress = device.deviceAddress;
+                            config.wps.setup = WpsInfo.PBC;
+                            // connect to device
+                            ((IDeviceActionListener) getActivity()).connect(config);
+                        }
+                    })
+                    .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                        }
+                    });
+        }
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
     }
@@ -211,7 +228,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                 new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-                        Toast.makeText(getActivity(), "Discovery cancelled by user!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "Discovery cancelled", Toast.LENGTH_SHORT).show();
                     }
                 }
         );

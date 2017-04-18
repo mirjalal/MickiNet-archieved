@@ -1,4 +1,4 @@
-package com.talmir.transferfileoverwifidirect.helpers;
+package com.talmir.mickinet.helpers;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -10,7 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import com.talmir.transferfileoverwifidirect.activities.HomeActivity;
+import com.talmir.mickinet.activities.HomeActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,6 +27,7 @@ import java.net.Socket;
 public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
     private Context context;
     private TextView statusText;
+    private static String mFileNameAndExtension;
 
     /**
      * @param context    {@link HomeActivity}
@@ -38,8 +39,25 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
     }
 
     @SuppressLint("LongLogTag")
-    public static boolean copyFile(InputStream inputStream, OutputStream out) {
-        byte buf[] = new byte[1024];
+    public static boolean copyFile(InputStream inputStream, OutputStream out, String fileNameAndExtension) {
+        mFileNameAndExtension = fileNameAndExtension;
+        byte buf[] = new byte[4096];
+        int len;
+        try {
+            while ((len = inputStream.read(buf)) != -1)
+                out.write(buf, 0, len);
+
+            out.close();
+            inputStream.close();
+            return true;
+        } catch (IOException e) {
+            Log.d(HomeActivity.TAG, e.toString());
+            return false;
+        }
+    }
+
+    private static boolean copyFile(InputStream inputStream, OutputStream out) {
+        byte buf[] = new byte[4096];
         int len;
         try {
             while ((len = inputStream.read(buf)) != -1)
@@ -62,19 +80,11 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
             Log.d(HomeActivity.TAG, "Server: Socket opened");
             Socket client = serverSocket.accept();
 
-//            String fileName = "";
-//            BufferedInputStream buffinBufferedInputStream = new BufferedInputStream(client.getInputStream());
-//            try (DataInputStream d = new DataInputStream(buffinBufferedInputStream)) {
-//                fileName = d.readUTF();
-//                buffinBufferedInputStream.close();
-//            }
-//            Toast.makeText(context, fileName, Toast.LENGTH_SHORT).show();
-
-
             Log.d(HomeActivity.TAG, "Server: connection done");
+            long current = System.currentTimeMillis();
             final File f = new File(Environment.getExternalStorageDirectory() + "/"
-                    + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-                    + ".jpg");
+                    + context.getPackageName() + "/wifip2pshared-" + current);
+//            final File f = new File(Environment.getExternalStorageDirectory() + "/MickiNet/" + mFileNameAndExtension);
 
             File dirs = new File(f.getParent());
             if (!dirs.exists())
@@ -82,22 +92,45 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
             f.createNewFile();
 
             Log.d(HomeActivity.TAG, "server: copying files " + f.toString());
-            InputStream inputstream = client.getInputStream();
-            copyFile(inputstream, new FileOutputStream(f));
+
+//            String contentType = null;
+//            try {
+//                InputStream stream = new FileInputStream(f);
+//
+//                AutoDetectParser parser = new AutoDetectParser();
+//                BodyContentHandler handler = new BodyContentHandler();
+//                Metadata metadata = new Metadata();
+//
+//                try {
+////                     This step here is a little expensive
+//                    parser.parse(stream, handler, metadata);
+//                } catch (SAXException | TikaException e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    stream.close();
+//                }
+//
+////                 metadata is a HashMap, you can loop over it see what you need. Alternatively, I think Content-Type is what you need
+//                contentType = metadata.get("Content-Type");
+//                Log.e("contentType", contentType+"");
+//            }
+//            catch (Exception e) {
+//                Log.e("contentType: ", e.getMessage());
+//            }
+
+            InputStream inputStream = client.getInputStream();
+            copyFile(inputStream, new FileOutputStream(f));
+
+
+
             serverSocket.close();
             return f.getAbsolutePath();
         } catch (IOException e) {
-            Log.e("burdakidi", e.getMessage());
             Log.e(HomeActivity.TAG, e.getMessage());
             return null;
         }
     }
 
-    /**
-     * (non-Javadoc)
-     *
-     * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-     */
     @Override
     protected void onPostExecute(String result) {
         if (result != null) {
@@ -109,11 +142,6 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, String> {
         }
     }
 
-    /**
-     * (non-Javadoc)
-     *
-     * @see android.os.AsyncTask#onPreExecute()
-     */
     @Override
     protected void onPreExecute() {
         statusText.setText("Opening a server socket");

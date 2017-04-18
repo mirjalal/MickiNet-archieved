@@ -1,4 +1,4 @@
-package com.talmir.transferfileoverwifidirect.helpers;
+package com.talmir.mickinet.helpers;
 
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;

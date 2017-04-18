@@ -1,4 +1,4 @@
-package com.talmir.transferfileoverwifidirect.activities;
+package com.talmir.mickinet.activities;
 
 import android.Manifest;
 import android.content.SharedPreferences;
@@ -12,8 +12,8 @@ import android.support.v4.content.ContextCompat;
 
 import com.github.paolorotolo.appintro.AppIntro;
 import com.github.paolorotolo.appintro.AppIntroFragment;
-import com.talmir.transferfileoverwifidirect.R;
-import com.talmir.transferfileoverwifidirect.fragments.SlideFragment;
+import com.talmir.mickinet.R;
+import com.talmir.mickinet.fragments.SlideFragment;
 
 /**
  * @author mirjalal

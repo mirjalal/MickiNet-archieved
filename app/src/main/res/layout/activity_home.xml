@@ -7,11 +7,11 @@
         android:layout_height="match_parent"
         android:paddingTop="@dimen/activity_vertical_margin"
         android:paddingBottom="@dimen/activity_vertical_margin"
-        tools:context="com.talmir.transferfileoverwifidirect.activities.HomeActivity">
+        tools:context="com.talmir.mickinet.activities.HomeActivity">
 
     <fragment
             android:id="@+id/frag_list"
-            class="com.talmir.transferfileoverwifidirect.fragments.DeviceListFragment"
+            class="com.talmir.mickinet.fragments.DeviceListFragment"
             android:layout_width="match_parent"
             android:layout_height="@dimen/phone_list_height">
         <!-- Preview: layout=@layout/row_devices -->
@@ -19,10 +19,16 @@
 
     <fragment
             android:id="@+id/frag_detail"
-            class="com.talmir.transferfileoverwifidirect.fragments.DeviceDetailFragment"
+            class="com.talmir.mickinet.fragments.DeviceDetailFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         <!-- Preview: layout=@layout/device_detail -->
     </fragment>
+
+    <Button
+            android:onClick="myFunc"
+            android:text="click me"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
 </RelativeLayout>
