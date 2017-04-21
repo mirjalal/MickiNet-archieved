@@ -25,10 +25,4 @@
         <!-- Preview: layout=@layout/device_detail -->
     </fragment>
 
-    <Button
-            android:onClick="myFunc"
-            android:text="click me"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-
 </RelativeLayout>

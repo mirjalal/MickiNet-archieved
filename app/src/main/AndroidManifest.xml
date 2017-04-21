@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <compatible-screens>
 
@@ -72,20 +73,20 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.SEND"/>-->
 
-                <category android:name="android.intent.category.DEFAULT"/>
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
 
-                <data android:mimeType="*/*"/>
-            </intent-filter>
+                <!--<data android:mimeType="*/*"/>-->
+            <!--</intent-filter>-->
         </activity>
 
         <activity
                 android:name="com.talmir.mickinet.activities.SearchMimeTypeActivity"
                 android:label="@string/title_activity_search_mime_type"
                 android:parentActivityName="com.talmir.mickinet.activities.HomeActivity"
-                android:theme="@style/AppTheme.NoActionBar"
+                android:theme="@style/AppTheme"
                 android:launchMode="singleTop">
             <meta-data
                     android:name="android.app.searchable"

@@ -3,6 +3,6 @@
             android:label="@string/search_hint"
             android:hint="@string/search_hint"
             android:voiceSearchMode="showVoiceSearchButton|launchRecognizer"
-            android:searchSuggestAuthority="com.talmir.transferfileoverwifidirect.helpers.MimeTypeSuggestionProvider"
+            android:searchSuggestAuthority="com.talmir.mickinet.helpers.MimeTypeSuggestionProvider"
             android:searchSuggestSelection=" ?">
 </searchable>

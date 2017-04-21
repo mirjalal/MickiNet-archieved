@@ -18,7 +18,6 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,8 +29,7 @@ import com.talmir.mickinet.fragments.DeviceListFragment;
 import com.talmir.mickinet.helpers.IDeviceActionListener;
 import com.talmir.mickinet.helpers.WiFiDirectBroadcastReceiver;
 
-public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener
-{
+public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
     /** ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ */
     private static final String[] INITIAL_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -80,13 +78,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private final IntentFilter intentFilter = new IntentFilter();
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
-//    private final BroadcastReceiver myReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            if (intent.getAction().equalsIgnoreCase("MyBroadcast"))
-//                disconnect();
-//        }
-//    };
+
 
     /**
      * @param isWifiP2pEnabled the isWifiP2pEnabled to set
@@ -226,12 +218,14 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
 
-        Intent intent = getIntent();
-        if (intent.getAction().equals(Intent.ACTION_SEND)) {
-            Toast toast = Toast.makeText(this, "send intent", Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.CENTER, 0, 0);
-            toast.show();
-        }
+//        Intent intent = getIntent();
+//        if (intent.getAction().equals(Intent.ACTION_SEND) && intent.getType() != null) {
+//            Toast toast = Toast.makeText(this, "send intent", Toast.LENGTH_LONG);
+//            toast.setGravity(Gravity.CENTER, 0, 0);
+//            toast.show();
+//            Uri fileUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+//            DeviceDetailFragment.executeSendIntent(this, fileUri);
+//        }
     }
 
     @Override
@@ -259,11 +253,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         return true;
     }
 
-    /**
-     * (non-Javadoc)
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
-    @SuppressLint("LongLogTag")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId())
@@ -311,17 +300,9 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         registerReceiver(receiver, intentFilter);
     }
 
-//    public native String stringFromJNI();
-
     @Override
     public void onPause() {
         super.onPause();
-//        try {
-            unregisterReceiver(receiver);
-//        } catch (Exception ignored) {}
-    }
-
-    public void myFunc(View view) {
-        startActivity(new Intent(this, SearchMimeTypeActivity.class));
+        unregisterReceiver(receiver);
     }
 }

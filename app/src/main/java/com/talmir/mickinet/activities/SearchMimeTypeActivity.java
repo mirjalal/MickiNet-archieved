@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.SearchRecentSuggestions;
 import android.support.v7.app.AppCompatActivity;
@@ -13,40 +14,37 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.DBAction;
 import com.talmir.mickinet.helpers.DividerItemDecoration;
+import com.talmir.mickinet.helpers.FileReceiverAsyncTask;
 import com.talmir.mickinet.helpers.IRecyclerClickListener;
 import com.talmir.mickinet.helpers.MimeTypeAdapter;
 import com.talmir.mickinet.helpers.MimeTypeSuggestionProvider;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 
 public class SearchMimeTypeActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private MimeTypeAdapter mimeTypeAdapter;
+    private ArrayList<String> mimeTypesList;
     private SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_mime_type);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         DBAction helper = new DBAction(getApplicationContext());
-
         db = helper.getWritableDatabase();
 
         Cursor mCursor = db.rawQuery("SELECT count(*) FROM mimeTypes;", null);
@@ -725,9 +723,9 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
                     contentValues.put("type", mimeTypes[i]);
                     db.insert("mimeTypes", null, contentValues);
                 }
-                Toast.makeText(this, "success", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(this, "success", Toast.LENGTH_SHORT).show();
             } catch (Exception ignored) {
-                Toast.makeText(this, "failed", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(this, "failed", Toast.LENGTH_SHORT).show();
             }
             mCursor.close();
         }
@@ -737,7 +735,7 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
         }
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-//        recyclerView.setHasFixedSize(false);
+        recyclerView.setHasFixedSize(false);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
@@ -745,8 +743,32 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView, new IRecyclerClickListener() {
             @Override
             public void onClick(View view, int position) {
-//                    Movie movie = movieList.get(position);
-// /                   Toast.makeText(getApplicationContext(), movie.getTitle() + " is selected!", Toast.LENGTH_SHORT).show();
+                String currentItem = mimeTypesList.get(position);
+                String str_mimeType = currentItem.substring(currentItem.indexOf(' ') + 1, currentItem.lastIndexOf(' '));
+                String str_extension = currentItem.substring(currentItem.indexOf('(') + 1, currentItem.lastIndexOf(')'));
+
+                File receivedFile = new File(URI.create("file://" + FileReceiverAsyncTask.getFileName()));
+                File newFile = new File(FileReceiverAsyncTask.getFileName() + str_extension);
+
+                // return to main activity
+                onBackPressed();
+
+                if (receivedFile.renameTo(newFile)) {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        newFile.createNewFile();
+                        intent.setDataAndType(
+                                Uri.parse("file://" + newFile.getAbsolutePath()),
+                                str_mimeType.substring(0, str_mimeType.lastIndexOf('/')) + "/*"
+                        );
+                        startActivity(intent);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else
+                    Log.e("file", "cannot rename");
             }
 
             @Override
@@ -772,7 +794,7 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
             SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this, MimeTypeSuggestionProvider.AUTHORITY, MimeTypeSuggestionProvider.MODE);
             suggestions.saveRecentQuery(query, null);
 
-            ArrayList<String> mimeTypesList = new ArrayList<>();
+            mimeTypesList = new ArrayList<>();
             try {
                 Cursor cursor = db.rawQuery("SELECT type FROM mimeTypes WHERE type MATCH ?;", new String[]{query});
                 while (cursor.moveToNext()) {
@@ -780,7 +802,7 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
                 }
                 cursor.close();
             } catch (Exception e) { Log.e("error", e.getMessage()); }
-            mimeTypeAdapter = new MimeTypeAdapter(mimeTypesList);
+            MimeTypeAdapter mimeTypeAdapter = new MimeTypeAdapter(mimeTypesList);
             recyclerView.setAdapter(mimeTypeAdapter);
             mimeTypeAdapter.notifyDataSetChanged();
         }
@@ -788,10 +810,8 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.search_menu, menu);
 
-        // Associate searchable configuration with the SearchView
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
@@ -816,7 +836,7 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
                 public void onLongPress(MotionEvent e) {
                     View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
                     if (child != null && clickListener != null) {
-                        clickListener.onLongClick(child, recyclerView.getChildPosition(child));
+                        clickListener.onLongClick(child, recyclerView.getChildAdapterPosition(child));
                     }
                 }
             });
