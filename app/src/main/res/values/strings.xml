@@ -21,6 +21,7 @@
     <string name="string_first_slide">Welcome!</string>
     <string name="string_second_slide">To begin with, we need some permissions</string>
     <string name="string_third_slide">We are done!</string>
-    <string name="title_activity_search_mime_type">SearchMimeTypeActivity</string>
+    <string name="title_activity_search_mime_type">Set received file type</string>
     <string name="search_hint">Search mime type or extension</string>
+    <string name="clear_history">Clear Search History</string>
 </resources>

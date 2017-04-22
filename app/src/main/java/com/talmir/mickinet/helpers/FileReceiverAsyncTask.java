@@ -102,11 +102,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             Log.d(HomeActivity.TAG, "Server: Socket opened");
             Socket client = serverSocket.accept();
 
-//            final String temp_str = client.getRemoteSocketAddress().toString();
-            Log.e("full ip", client.getRemoteSocketAddress().toString());
-            clientIpAddress = client.getRemoteSocketAddress().toString().substring(1);//temp_str.substring(1, temp_str.indexOf(':'));
-//            Log.e("ip", clientIpAddress);
-//            Log.e("port", clientIpAddress.substring(':') + 1);
+            final String temp_str = client.getRemoteSocketAddress().toString();
+            clientIpAddress = temp_str.substring(1, temp_str.indexOf(':'));
 
             Log.d(HomeActivity.TAG, "Server: connection done");
             final long current = System.currentTimeMillis();

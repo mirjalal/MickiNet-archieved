@@ -1,5 +1,6 @@
 package com.talmir.mickinet.activities;
 
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,6 +8,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.SearchRecentSuggestions;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +21,7 @@ import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.DBAction;
@@ -52,8 +55,166 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
         if (mCursor.getInt(0) > 0)
             mCursor.close();
         else {
-            ContentValues contentValues = new ContentValues();
+            new RunForFirstTime().execute();
+            mCursor.close();
+        }
 
+        if (getIntent() != null) {
+            handleIntent(getIntent());
+        }
+
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        recyclerView.setHasFixedSize(false);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView, new IRecyclerClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                String currentItem = mimeTypesList.get(position);
+                String str_mimeType = currentItem.substring(currentItem.indexOf(' ') + 1, currentItem.lastIndexOf(' '));
+                String str_extension = currentItem.substring(currentItem.indexOf('(') + 1, currentItem.lastIndexOf(')'));
+
+                File receivedFile = new File(URI.create("file://" + FileReceiverAsyncTask.getFileName()));
+                File newFile = new File(FileReceiverAsyncTask.getFileName() + str_extension);
+
+                // return to main activity
+                onBackPressed();
+
+                if (receivedFile.renameTo(newFile)) {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        newFile.createNewFile();
+                        intent.setDataAndType(
+                                Uri.parse("file://" + newFile.getAbsolutePath()),
+                                str_mimeType.substring(0, str_mimeType.lastIndexOf('/')) + "/*"
+                        );
+                        startActivity(intent);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else
+                    Log.e("file", "cannot rename");
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+
+            }
+        }));
+
+        if (getIntent() != null) {
+            handleIntent(getIntent());
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        setIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this, MimeTypeSuggestionProvider.AUTHORITY, MimeTypeSuggestionProvider.MODE);
+            suggestions.saveRecentQuery(query, null);
+
+            mimeTypesList = new ArrayList<>();
+            try {
+                Cursor cursor = db.rawQuery("SELECT type FROM mimeTypes WHERE type MATCH ?;", new String[]{query});
+                while (cursor.moveToNext()) {
+                    mimeTypesList.add(cursor.getString(0));
+                }
+                cursor.close();
+            } catch (Exception e) { Log.e("error", e.getMessage()); }
+            MimeTypeAdapter mimeTypeAdapter = new MimeTypeAdapter(mimeTypesList);
+            recyclerView.setAdapter(mimeTypeAdapter);
+            mimeTypeAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.search_menu, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setQueryRefinementEnabled(true);
+
+        return true;
+    }
+
+    private static class RecyclerTouchListener implements RecyclerView.OnItemTouchListener {
+        private GestureDetector gestureDetector;
+        private IRecyclerClickListener clickListener;
+
+        RecyclerTouchListener(Context context, final RecyclerView recyclerView, final IRecyclerClickListener clickListener) {
+            this.clickListener = clickListener;
+            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
+                    return true;
+                }
+
+                @Override
+                public void onLongPress(MotionEvent e) {
+                    View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
+                    if (child != null && clickListener != null) {
+                        clickListener.onLongClick(child, recyclerView.getChildAdapterPosition(child));
+                    }
+                }
+            });
+        }
+
+        @Override
+        public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+
+            View child = rv.findChildViewUnder(e.getX(), e.getY());
+            if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
+                clickListener.onClick(child, rv.getChildAdapterPosition(child));
+            }
+            return false;
+        }
+
+        @Override
+        public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+        }
+
+        @Override
+        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+        }
+    }
+
+    private class RunForFirstTime extends AsyncTask<Void, Integer, Void> {
+
+        private ProgressDialog progressDialog;
+
+        RunForFirstTime() {
+            progressDialog = new ProgressDialog(SearchMimeTypeActivity.this);
+            progressDialog.setTitle("Please wait");
+            progressDialog.setMessage("Indexing mime types. You will see this once only. Hang tight...");
+            progressDialog.setCancelable(false);
+            progressDialog.setProgress(0);
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setIndeterminate(false);
+            progressDialog.setMax(100);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            ContentValues contentValues = new ContentValues();
             try {
                 String[] mimeTypes = new String[662];
                 mimeTypes[0] = "#1 application/acad (.dwg)";
@@ -719,146 +880,27 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
                 mimeTypes[660] = "#661 xgl/drawing (.xgz)";
                 mimeTypes[661] = "#662 xgl/movie (.xmz)";
 
-                for (int i = 0; i < 661; i++) {
+                for (int i = 0; i < 662; i++) {
+                    publishProgress(i * 100 / 661);
                     contentValues.put("type", mimeTypes[i]);
                     db.insert("mimeTypes", null, contentValues);
                 }
-//                Toast.makeText(this, "success", Toast.LENGTH_SHORT).show();
             } catch (Exception ignored) {
-//                Toast.makeText(this, "failed", Toast.LENGTH_SHORT).show();
             }
-            mCursor.close();
-        }
-
-        if (getIntent() != null) {
-            handleIntent(getIntent());
-        }
-
-        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        recyclerView.setHasFixedSize(false);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView, new IRecyclerClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                String currentItem = mimeTypesList.get(position);
-                String str_mimeType = currentItem.substring(currentItem.indexOf(' ') + 1, currentItem.lastIndexOf(' '));
-                String str_extension = currentItem.substring(currentItem.indexOf('(') + 1, currentItem.lastIndexOf(')'));
-
-                File receivedFile = new File(URI.create("file://" + FileReceiverAsyncTask.getFileName()));
-                File newFile = new File(FileReceiverAsyncTask.getFileName() + str_extension);
-
-                // return to main activity
-                onBackPressed();
-
-                if (receivedFile.renameTo(newFile)) {
-                    try {
-                        Intent intent = new Intent();
-                        intent.setAction(Intent.ACTION_VIEW);
-                        newFile.createNewFile();
-                        intent.setDataAndType(
-                                Uri.parse("file://" + newFile.getAbsolutePath()),
-                                str_mimeType.substring(0, str_mimeType.lastIndexOf('/')) + "/*"
-                        );
-                        startActivity(intent);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                else
-                    Log.e("file", "cannot rename");
-            }
-
-            @Override
-            public void onLongClick(View view, int position) {
-
-            }
-        }));
-
-        if (getIntent() != null) {
-            handleIntent(getIntent());
-        }
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        setIntent(intent);
-        handleIntent(intent);
-    }
-
-    private void handleIntent(Intent intent) {
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            String query = intent.getStringExtra(SearchManager.QUERY);
-            SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this, MimeTypeSuggestionProvider.AUTHORITY, MimeTypeSuggestionProvider.MODE);
-            suggestions.saveRecentQuery(query, null);
-
-            mimeTypesList = new ArrayList<>();
-            try {
-                Cursor cursor = db.rawQuery("SELECT type FROM mimeTypes WHERE type MATCH ?;", new String[]{query});
-                while (cursor.moveToNext()) {
-                    mimeTypesList.add(cursor.getString(0));
-                }
-                cursor.close();
-            } catch (Exception e) { Log.e("error", e.getMessage()); }
-            MimeTypeAdapter mimeTypeAdapter = new MimeTypeAdapter(mimeTypesList);
-            recyclerView.setAdapter(mimeTypeAdapter);
-            mimeTypeAdapter.notifyDataSetChanged();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.search_menu, menu);
-
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-//        searchView.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
-
-        return true;
-    }
-
-    private static class RecyclerTouchListener implements RecyclerView.OnItemTouchListener {
-        private GestureDetector gestureDetector;
-        private IRecyclerClickListener clickListener;
-
-        RecyclerTouchListener(Context context, final RecyclerView recyclerView, final IRecyclerClickListener clickListener) {
-            this.clickListener = clickListener;
-            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-                @Override
-                public boolean onSingleTapUp(MotionEvent e) {
-                    return true;
-                }
-
-                @Override
-                public void onLongPress(MotionEvent e) {
-                    View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
-                    if (child != null && clickListener != null) {
-                        clickListener.onLongClick(child, recyclerView.getChildAdapterPosition(child));
-                    }
-                }
-            });
+            return null;
         }
 
         @Override
-        public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-
-            View child = rv.findChildViewUnder(e.getX(), e.getY());
-            if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
-                clickListener.onClick(child, rv.getChildAdapterPosition(child));
-            }
-            return false;
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            progressDialog.setProgress(values[0]);
         }
 
         @Override
-        public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-        }
-
-        @Override
-        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            progressDialog.dismiss();
+            Toast.makeText(SearchMimeTypeActivity.this, "Done!", Toast.LENGTH_SHORT).show();
         }
     }
 }

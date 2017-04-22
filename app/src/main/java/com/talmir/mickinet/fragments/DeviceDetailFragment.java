@@ -102,16 +102,12 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
                     serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-                    String hostAndPort = FileReceiverAsyncTask.getClientIpAddress();
                     serviceIntent.putExtra(
                             FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                             deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
-                                    hostAndPort.substring(0, hostAndPort.indexOf(':'))
+                                    FileReceiverAsyncTask.getClientIpAddress()
                     );
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT,
-                            deviceType == 1 ? 4126 :
-                                    Integer.valueOf(hostAndPort.substring(hostAndPort.indexOf(':')+1))
-                    );
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getRealPathFromUri(getActivity(), uri));
                     getActivity().startService(serviceIntent);
                 } else {
@@ -133,10 +129,11 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         DeviceDetailFragment.info = info;
         this.getView().setVisibility(View.VISIBLE);
 
+        new FileReceiverAsyncTask(getActivity()).execute();
+
         if (info.groupFormed && info.isGroupOwner) {
             deviceType = 0;
             mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-            new FileReceiverAsyncTask(getActivity()).execute();
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button.

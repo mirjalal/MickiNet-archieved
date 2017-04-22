@@ -4,20 +4,21 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -216,6 +217,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+
         channel = manager.initialize(this, getMainLooper(), null);
 
 //        Intent intent = getIntent();
@@ -257,18 +259,39 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId())
         {
-            case R.id.atn_direct_enable:
-                if (manager != null && channel != null) {
-                    // Since this is the system wireless settings activity, it's
-                    // not going to send us a result. We will be notified by
-                    // WiFiDeviceBroadcastReceiver instead.
-                    startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
-                } else
-                    Log.e(TAG, "channel or manager is null");
-                return true;
-            case R.id.atn_direct_discover:
+            case R.id.action_discover:
                 if (!isWifiP2pEnabled) {
-                    Toast.makeText(this, R.string.p2p_off_warning, Toast.LENGTH_LONG).show();
+                    AlertDialog.Builder wifiOnOffAlertDialog = new AlertDialog.Builder(this);
+                    wifiOnOffAlertDialog.setTitle("Turn on WiFi?")
+                            .setMessage("WiFi is turned off. Before starting discovery MickiNet needs to enable WiFi.")
+                            .setPositiveButton("turn on", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                                    wifi.setWifiEnabled(true);
+                                    try {
+                                        Thread.sleep(500); // .5 sec is enough to wait...
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
+                                    fragment.onInitiateDiscovery();
+                                    manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+                                        @Override
+                                        public void onSuccess() {
+                                            Toast.makeText(HomeActivity.this, "Discovery started", Toast.LENGTH_LONG).show();
+                                        }
+
+                                        @Override
+                                        public void onFailure(int reasonCode) {
+                                            Toast.makeText(HomeActivity.this, "Discovery failed. Reason code: " + reasonCode, Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                                }
+                            })
+                            .setNegativeButton("cancel", null)
+                            .setCancelable(true)
+                            .show();
                     return true;
                 }
                 final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);

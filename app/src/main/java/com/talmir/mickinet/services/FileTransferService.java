@@ -12,14 +12,12 @@ import android.util.Log;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
-import com.talmir.mickinet.fragments.DeviceDetailFragment;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
@@ -56,61 +54,33 @@ public class FileTransferService extends IntentService {
             String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
 
-            if (DeviceDetailFragment.getDeviceType() == 1) {
-                Socket socket = new Socket();
-                try {
-                    socket.bind(null);
-                    socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+            Socket socket = new Socket();
+            try {
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
-                    OutputStream stream = socket.getOutputStream();
-                    ContentResolver cr = context.getContentResolver();
-                    InputStream inputStream = null;
-                    try {
-                        inputStream = cr.openInputStream(Uri.parse(fileUri));
-                    } catch (FileNotFoundException e) {
-                        Log.d(HomeActivity.TAG, e.toString());
-                    }
-                    copyFile(inputStream, stream, context);
-                    Log.d(HomeActivity.TAG, "Client: Data written");
-                } catch (IOException e) {
-                    Log.e(HomeActivity.TAG, e.getMessage());
-                } finally {
-                    if (socket != null) {
-                        if (socket.isConnected()) {
-                            try {
-                                socket.close();
-                            } catch (IOException e) {
-                                // Give up
-                                e.printStackTrace();
-                            }
+                OutputStream stream = socket.getOutputStream();
+                ContentResolver cr = context.getContentResolver();
+                InputStream inputStream = null;
+                try {
+                    inputStream = cr.openInputStream(Uri.parse(fileUri));
+                } catch (FileNotFoundException e) {
+                    Log.d(HomeActivity.TAG, e.toString());
+                }
+                copyFile(inputStream, stream, context);
+                Log.d(HomeActivity.TAG, "Client: Data written");
+            } catch (IOException e) {
+                Log.e(HomeActivity.TAG, e.getMessage());
+            } finally {
+                if (socket != null) {
+                    if (socket.isConnected()) {
+                        try {
+                            socket.close();
+                        } catch (IOException e) {
+                            // Give up
+                            e.printStackTrace();
                         }
                     }
-                }
-            }
-            else {
-                try {
-                    ServerSocket socket = new ServerSocket(4126);
-                    socket.bind(null);
-                    Socket connectionSocket = socket.accept();
-                    connectionSocket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                    Log.e("host", host);
-
-                    OutputStream stream = connectionSocket.getOutputStream();
-                    ContentResolver cr = context.getContentResolver();
-                    InputStream inputStream = null;
-                    try {
-                        inputStream = cr.openInputStream(Uri.parse(fileUri));
-                    } catch (FileNotFoundException e) {
-                        Log.d(HomeActivity.TAG, e.toString());
-                    }
-
-                    copyFile(inputStream, stream, context);
-
-                    Log.d(HomeActivity.TAG, "Client: Data written");
-                    connectionSocket.close();
-                    socket.close();
-                } catch (IOException e) {
-                    Log.e(HomeActivity.TAG, e.getMessage());
                 }
             }
         }
