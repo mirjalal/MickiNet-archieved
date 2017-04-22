@@ -24,10 +24,14 @@ import com.talmir.mickinet.helpers.IDeviceActionListener;
 import com.talmir.mickinet.services.FileTransferService;
 
 public class DeviceDetailFragment extends Fragment implements WifiP2pManager.ConnectionInfoListener {
-    protected static final int CHOOSE_FILE_RESULT_CODE = 20;
+
+    private static final int CHOOSE_FILE_RESULT_CODE = 20;
     private View mContentView = null;
     private static WifiP2pInfo info;
     public ProgressDialog progressDialog = null;
+    private static int deviceType = -1;
+
+    public static int getDeviceType() { return deviceType; }
 
     private static String getRealPathFromUri(Context context, Uri contentUri) {
         Cursor cursor = null;
@@ -55,7 +59,6 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         mContentView = inflater.inflate(R.layout.fragment_device_detail, null);
         mContentView.findViewById(R.id.btn_disconnect).setOnClickListener(
                 new View.OnClickListener() {
-
                     @Override
                     public void onClick(View v) {
                         ((IDeviceActionListener) getActivity()).disconnect();
@@ -65,11 +68,22 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // Allow user to pick an image from Gallery or other
-                        // registered apps
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("*/*");
-                        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                        if (deviceType == 1) {
+                            // Allow user to pick an image from Gallery or other registered apps
+                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                            intent.setType("*/*");
+                            startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                        }
+                        else {
+                            if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                            Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                            else {
+                                // Allow user to pick an image from Gallery or other registered apps
+                                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                                intent.setType("*/*");
+                                startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                            }
+                        }
                     }
                 });
         return mContentView;
@@ -88,8 +102,16 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
                     serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS, info.groupOwnerAddress.getHostAddress());
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+                    String hostAndPort = FileReceiverAsyncTask.getClientIpAddress();
+                    serviceIntent.putExtra(
+                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
+                                    hostAndPort.substring(0, hostAndPort.indexOf(':'))
+                    );
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT,
+                            deviceType == 1 ? 4126 :
+                                    Integer.valueOf(hostAndPort.substring(hostAndPort.indexOf(':')+1))
+                    );
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getRealPathFromUri(getActivity(), uri));
                     getActivity().startService(serviceIntent);
                 } else {
@@ -112,11 +134,13 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         this.getView().setVisibility(View.VISIBLE);
 
         if (info.groupFormed && info.isGroupOwner) {
+            deviceType = 0;
+            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
             new FileReceiverAsyncTask(getActivity()).execute();
-//            startActivity(new Intent(getActivity(), SearchMimeTypeActivity.class));
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button.
+            deviceType = 1;
             mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
             ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources().getString(R.string.client_text));
         }

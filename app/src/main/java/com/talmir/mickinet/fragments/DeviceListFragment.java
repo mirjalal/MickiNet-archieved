@@ -1,6 +1,5 @@
 package com.talmir.mickinet.fragments;
 
-import android.annotation.SuppressLint;
 import android.app.ListFragment;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -10,7 +9,6 @@ import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -41,7 +39,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     private List<WifiP2pDevice> peers = new ArrayList<>();
     private WifiP2pDevice device;
 
-    @SuppressLint("LongLogTag")
+    @NonNull
     private static String getDeviceStatus(int deviceStatus) {
         Log.d(HomeActivity.TAG, "Peer status: " + deviceStatus);
         switch (deviceStatus) {
@@ -69,33 +67,6 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(R.layout.fragment_device_list, null);
-//        CardView cardView = (CardView) mContentView.findViewById(R.id.this_device);
-//        cardView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
-//                alertDialogBuilder.setTitle("Device information");
-//                alertDialogBuilder
-//                        .setMessage(
-//                                Html.fromHtml(String.format(
-//                                        "Name: %1$s%nStatus: %2$s%nMAC Address: %3$s%nIs group owner: %4$s%nWiFi Direct IP Address: %5$s",
-//                                        device.deviceName,
-//                                        device.status,
-//                                        device.deviceAddress,
-//                                        device.isGroupOwner() ? "Yes" : "No",
-//                                        getDottedDecimalIP(getLocalIPAddress())))
-//                        )
-//                        .setCancelable(false)
-//                        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
-//                            public void onClick(DialogInterface dialog, int id) {
-//                                dialog.cancel();
-//                            }
-//                        });
-//                AlertDialog alertDialog = alertDialogBuilder.create();
-//                alertDialog.show();
-//            }
-//        });
-
         return mContentView;
     }
 
@@ -112,69 +83,36 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     @Override
     public void onListItemClick(ListView listView, View view, int position, long id) {
         final WifiP2pDevice device = (WifiP2pDevice) getListAdapter().getItem(position);
-//        ((IDeviceActionListener) getActivity()).showDetails(device);
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
         alertDialogBuilder.setTitle("Connect to device?");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            alertDialogBuilder
-                    .setMessage(
-                            Html.fromHtml(
-                                    String.format(
-                                    "<b>Name</b>: %1$s<br><b>Status</b>: %2$s<br><b>MAC Address</b>: %3$s<br><b>Is group owner</b>: %4$s",
-                                    device.deviceName,
-                                    getDeviceStatus(device.status),
-                                    device.deviceAddress,
-                                    device.isGroupOwner() ? "Yes" : "No"
-                                ), Html.FROM_HTML_MODE_LEGACY, null, null
-                            )
-                    )
-                    .setCancelable(false)
-                    .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            final WifiP2pConfig config = new WifiP2pConfig();
-                            config.deviceAddress = device.deviceAddress;
-                            config.wps.setup = WpsInfo.PBC;
-                            // connect to device
-                            ((IDeviceActionListener) getActivity()).connect(config);
-                        }
-                    })
-                    .setNegativeButton("Close", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dialog.cancel();
-                        }
-                    });
-        }
-        else {
-            alertDialogBuilder
-                    .setMessage(
-                            Html.fromHtml(
-                                    String.format(
-                                            "<b>Name</b>: %1$s<br><b>Status</b>: %2$s<br><b>MAC Address</b>: %3$s<br><b>Is group owner</b>: %4$s",
-                                            device.deviceName,
-                                            getDeviceStatus(device.status),
-                                            device.deviceAddress,
-                                            device.isGroupOwner() ? "Yes" : "No"
-                                    )
-                            )
-                    )
-                    .setCancelable(false)
-                    .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            final WifiP2pConfig config = new WifiP2pConfig();
-                            config.deviceAddress = device.deviceAddress;
-                            config.wps.setup = WpsInfo.PBC;
-                            // connect to device
-                            ((IDeviceActionListener) getActivity()).connect(config);
-                        }
-                    })
-                    .setNegativeButton("Close", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dialog.cancel();
-                        }
-                    });
-        }
+        alertDialogBuilder
+                .setMessage(
+                        Html.fromHtml(
+                                String.format(
+                                        "<b>Name</b>: %1$s<br><b>Status</b>: %2$s<br><b>MAC Address</b>: %3$s<br><b>Is group owner</b>: %4$s",
+                                        device.deviceName,
+                                        getDeviceStatus(device.status),
+                                        device.deviceAddress,
+                                        device.isGroupOwner() ? "Yes" : "No"
+                                )
+                        )
+                )
+                .setCancelable(false)
+                .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        final WifiP2pConfig config = new WifiP2pConfig();
+                        config.deviceAddress = device.deviceAddress;
+                        config.wps.setup = WpsInfo.PBC;
+                        // connect to device
+                        ((IDeviceActionListener) getActivity()).connect(config);
+                    }
+                })
+                .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
     }
@@ -202,10 +140,8 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
         peers.clear();
         peers.addAll(wifiP2pDeviceList.getDeviceList());
         ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
-        if (peers.size() == 0) {
+        if (peers.size() == 0)
             Log.d(HomeActivity.TAG, "No devices found");
-            return;
-        }
     }
 
     public void clearPeers() {
@@ -233,40 +169,6 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                 }
         );
     }
-
-//    @Nullable
-//    private byte[] getLocalIPAddress() {
-//        try {
-//            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
-//                NetworkInterface intf = en.nextElement();
-//                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
-//                    InetAddress inetAddress = enumIpAddr.nextElement();
-//                    if (!inetAddress.isLoopbackAddress()) {
-//                        if (inetAddress instanceof Inet4Address) { // fix for Galaxy Nexus. IPv4 is easy to use :-)
-//                            return inetAddress.getAddress();
-//                        }
-//                        //return inetAddress.getHostAddress().toString(); // Galaxy Nexus returns IPv6
-//                    }
-//                }
-//            }
-//        } catch (SocketException | NullPointerException ex) {
-//            Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()", ex);
-//        }
-//        return null;
-//    }
-//
-//    @Contract(pure = true)
-//    private String getDottedDecimalIP(byte[] ipAddr) {
-//        //convert to dotted decimal notation:
-//        String ipAddrStr = "";
-//        for (int i = 0; i < ipAddr.length; i++) {
-//            if (i > 0) {
-//                ipAddrStr += ".";
-//            }
-//            ipAddrStr += ipAddr[i] & 0xFF;
-//        }
-//        return ipAddrStr;
-//    }
 
     /**
      * Array adapter for ListFragment that maintains WifiP2pDevice list.

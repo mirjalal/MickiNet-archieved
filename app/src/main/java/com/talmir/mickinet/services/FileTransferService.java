@@ -12,12 +12,14 @@ import android.util.Log;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.fragments.DeviceDetailFragment;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
@@ -29,6 +31,7 @@ import java.net.Socket;
  */
 public class FileTransferService extends IntentService {
 
+    public static final String ACTION_SEND_IP = "client_ip";
     public static final String ACTION_SEND_FILE = "com.talmir.mickinet.SEND_FILE";
     public static final String EXTRAS_FILE_PATH = "file_uri";
     public static final String EXTRAS_FILE_NAME = "file_name_and_extension";
@@ -47,43 +50,73 @@ public class FileTransferService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Context context = getApplicationContext();
+
         if (intent.getAction().equals(ACTION_SEND_FILE)) {
             String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
             String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
 
-            Socket socket = new Socket();
-            try {
-                socket.bind(null);
-                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-
-                OutputStream stream = socket.getOutputStream();
-                ContentResolver cr = context.getContentResolver();
-                InputStream inputStream = null;
+            if (DeviceDetailFragment.getDeviceType() == 1) {
+                Socket socket = new Socket();
                 try {
-                    inputStream = cr.openInputStream(Uri.parse(fileUri));
-                } catch (FileNotFoundException e) {
-                    Log.d(HomeActivity.TAG, e.toString());
-                }
-                copyFile(inputStream, stream, context);
-                Log.d(HomeActivity.TAG, "Client: Data written");
-            } catch (IOException e) {
-                Log.e(HomeActivity.TAG, e.getMessage());
-            } finally {
-                if (socket != null) {
-                    if (socket.isConnected()) {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            // Give up
-                            e.printStackTrace();
+                    socket.bind(null);
+                    socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+
+                    OutputStream stream = socket.getOutputStream();
+                    ContentResolver cr = context.getContentResolver();
+                    InputStream inputStream = null;
+                    try {
+                        inputStream = cr.openInputStream(Uri.parse(fileUri));
+                    } catch (FileNotFoundException e) {
+                        Log.d(HomeActivity.TAG, e.toString());
+                    }
+                    copyFile(inputStream, stream, context);
+                    Log.d(HomeActivity.TAG, "Client: Data written");
+                } catch (IOException e) {
+                    Log.e(HomeActivity.TAG, e.getMessage());
+                } finally {
+                    if (socket != null) {
+                        if (socket.isConnected()) {
+                            try {
+                                socket.close();
+                            } catch (IOException e) {
+                                // Give up
+                                e.printStackTrace();
+                            }
                         }
                     }
+                }
+            }
+            else {
+                try {
+                    ServerSocket socket = new ServerSocket(4126);
+                    socket.bind(null);
+                    Socket connectionSocket = socket.accept();
+                    connectionSocket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+                    Log.e("host", host);
+
+                    OutputStream stream = connectionSocket.getOutputStream();
+                    ContentResolver cr = context.getContentResolver();
+                    InputStream inputStream = null;
+                    try {
+                        inputStream = cr.openInputStream(Uri.parse(fileUri));
+                    } catch (FileNotFoundException e) {
+                        Log.d(HomeActivity.TAG, e.toString());
+                    }
+
+                    copyFile(inputStream, stream, context);
+
+                    Log.d(HomeActivity.TAG, "Client: Data written");
+                    connectionSocket.close();
+                    socket.close();
+                } catch (IOException e) {
+                    Log.e(HomeActivity.TAG, e.getMessage());
                 }
             }
         }
     }
 
+    // TODO: notification hissesi duzeldilmelidir
     private boolean copyFile(InputStream inputStream, OutputStream out, Context c) {
         // http://stackoverflow.com/a/19561265/4057688
         byte buf[] = new byte[8192];
@@ -108,6 +141,7 @@ public class FileTransferService extends IntentService {
                 out.write(buf, 0, len);
 
             out.close();
+            out.flush();
             inputStream.close();
 
             // When the loop is finished, updates the notification
@@ -115,7 +149,7 @@ public class FileTransferService extends IntentService {
                     .setContentText("File send")
                     .setProgress(0, 0, false)
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done)
-                    .setLights(Color.rgb(0, 78, 142), 1500, 1000); // 1 saat
+                    .setLights(Color.rgb(0, 78, 142), 1500, 1000);
 
             mNotifyManager.notify(id, mBuilder.build());
 

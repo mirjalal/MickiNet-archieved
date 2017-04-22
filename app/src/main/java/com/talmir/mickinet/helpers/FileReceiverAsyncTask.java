@@ -32,9 +32,15 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
     private final static int id = 1;
 
+    // TODO: should be changed to List<String> clientIpAddressList in future
+    private static String clientIpAddress = "";
+
     public static String getFileName() {
         return fileName;
     }
+
+    // TODO: should be changed to List<String> getClientIpAddressList in future
+    public static String getClientIpAddress() { return clientIpAddress; }
 
     /**
      * @param context    {@link HomeActivity}
@@ -43,6 +49,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
         this.context = context;
     }
 
+    // TODO: notification hissesi duzeldilmelidir
     private static boolean copyFile(InputStream inputStream, OutputStream out, Context c) {
         // http://stackoverflow.com/a/19561265/4057688
         byte buf[] = new byte[8192];
@@ -55,18 +62,19 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             mBuilder.setTicker("Receiving the file")
                     .setContentTitle("File Receive")
                     .setContentText("Receiving the file")
-                    .setSmallIcon(android.R.drawable.stat_sys_download/*R.drawable.ic_stat_name*/)
+                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setOngoing(true)
                     .setSound(Uri.parse("android.resource://" + c.getPackageName() + "/" + R.raw.file_receive));
 
             // Sets an activity indicator for an operation of indeterminate length
             mBuilder.setProgress(0, 0, true);
             mNotifyManager.notify(id, mBuilder.build());
 
-
             while ((len = inputStream.read(buf)) != -1)
                 out.write(buf, 0, len);
 
             out.close();
+            out.flush();
             inputStream.close();
 
             // When the loop is finished, updates the notification
@@ -74,7 +82,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                     .setTicker("File received")
                     .setProgress(0, 0, false)
                     .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setLights(Color.rgb(0, 78, 142), 1000 * 60 * 60, 1) // 1 saat
+                    .setLights(Color.rgb(0, 78, 142), 1500, 1000)
+                    .setOngoing(false)
                     .setVibrate(new long[] {0, 1000, 200, 1000 });
 
             mNotifyManager.notify(id, mBuilder.build());
@@ -93,6 +102,12 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             Log.d(HomeActivity.TAG, "Server: Socket opened");
             Socket client = serverSocket.accept();
 
+//            final String temp_str = client.getRemoteSocketAddress().toString();
+            Log.e("full ip", client.getRemoteSocketAddress().toString());
+            clientIpAddress = client.getRemoteSocketAddress().toString().substring(1);//temp_str.substring(1, temp_str.indexOf(':'));
+//            Log.e("ip", clientIpAddress);
+//            Log.e("port", clientIpAddress.substring(':') + 1);
+
             Log.d(HomeActivity.TAG, "Server: connection done");
             final long current = System.currentTimeMillis();
             final File f = new File(Environment.getExternalStorageDirectory() + "/MickiNet/" + current);
@@ -107,6 +122,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             InputStream inputStream = client.getInputStream();
             copyFile(inputStream, new FileOutputStream(f), context);
 
+            client.close();
             serverSocket.close();
             return f.getAbsolutePath();
         } catch (IOException e) {
