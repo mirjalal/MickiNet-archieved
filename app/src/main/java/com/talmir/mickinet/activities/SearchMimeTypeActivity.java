@@ -55,7 +55,7 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
         if (mCursor.getInt(0) > 0)
             mCursor.close();
         else {
-            new RunForFirstTime().execute();
+            new PrepareDatabase().execute();
             mCursor.close();
         }
 
@@ -125,7 +125,7 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
 
             mimeTypesList = new ArrayList<>();
             try {
-                Cursor cursor = db.rawQuery("SELECT type FROM mimeTypes WHERE type MATCH ?;", new String[]{query});
+                Cursor cursor = db.rawQuery("SELECT type FROM mimeTypes WHERE type MATCH ?;", new String[]{ query });
                 while (cursor.moveToNext()) {
                     mimeTypesList.add(cursor.getString(0));
                 }
@@ -191,11 +191,11 @@ public class SearchMimeTypeActivity extends AppCompatActivity {
         }
     }
 
-    private class RunForFirstTime extends AsyncTask<Void, Integer, Void> {
+    private class PrepareDatabase extends AsyncTask<Void, Integer, Void> {
 
         private ProgressDialog progressDialog;
 
-        RunForFirstTime() {
+        PrepareDatabase() {
             progressDialog = new ProgressDialog(SearchMimeTypeActivity.this);
             progressDialog.setTitle("Please wait");
             progressDialog.setMessage("Indexing mime types. You will see this once only. Hang tight...");

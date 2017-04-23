@@ -1,8 +1,17 @@
 <resources>
 
+    <style name="ApplicationTheme">
+        <item name="android:typeface">serif</item>
+    </style>
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
+
+        <!-- To change font of whole app uncomment line below -->
+        <!--<item name="android:typeface">serif</item>-->
+        <!--<item name="android:textColor">@color/black_russian</item>-->
+
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -23,4 +32,10 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+
+    <style name="MyButton">
+        <item name="colorControlNormal">@color/snow</item>
+        <!--<item name="colorControlHighlight">@color/colorAccent_alpha26</item>-->
+        <item name="android:textColor">@color/colorAccent</item>
+    </style>
 </resources>

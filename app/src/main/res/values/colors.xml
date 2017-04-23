@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimaryDark">#004E8E</color>
-    <color name="colorPrimary">#004E8E</color>
-    <color name="colorAccent">#FFD713</color>
+    <color name="colorPrimaryDark">#FF156AA6</color>
+    <color name="colorPrimary">#FF197ABE</color>
+    <color name="colorAccent">#FF197ABE</color>
+    <!--<color name="colorAccent_alpha26">#42FFD713</color>-->
     <color name="colorSlide1">#9575CD</color>
     <color name="colorSlide2">#7986CB</color>
     <color name="colorSlide3">#64B5F6</color>
@@ -10,7 +11,8 @@
     <color name="colorSlide5">#4DD0E1</color>
     <color name="status_bar_color">#FF000000</color>
     <color name="layout_border_color">#FF111111</color>
-    <color name="white">#FFFFFF</color>
+    <color name="snow">#FCFCFC</color>
+    <color name="black_russian">#FF1B1B1C</color>
     <color name="shade_of_gray">#FF999999</color>
     <color name="mime_type_name">#FF222222</color>
 </resources>

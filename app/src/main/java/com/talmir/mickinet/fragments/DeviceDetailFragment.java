@@ -31,8 +31,6 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     public ProgressDialog progressDialog = null;
     private static int deviceType = -1;
 
-    public static int getDeviceType() { return deviceType; }
-
     private static String getRealPathFromUri(Context context, Uri contentUri) {
         Cursor cursor = null;
         try {

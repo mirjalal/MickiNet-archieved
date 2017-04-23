@@ -7,12 +7,18 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
-import com.talmir.mickinet.activities.SearchMimeTypeActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,6 +27,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
+import java.util.Date;
 
 /**
  * TODO: comment should be added!
@@ -30,16 +38,12 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     private Context context;
     private static String fileName;
 
-    private final static int id = 1;
-
     // TODO: should be changed to List<String> clientIpAddressList in future
     private static String clientIpAddress = "";
 
     public static String getFileName() {
         return fileName;
     }
-
-    // TODO: should be changed to List<String> getClientIpAddressList in future
     public static String getClientIpAddress() { return clientIpAddress; }
 
     /**
@@ -55,6 +59,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
         byte buf[] = new byte[8192];
         int len;
         try {
+            int id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
             NotificationManager mNotifyManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
 
@@ -64,7 +69,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                     .setContentText("Receiving the file")
                     .setSmallIcon(android.R.drawable.stat_sys_download)
                     .setOngoing(true)
-                    .setSound(Uri.parse("android.resource://" + c.getPackageName() + "/" + R.raw.file_receive));
+                    .setSound(Uri.parse("android.resource://" + c.getPackageName() + "/" + R.raw.file_receive))
+                    .setVibrate(new long[] { 0, 1000, 200, 1000 });
 
             // Sets an activity indicator for an operation of indeterminate length
             mBuilder.setProgress(0, 0, true);
@@ -82,9 +88,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                     .setTicker("File received")
                     .setProgress(0, 0, false)
                     .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setLights(Color.rgb(0, 78, 142), 1500, 1000)
-                    .setOngoing(false)
-                    .setVibrate(new long[] {0, 1000, 200, 1000 });
+                    .setLights(Color.rgb(0, 78, 142), 1000, 700)
+                    .setOngoing(false);
 
             mNotifyManager.notify(id, mBuilder.build());
 
@@ -122,7 +127,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             client.close();
             serverSocket.close();
             return f.getAbsolutePath();
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(HomeActivity.TAG, e.getMessage());
             return null;
         }
@@ -132,12 +137,64 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     protected void onPostExecute(String result) {
         if (result != null) {
             fileName = result;
-            context.startActivity(new Intent(context, SearchMimeTypeActivity.class));
+
+            final AlertDialog builder = new AlertDialog.Builder(context).create();
+            builder.setTitle("Enter file name and extension");
+            builder.setCancelable(false);
+
+            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            final View view = inflater.inflate(R.layout.file_receive_dialog, null);
+
+            final EditText fileNameWithExtension = (EditText) view.findViewById(R.id.file_name);
+            final Button saveButton = (Button) view.findViewById(R.id.save);
+            final Button cancelButton = (Button) view.findViewById(R.id.cancel);
+
+            saveButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (fileNameWithExtension.getText().toString().length() == 0) {
+                        Toast t = Toast.makeText(context, "Don't leave it blank.", Toast.LENGTH_SHORT);
+                        t.setGravity(Gravity.TOP, 0, 0);
+                        t.show();
+                    } else {
+                        File receivedFile = new File(URI.create("file://" + getFileName()));
+                        File newFile = new File(URI.create("file://" + receivedFile.getAbsolutePath() + fileNameWithExtension.getText().toString()));
+
+                        if (receivedFile.renameTo(newFile)) {
+                            builder.dismiss();
+                            Toast t = Toast.makeText(context, "Saved!", Toast.LENGTH_LONG);
+                            t.setGravity(Gravity.CENTER, 0, 0);
+                            t.show();
+                            try {
+                                Intent intent = new Intent();
+                                intent.setAction(Intent.ACTION_VIEW);
+                                newFile.createNewFile();
+                                intent.setDataAndType(Uri.parse("file://" + newFile.getAbsolutePath()), "*/*");
+                                context.startActivity(intent);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        else
+                            Log.e("file", "cannot rename");
+                    }
+                }
+            });
+            cancelButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    builder.dismiss();
+                }
+            });
+
+            builder.setView(view);
+            builder.show();
+
+//            context.startActivity(new Intent(context, SearchMimeTypeActivity.class));
+        } else {
+            Toast t = Toast.makeText(context, "Cannot receive file. Check app permissions.", Toast.LENGTH_LONG);
+            t.setGravity(Gravity.CENTER, 0, 0);
+            t.show();
         }
     }
-
-//    @Override
-//    protected void onPreExecute() {
-//
-//    }
 }

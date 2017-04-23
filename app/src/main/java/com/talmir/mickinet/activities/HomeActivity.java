@@ -1,7 +1,6 @@
 package com.talmir.mickinet.activities;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,6 +18,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDelegate;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,7 +31,16 @@ import com.talmir.mickinet.helpers.IDeviceActionListener;
 import com.talmir.mickinet.helpers.WiFiDirectBroadcastReceiver;
 
 public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
-    /** ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ */
+
+    public static final String TAG = "com.talmir.mickinet";
+
+    /**
+     * ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++
+     */
+    private static final int INITIAL_REQUEST = 0x4e;
+    private static final int CAMERA_REQUEST = INITIAL_REQUEST + 1;
+    private static final int STORAGE_REQUEST = INITIAL_REQUEST + 2;
+
     private static final String[] INITIAL_PERMISSIONS = {
             Manifest.permission.CAMERA,
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -44,9 +53,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-    private static final int INITIAL_REQUEST = 0x4e;
-    private static final int CAMERA_REQUEST = INITIAL_REQUEST + 1;
-    private static final int STORAGE_REQUEST = INITIAL_REQUEST + 2;
 
     private boolean canAccessCamera() {
         // holy crap! WTF ? why I wrote Location thing instead of CAMERA ?
@@ -63,23 +69,19 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
     private boolean hasPermission(String permission) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            return (PackageManager.PERMISSION_GRANTED == checkSelfPermission(permission));
-        return true;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (PackageManager.PERMISSION_GRANTED == checkSelfPermission(permission));
     }
     /** -------------------------------- Permissions ------------------------------------ */
 
-
-    /** +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++ */
-    public static final String TAG = "com.talmir.mickinet";
-
+    /**
+     * +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++
+     */
+    private final IntentFilter intentFilter = new IntentFilter();
     private WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
-    private final IntentFilter intentFilter = new IntentFilter();
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
-
 
     /**
      * @param isWifiP2pEnabled the isWifiP2pEnabled to set
@@ -188,9 +190,16 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             }
         }
     }
-    /** --------------------------- WiFi Direct specific -------------------------------- */
+    /**
+     * --------------------------- WiFi Direct specific --------------------------------
+     */
 
-    @SuppressLint("LongLogTag")
+    // Great article!
+    // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
+    static {
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Thread t = new Thread(new Runnable() {
@@ -198,7 +207,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             public void run() {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
                 boolean previouslyStarted = prefs.getBoolean("loseVirginity?", false);
-                if(!previouslyStarted)
+                if (!previouslyStarted)
                     startActivity(new Intent(HomeActivity.this, IntroductionActivity.class));
             }
         });
@@ -257,41 +266,46 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId())
-        {
+        switch (item.getItemId()) {
             case R.id.action_discover:
                 if (!isWifiP2pEnabled) {
-                    AlertDialog.Builder wifiOnOffAlertDialog = new AlertDialog.Builder(this);
-                    wifiOnOffAlertDialog.setTitle("Turn on WiFi?")
-                            .setMessage("WiFi is turned off. Before starting discovery MickiNet needs to enable WiFi.")
-                            .setPositiveButton("turn on", new DialogInterface.OnClickListener() {
+                    AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(this).create();
+                    wifiOnOffAlertDialog.setTitle("Turn on WiFi?");
+                    wifiOnOffAlertDialog.setMessage("WiFi is turned off. Before starting discovery MickiNet needs to enable WiFi.");
+                    wifiOnOffAlertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "turn on", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                            wifi.setWifiEnabled(true);
+                            try {
+                                Thread.sleep(500); // .5 sec is enough to wait...
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            dialog.dismiss();
+                            final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
+                            fragment.onInitiateDiscovery();
+                            manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
                                 @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                                    wifi.setWifiEnabled(true);
-                                    try {
-                                        Thread.sleep(500); // .5 sec is enough to wait...
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                    final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
-                                    fragment.onInitiateDiscovery();
-                                    manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-                                        @Override
-                                        public void onSuccess() {
-                                            Toast.makeText(HomeActivity.this, "Discovery started", Toast.LENGTH_LONG).show();
-                                        }
-
-                                        @Override
-                                        public void onFailure(int reasonCode) {
-                                            Toast.makeText(HomeActivity.this, "Discovery failed. Reason code: " + reasonCode, Toast.LENGTH_LONG).show();
-                                        }
-                                    });
+                                public void onSuccess() {
+                                    Toast.makeText(HomeActivity.this, "Discovery started", Toast.LENGTH_LONG).show();
                                 }
-                            })
-                            .setNegativeButton("cancel", null)
-                            .setCancelable(true)
-                            .show();
+
+                                @Override
+                                public void onFailure(int reasonCode) {
+                                    Toast.makeText(HomeActivity.this, "Discovery failed.", Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                    });
+                    wifiOnOffAlertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    wifiOnOffAlertDialog.setCancelable(true);
+                    wifiOnOffAlertDialog.show();
                     return true;
                 }
                 final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
@@ -308,6 +322,14 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                     }
                 });
                 return true;
+            case R.id.action_settings:
+                startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
+                return true;
+            //        SharedPreferences sh_preference = PreferenceManager.getDefaultSharedPreferences(c);
+//        String strRingtonePreference = sh_preference.getString("notifications_new_message_ringtone", "DEFAULT_SOUND");
+//        boolean vibrate = sh_preference.getBoolean("notifications_new_message_vibrate", true);
+//        Log.e("prefKey", Uri.parse(strRingtonePreference).toString());
+//        Log.e("prefKey", vibrate + "");
             default:
                 return super.onOptionsItemSelected(item);
         }

@@ -31,7 +31,8 @@
             android:focusable="true"
             android:foreground="?android:attr/selectableItemBackground"
             app:cardCornerRadius="5dp"
-            app:cardElevation="5dp">
+            app:cardElevation="5dp"
+            android:background="@color/snow">
 
         <RelativeLayout
                 android:layout_width="match_parent"
