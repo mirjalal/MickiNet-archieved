@@ -126,4 +126,9 @@
     <string name="settings_notification_light_summary">Choose a color to blink the notification light when a new file is received.</string>
     <string name="settings_notification_ringtone_summary">Select a ringtone for incoming MickiNet files.</string>
     <string name="settings_notification_vibrate_summary">Vibrate device when an incoming MickiNet file arrives.</string>
+    <string name="incoming_notifications">File send notifications</string>
+    <string name="outgoing_notifications">File receive notifications</string>
+    <string name="app_icon">app_icon</string>
+    <string name="search_a_application">Search a application</string>
+    <string name="title_activity_dasdas">dasdasActivity</string>
 </resources>

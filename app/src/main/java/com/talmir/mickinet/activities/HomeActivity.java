@@ -38,34 +38,34 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
      * ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++
      */
     private static final int INITIAL_REQUEST = 0x4e;
-    private static final int CAMERA_REQUEST = INITIAL_REQUEST + 1;
-    private static final int STORAGE_REQUEST = INITIAL_REQUEST + 2;
+    private static final int CAMERA_REQUEST = INITIAL_REQUEST + 27;
+    private static final int STORAGE_REQUEST = INITIAL_REQUEST + 403;
+    private static final int CONTACTS_REQUEST = INITIAL_REQUEST + 600;
+
+    private static final String CAMERA_PERMISSIONS = Manifest.permission.CAMERA;
+    private static final String CONTACTS_PERMISSION = Manifest.permission.READ_CONTACTS;
+    private static final String READ_STORAGE_PERMISSION = Manifest.permission.READ_EXTERNAL_STORAGE;
+    private static final String WRITE_STORAGE_PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
     private static final String[] INITIAL_PERMISSIONS = {
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-    };
-    private static final String[] CAMERA_PERMISSIONS = {
-            Manifest.permission.CAMERA
-    };
-    private static final String[] STORAGE_PERMISSIONS = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            CAMERA_PERMISSIONS,
+            CONTACTS_PERMISSION,
+            READ_STORAGE_PERMISSION,
+            WRITE_STORAGE_PERMISSION
     };
 
     private boolean canAccessCamera() {
         // holy crap! WTF ? why I wrote Location thing instead of CAMERA ?
         // return (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
-        return (hasPermission(Manifest.permission.CAMERA));
+        return hasPermission(CAMERA_PERMISSIONS);
     }
 
-    private boolean canReadExternalStorage() {
-        return (hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE));
+    private boolean canAccessExternalStorage() {
+        return hasPermission(READ_STORAGE_PERMISSION) && hasPermission(WRITE_STORAGE_PERMISSION);
     }
 
-    private boolean canWriteExternalStorage() {
-        return (hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE));
+    private boolean canAccessContacts() {
+        return hasPermission(CONTACTS_PERMISSION);
     }
 
     private boolean hasPermission(String permission) {
@@ -216,7 +216,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         setContentView(R.layout.activity_home);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            if (!canAccessCamera() || !canReadExternalStorage() || !canWriteExternalStorage())
+            if (!canAccessCamera() || !canAccessExternalStorage() || !canAccessContacts())
                 requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
 
         // add necessary intent values to be matched.
@@ -249,7 +249,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                     Toast.makeText(this, "camera thing no", Toast.LENGTH_LONG).show();
                 break;
             case STORAGE_REQUEST:
-                if (canReadExternalStorage() && canWriteExternalStorage())
+                if (canAccessExternalStorage())
                     Toast.makeText(this, "storage thing", Toast.LENGTH_LONG).show();
                 else
                     Toast.makeText(this, "storage no", Toast.LENGTH_LONG).show();
@@ -272,13 +272,14 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                     AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(this).create();
                     wifiOnOffAlertDialog.setTitle("Turn on WiFi?");
                     wifiOnOffAlertDialog.setMessage("WiFi is turned off. Before starting discovery MickiNet needs to enable WiFi.");
+                    wifiOnOffAlertDialog.setIcon(R.drawable.ic_signal_wifi_off);
                     wifiOnOffAlertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "turn on", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                             wifi.setWifiEnabled(true);
                             try {
-                                Thread.sleep(500); // .5 sec is enough to wait...
+                                Thread.sleep(700); // .5 sec is enough to wait...
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }

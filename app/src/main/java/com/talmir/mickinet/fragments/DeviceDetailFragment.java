@@ -2,7 +2,6 @@ package com.talmir.mickinet.fragments;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -10,7 +9,8 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.provider.OpenableColumns;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.activities.ApkShareActivity;
 import com.talmir.mickinet.helpers.FileReceiverAsyncTask;
 import com.talmir.mickinet.helpers.IDeviceActionListener;
 import com.talmir.mickinet.services.FileTransferService;
@@ -30,22 +31,6 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     private static WifiP2pInfo info;
     public ProgressDialog progressDialog = null;
     private static int deviceType = -1;
-
-    private static String getRealPathFromUri(Context context, Uri contentUri) {
-        Cursor cursor = null;
-        try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            return cursor.getString(column_index);
-        }
-        finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -67,10 +52,21 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     @Override
                     public void onClick(View v) {
                         if (deviceType == 1) {
-                            // Allow user to pick an image from Gallery or other registered apps
-                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                            intent.setType("*/*");
-                            startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+//                            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // for Camera app
+
+//                            Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+//                            fileIntent.setType("*/*");
+//                            fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+//                            Intent contactsIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+//                            contactsIntent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+
+//                            Intent apkShareIntent = ;
+                            startActivity(new Intent(getActivity(), ApkShareActivity.class));
+
+//                            Intent chooserIntent = Intent.createChooser(fileIntent, "Pick file");
+//                            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{ takePictureIntent, apkShareIntent });
+//                            startActivityForResult(chooserIntent, CHOOSE_FILE_RESULT_CODE);
                         }
                         else {
                             if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
@@ -87,26 +83,49 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         return mContentView;
     }
 
+    public String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
             case CHOOSE_FILE_RESULT_CODE:
-                // User has picked an image. Transfer it to group owner i.e peer using
+                // User has picked a file. Transfer it to group owner i.e peer using
                 // FileTransferService.
                 if (data != null && data.getData() != null) {
                     Uri uri = data.getData();
+                    Log.e("filename", getFileName(uri));
                     Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
                     serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
                     serviceIntent.putExtra(
                             FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                             deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
                                     FileReceiverAsyncTask.getClientIpAddress()
                     );
                     serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getRealPathFromUri(getActivity(), uri));
                     getActivity().startService(serviceIntent);
                 } else {
                     Toast t = Toast.makeText(getActivity(), "No file selected", Toast.LENGTH_LONG);

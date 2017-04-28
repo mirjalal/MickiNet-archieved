@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.Date;
 
 /**
@@ -49,6 +50,7 @@ public class FileTransferService extends IntentService {
 
         if (intent.getAction().equals(ACTION_SEND_FILE)) {
             String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
+            String fileName = intent.getExtras().getString(EXTRAS_FILE_NAME);
             String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
 
@@ -57,7 +59,13 @@ public class FileTransferService extends IntentService {
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
-                OutputStream stream = socket.getOutputStream();
+                OutputStream outputStream = socket.getOutputStream();
+                final byte[] full_file_name = fileName.getBytes(Charset.forName("UTF-8"));
+                final int count = full_file_name.length;
+                Log.e("count", ""+count);
+                outputStream.write(getByteArrayFromInt(count));
+                outputStream.write(full_file_name, 0, count);
+
                 ContentResolver cr = context.getContentResolver();
                 InputStream inputStream = null;
                 try {
@@ -65,7 +73,9 @@ public class FileTransferService extends IntentService {
                 } catch (FileNotFoundException e) {
                     Log.d(HomeActivity.TAG, e.toString());
                 }
-                copyFile(inputStream, stream, context);
+
+                copyFile(inputStream, outputStream, context);
+
                 Log.d(HomeActivity.TAG, "Client: Data written");
             } catch (IOException e) {
                 Log.e(HomeActivity.TAG, e.getMessage());
@@ -84,6 +94,14 @@ public class FileTransferService extends IntentService {
         }
     }
 
+    private static byte[] getByteArrayFromInt(int value) {
+        return new byte[]{
+                (byte) (value >> 24),
+                (byte) (value >> 16),
+                (byte) (value >> 8),
+                (byte) value};
+    }
+
     // TODO: notification hissesi duzeldilmelidir
     private boolean copyFile(InputStream inputStream, OutputStream out, Context c) {
         // http://stackoverflow.com/a/19561265/4057688
@@ -99,10 +117,8 @@ public class FileTransferService extends IntentService {
                     .setContentTitle("Sending file")
                     .setOngoing(true)
                     .setContentText("Sending...")
-                    .setSmallIcon(android.R.drawable.stat_sys_upload);
-
-            // Sets an activity indicator for an operation of indeterminate length
-            mBuilder.setProgress(0, 0, true);
+                    .setSmallIcon(android.R.drawable.stat_sys_upload)
+                    .setProgress(0, 0, true);
             mNotifyManager.notify(id, mBuilder.build());
 
             while ((len = inputStream.read(buf)) != -1)
@@ -115,10 +131,9 @@ public class FileTransferService extends IntentService {
             // When the loop is finished, updates the notification
             mBuilder.setTicker("File sent")
                     .setContentText("File sent")
-                    .setProgress(0, 0, false)
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done)
-                    .setOngoing(false);
-
+                    .setOngoing(false)
+                    .setProgress(0, 0, false);
             mNotifyManager.notify(id, mBuilder.build());
 
             return true;

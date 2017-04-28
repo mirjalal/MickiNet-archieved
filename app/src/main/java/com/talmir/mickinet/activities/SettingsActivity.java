@@ -225,7 +225,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("notifications_new_file_receive_ringtone"));
+            bindPreferenceSummaryToValue(findPreference("notifications_new_file_send_ringtone"));
             bindPreferenceSummaryToValue(findPreference("notifications_new_file_receive_led_light"));
+            bindPreferenceSummaryToValue(findPreference("notifications_new_file_send_led_light"));
         }
 
         @Override

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimaryDark">#FF156AA6</color>
-    <color name="colorPrimary">#FF197ABE</color>
-    <color name="colorAccent">#FF197ABE</color>
+    <color name="colorPrimaryDark">#FF004ba0</color>
+    <color name="colorPrimary">#FF1976D2</color>
+    <color name="colorAccent">#FF1976D2</color>
     <!--<color name="colorAccent_alpha26">#42FFD713</color>-->
     <color name="colorSlide1">#9575CD</color>
     <color name="colorSlide2">#7986CB</color>
