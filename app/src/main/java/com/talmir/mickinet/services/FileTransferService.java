@@ -62,7 +62,7 @@ public class FileTransferService extends IntentService {
                 OutputStream outputStream = socket.getOutputStream();
                 final byte[] full_file_name = fileName.getBytes(Charset.forName("UTF-8"));
                 final int count = full_file_name.length;
-                Log.e("count", ""+count);
+
                 outputStream.write(getByteArrayFromInt(count));
                 outputStream.write(full_file_name, 0, count);
 
@@ -102,7 +102,6 @@ public class FileTransferService extends IntentService {
                 (byte) value};
     }
 
-    // TODO: notification hissesi duzeldilmelidir
     private boolean copyFile(InputStream inputStream, OutputStream out, Context c) {
         // http://stackoverflow.com/a/19561265/4057688
         byte buf[] = new byte[8192];
@@ -130,7 +129,7 @@ public class FileTransferService extends IntentService {
 
             // When the loop is finished, updates the notification
             mBuilder.setTicker("File sent")
-                    .setContentText("File sent")
+                    .setContentTitle("File sent")
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done)
                     .setOngoing(false)
                     .setProgress(0, 0, false);

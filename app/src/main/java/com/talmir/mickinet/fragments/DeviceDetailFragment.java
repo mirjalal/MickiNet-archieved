@@ -9,12 +9,14 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +28,11 @@ import com.talmir.mickinet.services.FileTransferService;
 
 public class DeviceDetailFragment extends Fragment implements WifiP2pManager.ConnectionInfoListener {
 
-    private static final int CHOOSE_FILE_RESULT_CODE = 20;
+    private static final int ACTION_TAKE_PICTURE_RESULT_CODE = 640;
+    private static final int ACTION_TAKE_VIDEO_RESULT_CODE = 722;
+    private static final int ACTION_CHOOSE_FILE_RESULT_CODE = 551;
+    private static final int ACTION_CHOOSE_APP_RESULT_CODE = 290;
+
     private View mContentView = null;
     private static WifiP2pInfo info;
     public ProgressDialog progressDialog = null;
@@ -52,35 +58,65 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     @Override
                     public void onClick(View v) {
                         if (deviceType == 1) {
-//                            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE); // for Camera app
-
-//                            Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-//                            fileIntent.setType("*/*");
-//                            fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
-
-//                            Intent contactsIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-//                            contactsIntent.setType(ContactsContract.Contacts.CONTENT_TYPE);
-
-//                            Intent apkShareIntent = ;
-                            startActivity(new Intent(getActivity(), ApkShareActivity.class));
-
-//                            Intent chooserIntent = Intent.createChooser(fileIntent, "Pick file");
-//                            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{ takePictureIntent, apkShareIntent });
-//                            startActivityForResult(chooserIntent, CHOOSE_FILE_RESULT_CODE);
+                            chooseAction();
                         }
                         else {
                             if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
-                            Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
                             else {
-                                // Allow user to pick an image from Gallery or other registered apps
-                                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                                intent.setType("*/*");
-                                startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                                chooseAction();
                             }
                         }
                     }
                 });
         return mContentView;
+    }
+
+    private void chooseAction() {
+        final android.support.v7.app.AlertDialog dialog = new android.support.v7.app.AlertDialog.Builder(getActivity()).create();
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.choose_action, null);
+
+        final RelativeLayout cameraAction = (RelativeLayout) view.findViewById(R.id.photo_camera_action);
+        cameraAction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), ACTION_TAKE_PICTURE_RESULT_CODE);
+            }
+        });
+
+        final RelativeLayout videoAction = (RelativeLayout) view.findViewById(R.id.video_action);
+        videoAction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), ACTION_TAKE_VIDEO_RESULT_CODE);
+            }
+        });
+
+        final RelativeLayout folderAction = (RelativeLayout) view.findViewById(R.id.file_action);
+        folderAction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                fileIntent.setType("*/*");
+                fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
+            }
+        });
+
+        final RelativeLayout chooseApp = (RelativeLayout) view.findViewById(R.id.remove_action);
+        chooseApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
+            }
+        });
+        dialog.setTitle("Choose action");
+        dialog.setView(view);
+        dialog.show();
     }
 
     public String getFileName(Uri uri) {
@@ -110,7 +146,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case CHOOSE_FILE_RESULT_CODE:
+            case ACTION_TAKE_PICTURE_RESULT_CODE | ACTION_TAKE_VIDEO_RESULT_CODE | ACTION_CHOOSE_FILE_RESULT_CODE:
                 // User has picked a file. Transfer it to group owner i.e peer using
                 // FileTransferService.
                 if (data != null && data.getData() != null) {
@@ -129,6 +165,32 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     getActivity().startService(serviceIntent);
                 } else {
                     Toast t = Toast.makeText(getActivity(), "No file selected", Toast.LENGTH_LONG);
+                    t.setGravity(Gravity.CENTER, 0, 0);
+                    t.show();
+                }
+                break;
+            case ACTION_CHOOSE_APP_RESULT_CODE:
+                if (data != null && data.getExtras().getBoolean("share_apk")) {
+                    String apk_dir = data.getExtras().getString("apk_dir");
+                    String apk_name = data.getExtras().getString("apk_name");
+                    if (apk_dir != null && apk_name != null) {
+//                        Uri uri = Uri.parse();
+                        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+                        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, "file://" + apk_dir);
+                        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, apk_name + ".apk");
+                        serviceIntent.putExtra(
+                                FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                                deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
+                                        FileReceiverAsyncTask.getClientIpAddress()
+                        );
+                        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+                        getActivity().startService(serviceIntent);
+                    } else {
+                        Log.e("apk_sharing", "something went wrong.");
+                    }
+                } else {
+                    Toast t = Toast.makeText(getActivity(), "Select an application", Toast.LENGTH_LONG);
                     t.setGravity(Gravity.CENTER, 0, 0);
                     t.show();
                 }

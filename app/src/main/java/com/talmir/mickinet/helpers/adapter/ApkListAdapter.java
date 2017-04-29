@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.ui.IBubbleTextGetter;
@@ -21,11 +20,15 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
 
     private PackageManager packageManager;
 
-    private SortedList<ApplicationInfo> applicationInfoList;
+    private static SortedList<ApplicationInfo> applicationInfoSortedList;
+
+    public static SortedList<ApplicationInfo> getApplicationInfoSortedList() {
+        return applicationInfoSortedList;
+    }
 
     @Override
     public String getTextToShowInBubble(int pos) {
-        return Character.toString(applicationInfoList.get(pos).loadLabel(packageManager).charAt(0));
+        return Character.toString(applicationInfoSortedList.get(pos).loadLabel(packageManager).charAt(0));
     }
 
     class ApkViewHolder extends RecyclerView.ViewHolder {
@@ -42,10 +45,15 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
         }
     }
 
+//    public ApkListAdapter(final PackageManager packageManager, SortedList<ApplicationInfo> applicationInfoSortedList) {
+//        this.packageManager = packageManager;
+//        this.applicationInfoSortedList = applicationInfoSortedList;
+//    }
+
     public ApkListAdapter(final PackageManager packageManager, List<ApplicationInfo> applicationInfoList) {
         this.packageManager = packageManager;
 
-        this.applicationInfoList = new SortedList<>(ApplicationInfo.class, new SortedList.Callback<ApplicationInfo>() {
+        applicationInfoSortedList = new SortedList<>(ApplicationInfo.class, new SortedList.Callback<ApplicationInfo>() {
             @Override
             public int compare(ApplicationInfo o1, ApplicationInfo o2) {
                 return o1.loadLabel(packageManager).toString().compareTo(o2.loadLabel(packageManager).toString());
@@ -82,38 +90,7 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
             }
         });
 
-        this.applicationInfoList.addAll(applicationInfoList);
-    }
-
-    public void add(ApplicationInfo model) {
-        applicationInfoList.add(model);
-    }
-
-    public void remove(ApplicationInfo model) {
-        applicationInfoList.remove(model);
-    }
-
-    public void add(List<ApplicationInfo> models) {
-        applicationInfoList.addAll(models);
-    }
-
-    public void remove(List<ApplicationInfo> models) {
-        applicationInfoList.beginBatchedUpdates();
-        for (ApplicationInfo model : models) {
-            applicationInfoList.remove(model);
-        }
-        applicationInfoList.endBatchedUpdates();
-    }
-
-    public void replaceAll(List<ApplicationInfo> models) {
-        applicationInfoList.beginBatchedUpdates();
-        for (int i = applicationInfoList.size() - 1; i >= 0; i--) {
-            final ApplicationInfo model = applicationInfoList.get(i);
-            if (!models.contains(model))
-                applicationInfoList.remove(model);
-        }
-        applicationInfoList.addAll(models);
-        applicationInfoList.endBatchedUpdates();
+        applicationInfoSortedList.addAll(applicationInfoList);
     }
 
     @Override
@@ -126,20 +103,14 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
 
     @Override
     public void onBindViewHolder(final ApkViewHolder holder, int position) {
-        final ApplicationInfo applicationInfo = applicationInfoList.get(position);
+        final ApplicationInfo applicationInfo = applicationInfoSortedList.get(position);
         holder.icon.setImageDrawable(applicationInfo.loadIcon(packageManager));
         holder.app_name.setText(applicationInfo.loadLabel(packageManager).toString());
         holder.package_name.setText(applicationInfo.packageName);
-        holder.cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(v.getContext(), /*holder.app_name.getText().toString()*/applicationInfo.publicSourceDir, Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     @Override
     public int getItemCount() {
-        return applicationInfoList.size();
+        return applicationInfoSortedList.size();
     }
 }

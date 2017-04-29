@@ -22,11 +22,11 @@
     <string name="string_second_slide">To begin with, we need some permissions</string>
     <string name="string_third_slide">We are done!</string>
     <string name="title_activity_search_mime_type">Set received file type</string>
-    <string name="search_hint">Search mime type or extension</string>
+    <string name="search_hint">Type a application name</string>
     <string name="clear_history">Clear Search History</string>
     <string name="example_file_name">Example: myFile.jpg</string>
     <string name="save">Save</string>
-    <string name="cancel">cancel</string>
+    <string name="cancel">Cancel</string>
     <string name="settings">Settings</string>
     <string name="title_activity_settings">Settings</string>
 
@@ -131,4 +131,8 @@
     <string name="app_icon">app_icon</string>
     <string name="search_a_application">Search a application</string>
     <string name="title_activity_dasdas">dasdasActivity</string>
+    <string name="camera">Take photo</string>
+    <string name="file_folder">Pick file</string>
+    <string name="pick_apk">Choose app</string>
+    <string name="video">Take video</string>
 </resources>

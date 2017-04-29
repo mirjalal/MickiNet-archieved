@@ -1,5 +1,6 @@
 package com.talmir.mickinet.activities;
 
+import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -11,11 +12,17 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.view.GestureDetector;
 import android.view.Menu;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.adapter.ApkListAdapter;
 import com.talmir.mickinet.helpers.ui.DividerItemDecoration;
+import com.talmir.mickinet.helpers.ui.IRecyclerItemClickListener;
+import com.talmir.mickinet.helpers.ui.RecyclerViewFastScroller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,56 +41,55 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
         pm = getPackageManager();
 
         packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-//        for (ApplicationInfo app : packages) {
-//            checks for flags; if flagged, check if updated system app
-//            if((app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
-//                applicationInfoSortedList.add(app);
-////                it's a system app, not interested
-//            } if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
-//                //Discard this one
-//                //in this case, it should be a user-installed app
-//                applicationInfoSortedList.add(app);
-//            } else {
-//                applicationInfoSortedList.add(app);
-//            }
-//        }
-//        packages_.clear();
-
-//        applicationInfoSortedList.addAll(pm.getInstalledApplications(PackageManager.GET_META_DATA));
 
         // http://www.android--tutorials.com/2016/03/android-get-installed-apps-list.html
-
         final ApkListAdapter apkListAdapter = new ApkListAdapter(pm, packages);
         apkListAdapter.notifyDataSetChanged();
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setAdapter(apkListAdapter);
-//        final RecyclerViewFastScroller fastScroller = (RecyclerViewFastScroller) this.findViewById(R.id.fastscroller);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false) {
-//            @Override
-//            public void onLayoutChildren(final RecyclerView.Recycler recycler, final RecyclerView.State state) {
-//                super.onLayoutChildren(recycler, state);
-//
-//                final int firstVisibleItemPosition = findFirstVisibleItemPosition();
-//                if (firstVisibleItemPosition != 0) {
-////                     this avoids trying to handle un-needed calls
-//                    if (firstVisibleItemPosition == -1)
-////                        not initialized, or no items shown, so hide fast-scroller
-//                        fastScroller.setVisibility(View.GONE);
-//                    return;
-//                }
-//                final int lastVisibleItemPosition = findLastVisibleItemPosition();
-//                int itemsShown = lastVisibleItemPosition - firstVisibleItemPosition + 1;
-////                if all items are shown, hide the fast-scroller
-//                fastScroller.setVisibility(apkListAdapter.getItemCount() > itemsShown ? View.VISIBLE : View.GONE);
-//            }
-//        });
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(mLayoutManager);
+        final RecyclerViewFastScroller fastScroller = (RecyclerViewFastScroller) this.findViewById(R.id.fastscroller);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false) {
+            @Override
+            public void onLayoutChildren(final RecyclerView.Recycler recycler, final RecyclerView.State state) {
+                super.onLayoutChildren(recycler, state);
+
+                final int firstVisibleItemPosition = findFirstVisibleItemPosition();
+                if (firstVisibleItemPosition != 0) {
+//                     this avoids trying to handle un-needed calls
+                    if (firstVisibleItemPosition == -1)
+//                        not initialized, or no items shown, so hide fast-scroller
+                        fastScroller.setVisibility(View.GONE);
+                    return;
+                }
+                final int lastVisibleItemPosition = findLastVisibleItemPosition();
+                int itemsShown = lastVisibleItemPosition - firstVisibleItemPosition + 1;
+//                if all items are shown, hide the fast-scroller
+                fastScroller.setVisibility(apkListAdapter.getItemCount() > itemsShown ? View.VISIBLE : View.GONE);
+            }
+        });
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.addItemDecoration(new DividerItemDecoration(getApplicationContext(), LinearLayoutManager.VERTICAL));
-//        fastScroller.setRecyclerView(recyclerView);
-//        fastScroller.setViewsToUse(R.layout.recycler_view_fast_scroller__fast_scroller, R.id.fast_scroller_bubble, R.id.fast_scroller_handle);
+        recyclerView.addOnItemTouchListener(new RecyclerItemTouchListener(getApplicationContext(), recyclerView, new IRecyclerItemClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                ApplicationInfo currentItem = ApkListAdapter.getApplicationInfoSortedList().get(position);
+                Toast.makeText(ApkShareActivity.this, currentItem.publicSourceDir/*loadLabel(pm)*/, Toast.LENGTH_LONG).show();
+                Intent i = new Intent();
+                i.putExtra("share_apk", true);
+                i.putExtra("apk_dir", currentItem.publicSourceDir);
+                i.putExtra("apk_name", currentItem.loadLabel(pm));
+                setResult(Activity.RESULT_OK, i);
+                finish();
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+
+            }
+        }));
+        fastScroller.setRecyclerView(recyclerView);
+        fastScroller.setViewsToUse(R.layout.recycler_view_fast_scroller__fast_scroller, R.id.fast_scroller_bubble, R.id.fast_scroller_handle);
     }
 
     @Override
@@ -113,9 +119,6 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
     public boolean onQueryTextChange(String newText) {
         final String lowerCaseQuery = newText.toLowerCase();
 
-//        SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this, ApkSearchSuggestionProvider.AUTHORITY, ApkSearchSuggestionProvider.MODE);
-//        suggestions.saveRecentQuery(newText, null);
-
         final List<ApplicationInfo> filteredModelList = new ArrayList<>();
         for (ApplicationInfo model : packages) {
             final String package_name_text = model.packageName.toLowerCase();
@@ -129,5 +132,47 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
         recyclerView.setAdapter(mimeTypeAdapter);
         mimeTypeAdapter.notifyDataSetChanged();
         return false;
+    }
+
+    private static class RecyclerItemTouchListener implements RecyclerView.OnItemTouchListener {
+        private GestureDetector gestureDetector;
+        private IRecyclerItemClickListener clickListener;
+
+        RecyclerItemTouchListener(Context context, final RecyclerView recyclerView, final IRecyclerItemClickListener clickListener) {
+            this.clickListener = clickListener;
+            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
+                    return true;
+                }
+
+                @Override
+                public void onLongPress(MotionEvent e) {
+                    View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
+                    if (child != null && clickListener != null) {
+                        clickListener.onLongClick(child, recyclerView.getChildPosition(child));
+                    }
+                }
+            });
+        }
+
+        @Override
+        public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+
+            View child = rv.findChildViewUnder(e.getX(), e.getY());
+            if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
+                clickListener.onClick(child, rv.getChildAdapterPosition(child));
+            }
+            return false;
+        }
+
+        @Override
+        public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+        }
+
+        @Override
+        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+        }
     }
 }
