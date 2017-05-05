@@ -14,9 +14,9 @@
             android:layout_height="wrap_content">
 
         <ImageView
+                android:id="@+id/photo_camera_action_image_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_photo_camera_action"
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true"
                 android:contentDescription="@string/camera"/>
@@ -31,64 +31,39 @@
                 android:gravity="center"/>
     </RelativeLayout>
 
-    <!--<RelativeLayout-->
-    <!--android:id="@+id/video_camera_action"-->
-    <!--android:layout_width="wrap_content"-->
-    <!--android:layout_height="wrap_content">-->
-
-    <!--<ImageView-->
-    <!--android:layout_width="wrap_content"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:background="@drawable/ic_video_camera_action"-->
-    <!--android:layout_alignParentTop="true"-->
-    <!--android:layout_centerHorizontal="true"-->
-    <!--android:contentDescription="@string/video"/>-->
-
-    <!--<TextView-->
-    <!--android:layout_width="wrap_content"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:text="@string/video"-->
-    <!--android:textStyle="bold"-->
-    <!--android:layout_marginTop="50dp"-->
-    <!--android:layout_centerHorizontal="true"-->
-    <!--android:gravity="center"/>-->
-    <!--</RelativeLayout>-->
-
     <RelativeLayout
-            android:id="@+id/video_action"
+            android:id="@+id/video_camera_action"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp">
+            android:layout_marginStart="12dp">
 
         <ImageView
+                android:id="@+id/video_camera_action_image_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_video_camera_action"
                 android:layout_centerHorizontal="true"
-                android:contentDescription="@string/file_folder"
-                android:id="@+id/imageView3"/>
+                android:contentDescription="@string/file_folder"/>
 
         <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/video"
                 android:textStyle="bold"
-                android:gravity="center"
-                android:layout_below="@+id/imageView3"
-                android:layout_alignParentStart="true"
-                android:layout_marginTop="2dp"/>
+                android:layout_marginTop="50dp"
+                android:layout_centerHorizontal="true"
+                android:gravity="center"/>
     </RelativeLayout>
 
     <RelativeLayout
             android:id="@+id/file_action"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp">
+            android:layout_marginStart="12dp">
 
         <ImageView
+                android:id="@+id/file_action_image_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_folder_action"
                 android:layout_centerHorizontal="true"
                 android:contentDescription="@string/file_folder"/>
 
@@ -103,15 +78,15 @@
     </RelativeLayout>
 
     <RelativeLayout
-            android:id="@+id/remove_action"
+            android:id="@+id/pick_app_action"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp">
+            android:layout_marginStart="12dp">
 
         <ImageView
+                android:id="@+id/pick_app_action_image_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_pick_apk_action"
                 android:layout_centerHorizontal="true"
                 android:layout_alignParentTop="true"
                 android:contentDescription="@string/pick_apk"/>

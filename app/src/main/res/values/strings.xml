@@ -104,6 +104,7 @@
     <string name="pref_title_light">Light</string>
     <string-array name="pref_light_titles">
         <item>None</item>
+        <item>App default</item>
         <item>White</item>
         <item>Red</item>
         <item>Yellow</item>
@@ -114,6 +115,7 @@
     </string-array>
     <string-array name="pref_light_values">
         <item>000000</item>
+        <item>00DAD6</item>
         <item>FFFFFF</item>
         <item>FF0000</item>
         <item>FFFF00</item>
@@ -122,7 +124,7 @@
         <item>004E8E</item>
         <item>FF00FF</item>
     </string-array>
-    <string name="blue">004E8E</string>
+    <string name="cyan">00DAD6</string>
     <string name="settings_notification_light_summary">Choose a color to blink the notification light when a new file is received.</string>
     <string name="settings_notification_ringtone_summary">Select a ringtone for incoming MickiNet files.</string>
     <string name="settings_notification_vibrate_summary">Vibrate device when an incoming MickiNet file arrives.</string>

@@ -16,7 +16,6 @@ import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.adapter.ApkListAdapter;
@@ -74,7 +73,7 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
             @Override
             public void onClick(View view, int position) {
                 ApplicationInfo currentItem = ApkListAdapter.getApplicationInfoSortedList().get(position);
-                Toast.makeText(ApkShareActivity.this, currentItem.publicSourceDir/*loadLabel(pm)*/, Toast.LENGTH_LONG).show();
+//                Toast.makeText(ApkShareActivity.this, currentItem.publicSourceDir/*loadLabel(pm)*/, Toast.LENGTH_LONG).show();
                 Intent i = new Intent();
                 i.putExtra("share_apk", true);
                 i.putExtra("apk_dir", currentItem.publicSourceDir);

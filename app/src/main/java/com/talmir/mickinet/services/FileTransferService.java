@@ -44,6 +44,10 @@ public class FileTransferService extends IntentService {
         super("FileTransferService");
     }
 
+    /**
+     *
+     * @param intent which comes from {@link com.talmir.mickinet.fragments.DeviceDetailFragment#onActivityResult(int, int, Intent)}
+     */
     @Override
     protected void onHandleIntent(Intent intent) {
         Context context = getApplicationContext();
@@ -59,11 +63,16 @@ public class FileTransferService extends IntentService {
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
+                // get output stream to write data
                 OutputStream outputStream = socket.getOutputStream();
+                // byte[] of file name
                 final byte[] full_file_name = fileName.getBytes(Charset.forName("UTF-8"));
+                // get file name length
                 final int count = full_file_name.length;
 
+                // write file name length as byte[] to outputStream
                 outputStream.write(getByteArrayFromInt(count));
+                // write file name as byte[] to outputStream
                 outputStream.write(full_file_name, 0, count);
 
                 ContentResolver cr = context.getContentResolver();
@@ -74,6 +83,7 @@ public class FileTransferService extends IntentService {
                     Log.d(HomeActivity.TAG, e.toString());
                 }
 
+                // put all data to stream
                 copyFile(inputStream, outputStream, context);
 
                 Log.d(HomeActivity.TAG, "Client: Data written");
@@ -94,6 +104,12 @@ public class FileTransferService extends IntentService {
         }
     }
 
+    /**
+     * Converts int to byte[]
+     *
+     * @param value file name length
+     * @return file name length as byte[]
+     */
     private static byte[] getByteArrayFromInt(int value) {
         return new byte[]{
                 (byte) (value >> 24),
@@ -102,12 +118,21 @@ public class FileTransferService extends IntentService {
                 (byte) value};
     }
 
+    /**
+     * Sends data
+     *
+     * @param inputStream input stream
+     * @param out outputstream
+     * @param c context
+     * @return true if succeeded, false otherwise
+     */
     private boolean copyFile(InputStream inputStream, OutputStream out, Context c) {
         // http://stackoverflow.com/a/19561265/4057688
         byte buf[] = new byte[8192];
         int len;
         try {
-            int id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);;
+            // generate unique id every time to show new notification each time
+            int id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
             NotificationManager mNotifyManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
 
@@ -130,6 +155,7 @@ public class FileTransferService extends IntentService {
             // When the loop is finished, updates the notification
             mBuilder.setTicker("File sent")
                     .setContentTitle("File sent")
+                    .setContentText("")
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done)
                     .setOngoing(false)
                     .setProgress(0, 0, false);

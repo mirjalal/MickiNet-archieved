@@ -3,7 +3,6 @@ package com.talmir.mickinet.helpers.adapter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.v7.util.SortedList;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,37 +17,20 @@ import java.util.List;
 
 public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewHolder> implements IBubbleTextGetter {
 
+    private static SortedList<ApplicationInfo> applicationInfoSortedList;
     private PackageManager packageManager;
 
-    private static SortedList<ApplicationInfo> applicationInfoSortedList;
-
-    public static SortedList<ApplicationInfo> getApplicationInfoSortedList() {
-        return applicationInfoSortedList;
-    }
-
-    @Override
-    public String getTextToShowInBubble(int pos) {
-        return Character.toString(applicationInfoSortedList.get(pos).loadLabel(packageManager).charAt(0));
-    }
-
     class ApkViewHolder extends RecyclerView.ViewHolder {
-        private CardView cardView;
         private ImageView icon;
         private TextView app_name, package_name;
 
         ApkViewHolder(View itemView) {
             super(itemView);
-            cardView = (CardView) itemView.findViewById(R.id.cardView);
             icon = (ImageView) itemView.findViewById(R.id.icon);
             app_name = (TextView) itemView.findViewById(R.id.app_name);
             package_name = (TextView) itemView.findViewById(R.id.package_name);
         }
     }
-
-//    public ApkListAdapter(final PackageManager packageManager, SortedList<ApplicationInfo> applicationInfoSortedList) {
-//        this.packageManager = packageManager;
-//        this.applicationInfoSortedList = applicationInfoSortedList;
-//    }
 
     public ApkListAdapter(final PackageManager packageManager, List<ApplicationInfo> applicationInfoList) {
         this.packageManager = packageManager;
@@ -93,6 +75,15 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
         applicationInfoSortedList.addAll(applicationInfoList);
     }
 
+    public static SortedList<ApplicationInfo> getApplicationInfoSortedList() {
+        return applicationInfoSortedList;
+    }
+
+    @Override
+    public String getTextToShowInBubble(int pos) {
+        return Character.toString(applicationInfoSortedList.get(pos).loadLabel(packageManager).charAt(0));
+    }
+
     @Override
     public ApkViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         /* Big hack: http://stackoverflow.com/a/2605838 */
@@ -102,7 +93,7 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
     }
 
     @Override
-    public void onBindViewHolder(final ApkViewHolder holder, int position) {
+    public void onBindViewHolder(final ApkViewHolder holder, final int position) {
         final ApplicationInfo applicationInfo = applicationInfoSortedList.get(position);
         holder.icon.setImageDrawable(applicationInfo.loadIcon(packageManager));
         holder.app_name.setText(applicationInfo.loadLabel(packageManager).toString());

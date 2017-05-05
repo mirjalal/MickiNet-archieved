@@ -57,6 +57,7 @@
             android:hardwareAccelerated="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name">
+
         <service
                 android:name=".services.FileTransferService"
                 android:exported="false"/>
@@ -65,6 +66,7 @@
                 android:name=".activities.IntroductionActivity"
                 android:label="@string/app_name"
                 android:theme="@style/AppTheme1"/>
+
         <activity
                 android:name=".activities.HomeActivity"
                 android:configChanges="orientation|keyboardHidden"
@@ -75,15 +77,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.SEND"/> -->
-
-
-            <!-- <category android:name="android.intent.category.DEFAULT"/> -->
-
-
+             <!--<intent-filter>-->
+             <!--<action android:name="android.intent.action.GET_CONTENT"/>-->
+             <!--<action android:name="android.intent.action.SEND"/>-->
+             <!--<action android:name="android.intent.action.SEND_MULTIPLE"/>-->
+             <!--<category android:name="android.intent.category.DEFAULT"/>-->
             <!-- <data android:mimeType="*/*"/> -->
-            <!-- </intent-filter> -->
+             <!--</intent-filter>-->
         </activity>
         <activity
                 android:name=".activities.SettingsActivity"

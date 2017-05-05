@@ -35,7 +35,7 @@
                 android:title="@string/pref_title_light"
                 android:entries="@array/pref_light_titles"
                 android:entryValues="@array/pref_light_values"
-                android:defaultValue="@string/blue"
+                android:defaultValue="@string/cyan"
                 android:negativeButtonText="@null"
                 android:positiveButtonText="@null"/>
     </PreferenceCategory>
@@ -75,7 +75,7 @@
                 android:title="@string/pref_title_light"
                 android:entries="@array/pref_light_titles"
                 android:entryValues="@array/pref_light_values"
-                android:defaultValue="@string/blue"
+                android:defaultValue="@string/cyan"
                 android:negativeButtonText="@null"
                 android:positiveButtonText="@null"/>
     </PreferenceCategory>

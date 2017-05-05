@@ -37,10 +37,10 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     /**
      * ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++
      */
-    private static final int INITIAL_REQUEST = 0x4e;
-    private static final int CAMERA_REQUEST = INITIAL_REQUEST + 27;
-    private static final int STORAGE_REQUEST = INITIAL_REQUEST + 403;
-    private static final int CONTACTS_REQUEST = INITIAL_REQUEST + 600;
+    private static final int INITIAL_REQUEST = 603;
+    private static final int CAMERA_REQUEST = 376;
+    private static final int STORAGE_REQUEST = 759;
+    private static final int CONTACTS_REQUEST = 623;
 
     private static final String CAMERA_PERMISSIONS = Manifest.permission.CAMERA;
     private static final String CONTACTS_PERMISSION = Manifest.permission.READ_CONTACTS;
@@ -49,7 +49,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     private static final String[] INITIAL_PERMISSIONS = {
             CAMERA_PERMISSIONS,
-            CONTACTS_PERMISSION,
+//            CONTACTS_PERMISSION,
             READ_STORAGE_PERMISSION,
             WRITE_STORAGE_PERMISSION
     };
@@ -95,10 +95,9 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
      * BroadcastReceiver receiving a state change event.
      */
     public void resetData() {
-        DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_list);
-        DeviceDetailFragment fragmentDetails = (DeviceDetailFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_detail);
+        DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
+        DeviceDetailFragment fragmentDetails = (DeviceDetailFragment) getFragmentManager().findFragmentById(R.id.frag_detail);
+
         if (fragmentList != null)
             fragmentList.clearPeers();
 
@@ -123,19 +122,33 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
             @Override
             public void onFailure(int reason) {
-                Toast.makeText(HomeActivity.this, "Connect failed. Retry.", Toast.LENGTH_LONG).show();
+                if (reason == WifiP2pManager.ERROR)
+                    Toast.makeText(HomeActivity.this, "The operation failed due to an internal error.", Toast.LENGTH_LONG).show();
+                else if (reason == WifiP2pManager.P2P_UNSUPPORTED)
+                    Toast.makeText(HomeActivity.this, "The operation failed because p2p is unsupported on the device.", Toast.LENGTH_LONG).show();
+                else if (reason == WifiP2pManager.BUSY)
+                    Toast.makeText(HomeActivity.this, "The device is busy and unable to service the request.", Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(HomeActivity.this, "An unknown error occurred.", Toast.LENGTH_LONG).show();
             }
         });
     }
 
     @Override
     public void disconnect() {
-        final DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_detail);
+        final DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager().findFragmentById(R.id.frag_detail);
         fragment.resetViews();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onFailure(int reasonCode) {
+                if (reasonCode == WifiP2pManager.ERROR)
+                    Toast.makeText(HomeActivity.this, "The operation failed due to an internal error.", Toast.LENGTH_LONG).show();
+                else if (reasonCode == WifiP2pManager.P2P_UNSUPPORTED)
+                    Toast.makeText(HomeActivity.this, "The operation failed because p2p is unsupported on the device.", Toast.LENGTH_LONG).show();
+                else if (reasonCode == WifiP2pManager.BUSY)
+                    Toast.makeText(HomeActivity.this, "The device is busy and unable to service the request.", Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(HomeActivity.this, "Unknown error occurred.", Toast.LENGTH_LONG).show();
             }
 
             @Override
