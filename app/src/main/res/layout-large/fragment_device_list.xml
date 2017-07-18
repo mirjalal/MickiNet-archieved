@@ -5,27 +5,25 @@
               android:orientation="vertical">
 
     <TextView
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:paddingStart="@dimen/activity_horizontal_margin"
             android:paddingEnd="@dimen/activity_horizontal_margin"
             android:textStyle="bold"
-            android:text="@string/label_me"
-            android:textAlignment="textStart"
-            android:paddingStart="@dimen/large_screen_padding_left"/>
+            android:text="@string/label_me"/>
 
     <android.support.v7.widget.CardView
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/this_device"
-            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:paddingStart="@dimen/activity_horizontal_margin"
             android:paddingEnd="@dimen/activity_horizontal_margin"
             android:layout_marginTop="7dp"
             android:layout_marginEnd="10dp"
             android:layout_marginStart="10dp"
             android:layout_marginBottom="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="70dp"
             android:elevation="5dp"
             android:layout_gravity="center"
             android:clickable="true"
@@ -36,17 +34,17 @@
 
         <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="match_parent">
 
             <ImageView
                     android:id="@+id/icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/machine"
-                    android:paddingStart="5dp"
                     android:layout_alignParentTop="true"
-                    android:paddingTop="@dimen/large_screen_icon_padding_top"
-                    android:paddingEnd="5dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginEnd="5dp"
                     android:contentDescription="@string/my_machine"/>
 
             <TextView
@@ -54,7 +52,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/name"
-                    android:paddingTop="5dp"
+                    android:layout_marginTop="5dp"
                     android:textStyle="bold"
                     android:layout_toEndOf="@+id/icon"
                     android:gravity="center_vertical"/>
@@ -63,7 +61,7 @@
                     android:id="@+id/my_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="5dp"
+                    android:layout_marginTop="5dp"
                     android:layout_toEndOf="@+id/name"
                     android:gravity="center_vertical"/>
 
@@ -72,7 +70,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/status"
-                    android:paddingTop="5dp"
+                    android:layout_marginTop="5dp"
                     android:textStyle="bold"
                     android:layout_toEndOf="@+id/icon"
                     android:layout_below="@+id/name"
@@ -82,7 +80,7 @@
                     android:id="@+id/my_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="5dp"
+                    android:layout_marginTop="5dp"
                     android:layout_below="@id/my_name"
                     android:layout_toEndOf="@+id/status"
                     android:gravity="center_vertical"/>
@@ -92,7 +90,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/mac_address"
-                    android:paddingTop="5dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
                     android:textStyle="bold"
                     android:layout_toEndOf="@+id/icon"
                     android:layout_below="@+id/status"
@@ -102,7 +101,8 @@
                     android:id="@+id/my_address"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="5dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
                     android:layout_below="@id/my_status"
                     android:layout_toEndOf="@+id/address"
                     android:gravity="center_vertical"/>
@@ -113,7 +113,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:paddingStart="@dimen/large_screen_padding_left"
+            android:paddingStart="@dimen/activity_horizontal_margin"
             android:paddingEnd="@dimen/activity_horizontal_margin"
             android:textStyle="bold"
             android:text="@string/label_peers"/>
@@ -131,7 +131,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:paddingStart="@dimen/large_screen_padding_left"
+            android:paddingStart="@dimen/activity_horizontal_margin"
             android:paddingEnd="@dimen/activity_horizontal_margin"
             android:layout_marginTop="7dp"
             android:text="@string/empty_message"/>

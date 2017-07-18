@@ -1,25 +1,29 @@
-package com.talmir.mickinet.helpers;
+package com.talmir.mickinet.helpers.background;
+
+import com.google.firebase.crash.FirebaseCrash;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.NotificationCompat;
-import android.util.Log;
+import android.view.View;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.activities.HomeActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -28,24 +32,25 @@ import java.nio.charset.Charset;
 import java.util.Date;
 
 /**
- * A custom class that receives stream and saves in
- * device storage.
- *
- *
+ * A custom class that receives stream and saves it
+ * as file in device storage.
  */
 public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
-    // TODO: should be changed to List<String> clientIpAddressList in future
     private static String clientIpAddress = "";
-    private Context context;
+    private Context mContext;
+    private View mView;
 
     private int id;
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
 
-    public FileReceiverAsyncTask(Context context) {
-        this.context = context;
+    public FileReceiverAsyncTask(Context context, View view) {
+        mContext = context;
+        mView = view;
     }
+
+    public static void setClientIpAddress(@NonNull String ipAddress) { clientIpAddress = ipAddress; }
 
     public static String getClientIpAddress() {
         return clientIpAddress;
@@ -64,9 +69,9 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
      * @return absolute path of saved file
      */
     @Nullable
-    private static String saveFile(InputStream inputStream) {
+    private String saveFile(InputStream inputStream) {
         // recommended max buffer size is 8192.
-        // read about in: http://stackoverflow.com/a/19561265/4057688
+        // read about more: http://stackoverflow.com/a/19561265/4057688
         byte buf[] = new byte[8192];
 
         int len;
@@ -101,8 +106,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             inputStream.close();
 
             return receivedFile.getAbsolutePath();
-        } catch (IOException e) {
-            Log.d(HomeActivity.TAG, e.toString());
+        } catch (Exception e) {
             return null;
         }
     }
@@ -121,29 +125,29 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     protected String doInBackground(Void... params) {
         try {
             ServerSocket serverSocket = new ServerSocket(4126);
-            Log.d(HomeActivity.TAG, "Server: Socket opened");
             Socket client = serverSocket.accept();
-
-            // generate unique id to show new notification each time a file received
-            id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
-            mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            mBuilder = new NotificationCompat.Builder(context);
-
-            // Issues the notification
-            mBuilder.setTicker("Receiving the file")
-                    .setContentTitle("File Receive")
-                    .setContentText("Receiving the file")
-                    .setSmallIcon(android.R.drawable.stat_sys_download)
-                    .setOngoing(true)
-                    .setSound(Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.file_receive))
-                    .setProgress(0, 0, true);
-
-            mNotifyManager.notify(id, mBuilder.build());
 
             final String temp_str = client.getRemoteSocketAddress().toString();
             clientIpAddress = temp_str.substring(1, temp_str.indexOf(':'));
 
-            Log.d(HomeActivity.TAG, "Server: connection done");
+            // generate unique id to show a new notification each time a file received
+            id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
+            mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+            mBuilder = new NotificationCompat.Builder(mContext);
+
+            // Issues the notification
+            mBuilder.setTicker(mContext.getString(R.string.receiving_file))
+                    .setContentTitle(mContext.getString(R.string.file_receive))
+                    .setContentText(mContext.getString(R.string.receiving_file))
+                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setOngoing(true)
+//                    .setSound(Uri.parse("android.resource://" + mContext.getPackageName() + "/" + R.raw.file_receive))
+                    .setProgress(0, 0, true);
+
+            mNotifyManager.notify(id, mBuilder.build());
+
+//            final String temp_str = client.getRemoteSocketAddress().toString();
+//            clientIpAddress = temp_str.substring(1, temp_str.indexOf(':'));
 
             InputStream inputStream = client.getInputStream();
             final String result = saveFile(inputStream);
@@ -153,7 +157,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             return result;
         } catch (Exception e) {
-            Log.e(HomeActivity.TAG, e.getMessage());
+            FirebaseCrash.log(FileReceiverAsyncTask.class.getName());
+            FirebaseCrash.report(e);
             return null;
         }
     }
@@ -162,30 +167,63 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     protected void onPostExecute(String result) {
         if (result != null) {
             // intent to open received file from notification click
-            Intent openReceivedFile = new Intent(Intent.ACTION_VIEW);
+            final Intent openReceivedFile = new Intent(Intent.ACTION_VIEW);
             openReceivedFile.setDataAndType(
                     Uri.parse("file://" + result),
                     MimeTypeMap.getSingleton().getMimeTypeFromExtension(result.substring(result.lastIndexOf('.') + 1))
             );
 
-            PendingIntent notificationPendingIntent = PendingIntent.getActivity(context, 0, openReceivedFile, PendingIntent.FLAG_ONE_SHOT);
+            PendingIntent notificationPendingIntent = PendingIntent.getActivity(mContext, 0, openReceivedFile, PendingIntent.FLAG_ONE_SHOT);
 
-            mBuilder.setTicker("File received")
-                    .setContentTitle("File received")
+            mBuilder.setTicker(mContext.getString(R.string.file_received))
+                    .setContentTitle(mContext.getString(R.string.file_received))
                     .setContentText(result.substring(result.lastIndexOf('/') + 1))
                     .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_done : android.R.drawable.stat_sys_download_done)
-                    .setOngoing(false)
                     .setProgress(0, 0, false)
-                    .setContentIntent(notificationPendingIntent)
-                    .setLights(Color.rgb(0, 218, 214), 700, 500);
+                    .setOngoing(false)
+                    .setContentIntent(notificationPendingIntent);
+
+            SharedPreferences notificationSettings = PreferenceManager.getDefaultSharedPreferences(mContext);
+            if (notificationSettings.getBoolean("notifications_new_file_receive", false)) {
+                mBuilder.setSound(
+                        Uri.parse(
+                                PreferenceManager.getDefaultSharedPreferences(mContext).getString(
+                                        "notifications_new_file_receive_ringtone",
+                                        "android.resource://" + mContext.getPackageName() + "/" + R.raw.file_receive)
+                        )
+                );
+
+                if (notificationSettings.getBoolean("notifications_new_file_receive_vibrate", true))
+                    mBuilder.setVibrate(new long[]{500});
+
+                mBuilder.setLights(
+                        Color.parseColor("#" + notificationSettings.getString("notifications_new_file_receive_led_light", mContext.getString(R.string.cyan_color))),
+                        700,
+                        500
+                );
+            } else {
+                mBuilder.setSound(Uri.parse("android.resource://" + mContext.getPackageName() + "/" + R.raw.file_receive));
+
+                mBuilder.setLights(
+                    Color.parseColor("#" + mContext.getString(R.string.cyan_color)), 700, 500
+                );
+            }
 
             mNotifyManager.notify(id, mBuilder.build());
+
+            Snackbar.make(mView, mContext.getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
+                    .setAction(mContext.getString(R.string.open_file), new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mContext.startActivity(openReceivedFile);
+                        }
+                    })
+                    .show();
         } else {
-            mBuilder.setContentText("An error occurred. File receive failed.")
-                    .setTicker("File does not received")
+            mBuilder.setContentText(mContext.getString(R.string.file_receive_fail))
+                    .setTicker(mContext.getString(R.string.file_is_not_received))
+                    .setSmallIcon(android.R.drawable.stat_notify_error)
                     .setProgress(0, 0, false)
-                    .setSmallIcon(android.R.drawable.stat_sys_download_done)
-                    .setLights(Color.rgb(0, 78, 142), 1000, 700)
                     .setOngoing(false);
 
             mNotifyManager.notify(id, mBuilder.build());

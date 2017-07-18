@@ -22,8 +22,6 @@ import com.talmir.mickinet.fragments.SlideFragment;
 
 public class IntroductionActivity extends AppIntro {
 
-    private static Fragment currentFragment;
-
     /** ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ */
     private static final String[] CAMERA_PERMISSIONS = {
             Manifest.permission.CAMERA
@@ -49,19 +47,15 @@ public class IntroductionActivity extends AppIntro {
     }
 
     private boolean hasPermission(String permission) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            return (PackageManager.PERMISSION_GRANTED == checkSelfPermission(permission));
-        return true;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (PackageManager.PERMISSION_GRANTED == checkSelfPermission(permission));
     }
     /** -------------------------------- Permissions ------------------------------------ */
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         showStatusBar(false);
-        showSkipButton(false);
+//        showSkipButton(true);
 
         addSlide(SlideFragment.newInstance(R.layout.slide1));
         addSlide(SlideFragment.newInstance(R.layout.slide2));
@@ -76,11 +70,22 @@ public class IntroductionActivity extends AppIntro {
 //        askForPermissions(new String[]{Manifest.permission.CAMERA}, 4);
     }
 
+//    @Override
+//    public void onSkipPressed(Fragment currentFragment) {
+//        super.onSkipPressed(currentFragment);
+//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+//        SharedPreferences.Editor edit = prefs.edit();
+//        edit.putBoolean("firstTimeRun?", Boolean.TRUE);
+//        edit.apply();
+//        finish();
+//    }
+
     @Override
     public void onDonePressed(Fragment currentFragment) {
+        super.onDonePressed(currentFragment);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         SharedPreferences.Editor edit = prefs.edit();
-        edit.putBoolean("loseVirginity?", Boolean.TRUE);
+        edit.putBoolean("firstTimeRun?", Boolean.TRUE);
         edit.apply();
         finish();
     }
@@ -92,7 +97,6 @@ public class IntroductionActivity extends AppIntro {
 
     @Override
     public void onSlideChanged(@Nullable Fragment oldFragment, @Nullable Fragment newFragment) {
-        currentFragment = newFragment;
         if (newFragment != null) {
             if (newFragment.getTag().endsWith(":2"))
             {

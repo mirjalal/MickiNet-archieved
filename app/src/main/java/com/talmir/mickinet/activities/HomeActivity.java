@@ -3,17 +3,16 @@ package com.talmir.mickinet.activities;
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -27,20 +26,21 @@ import android.widget.Toast;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
-import com.talmir.mickinet.helpers.IDeviceActionListener;
-import com.talmir.mickinet.helpers.WiFiDirectBroadcastReceiver;
+import com.talmir.mickinet.helpers.background.IDeviceActionListener;
+import com.talmir.mickinet.helpers.background.WiFiDirectBroadcastReceiver;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
 
-    public static final String TAG = "com.talmir.mickinet";
-
-    /**
-     * ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++
-     */
+    // ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ /
     private static final int INITIAL_REQUEST = 603;
     private static final int CAMERA_REQUEST = 376;
     private static final int STORAGE_REQUEST = 759;
-    private static final int CONTACTS_REQUEST = 623;
+//    private static final int CONTACTS_REQUEST = 623;
 
     private static final String CAMERA_PERMISSIONS = Manifest.permission.CAMERA;
     private static final String CONTACTS_PERMISSION = Manifest.permission.READ_CONTACTS;
@@ -71,11 +71,9 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private boolean hasPermission(String permission) {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (PackageManager.PERMISSION_GRANTED == checkSelfPermission(permission));
     }
-    /** -------------------------------- Permissions ------------------------------------ */
+    // -------------------------------- Permissions ------------------------------------ //
 
-    /**
-     * +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++
-     */
+    // +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++ //
     private final IntentFilter intentFilter = new IntentFilter();
     private WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
@@ -121,15 +119,15 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             }
 
             @Override
-            public void onFailure(int reason) {
-                if (reason == WifiP2pManager.ERROR)
-                    Toast.makeText(HomeActivity.this, "The operation failed due to an internal error.", Toast.LENGTH_LONG).show();
-                else if (reason == WifiP2pManager.P2P_UNSUPPORTED)
-                    Toast.makeText(HomeActivity.this, "The operation failed because p2p is unsupported on the device.", Toast.LENGTH_LONG).show();
-                else if (reason == WifiP2pManager.BUSY)
-                    Toast.makeText(HomeActivity.this, "The device is busy and unable to service the request.", Toast.LENGTH_LONG).show();
+            public void onFailure(int reasonCode) {
+                if (reasonCode == WifiP2pManager.ERROR)
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_1, Toast.LENGTH_LONG).show();
+                else if (reasonCode == WifiP2pManager.P2P_UNSUPPORTED)
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_2, Toast.LENGTH_LONG).show();
+                else if (reasonCode == WifiP2pManager.BUSY)
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_3, Toast.LENGTH_LONG).show();
                 else
-                    Toast.makeText(HomeActivity.this, "An unknown error occurred.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_4, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -140,20 +138,20 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         fragment.resetViews();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
-            public void onFailure(int reasonCode) {
-                if (reasonCode == WifiP2pManager.ERROR)
-                    Toast.makeText(HomeActivity.this, "The operation failed due to an internal error.", Toast.LENGTH_LONG).show();
-                else if (reasonCode == WifiP2pManager.P2P_UNSUPPORTED)
-                    Toast.makeText(HomeActivity.this, "The operation failed because p2p is unsupported on the device.", Toast.LENGTH_LONG).show();
-                else if (reasonCode == WifiP2pManager.BUSY)
-                    Toast.makeText(HomeActivity.this, "The device is busy and unable to service the request.", Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(HomeActivity.this, "Unknown error occurred.", Toast.LENGTH_LONG).show();
+            public void onSuccess() {
+                fragment.getView().setVisibility(View.GONE);
             }
 
             @Override
-            public void onSuccess() {
-                fragment.getView().setVisibility(View.GONE);
+            public void onFailure(int reasonCode) {
+                if (reasonCode == WifiP2pManager.ERROR)
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_1, Toast.LENGTH_LONG).show();
+                else if (reasonCode == WifiP2pManager.P2P_UNSUPPORTED)
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_2, Toast.LENGTH_LONG).show();
+                else if (reasonCode == WifiP2pManager.BUSY)
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_3, Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(getApplicationContext(), R.string.discovery_error_4, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -162,50 +160,49 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public void onChannelDisconnected() {
         // we will try once more
         if (manager != null && !retryChannel) {
-            Toast.makeText(this, "Channel lost. Trying again", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.channel_lost, Toast.LENGTH_LONG).show();
             resetData();
             retryChannel = true;
-            manager.initialize(this, getMainLooper(), this);
+            manager.initialize(getApplicationContext(), getMainLooper(), this);
         } else {
-            Toast.makeText(
-                    this,
-                    "Severe! Channel is probably lost permanently. Try Disable/Re-Enable P2P.",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.connection_lost_permanently, Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     public void cancelDisconnect() {
-        /**
+        /*
          * A cancel abort request by user. Disconnect i.e. removeGroup if
          * already connected. Else, request WifiP2pManager to abort the ongoing
          * request
          */
         if (manager != null) {
             final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
-            if (fragment.getDevice() == null
-                    || fragment.getDevice().status == WifiP2pDevice.CONNECTED) {
+            if (fragment.getDevice() == null || fragment.getDevice().status == WifiP2pDevice.CONNECTED) {
                 disconnect();
-            } else if (fragment.getDevice().status == WifiP2pDevice.AVAILABLE
-                    || fragment.getDevice().status == WifiP2pDevice.INVITED) {
+            } else if (fragment.getDevice().status == WifiP2pDevice.AVAILABLE || fragment.getDevice().status == WifiP2pDevice.INVITED) {
                 manager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(HomeActivity.this, "Aborting connection", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), R.string.aborting_connection, Toast.LENGTH_LONG).show();
                     }
 
                     @Override
                     public void onFailure(int reasonCode) {
-                        Toast.makeText(HomeActivity.this,
-                                "Connect abort request failed. Reason Code: " + reasonCode, Toast.LENGTH_LONG).show();
+                        if (reasonCode == WifiP2pManager.ERROR)
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_1, Toast.LENGTH_LONG).show();
+                        else if (reasonCode == WifiP2pManager.P2P_UNSUPPORTED)
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_2, Toast.LENGTH_LONG).show();
+                        else if (reasonCode == WifiP2pManager.BUSY)
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_3, Toast.LENGTH_LONG).show();
+                        else
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_4, Toast.LENGTH_LONG).show();
                     }
                 });
             }
         }
     }
-    /**
-     * --------------------------- WiFi Direct specific --------------------------------
-     */
+    // --------------------------- WiFi Direct specific -------------------------------- //
 
     // Great article!
     // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
@@ -219,9 +216,9 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             @Override
             public void run() {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-                boolean previouslyStarted = prefs.getBoolean("loseVirginity?", false);
+                boolean previouslyStarted = prefs.getBoolean("firstTimeRun?", false);
                 if (!previouslyStarted)
-                    startActivity(new Intent(HomeActivity.this, IntroductionActivity.class));
+                    startActivity(new Intent(getApplicationContext(), IntroductionActivity.class));
             }
         });
         t.start();
@@ -232,6 +229,8 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             if (!canAccessCamera() || !canAccessExternalStorage() || !canAccessContacts())
                 requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
 
+        copyRawFile(R.raw.file_receive);
+
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -239,8 +238,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-
-        channel = manager.initialize(this, getMainLooper(), null);
+        channel = manager.initialize(getApplicationContext(), getMainLooper(), null);
 
 //        Intent intent = getIntent();
 //        if (intent.getAction().equals(Intent.ACTION_SEND) && intent.getType() != null) {
@@ -257,15 +255,15 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         switch (requestCode) {
             case CAMERA_REQUEST:
                 if (canAccessCamera())
-                    Toast.makeText(this, "camera thing", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "camera thing", Toast.LENGTH_LONG).show();
                 else
-                    Toast.makeText(this, "camera thing no", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "camera thing no", Toast.LENGTH_LONG).show();
                 break;
             case STORAGE_REQUEST:
                 if (canAccessExternalStorage())
-                    Toast.makeText(this, "storage thing", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "storage thing", Toast.LENGTH_LONG).show();
                 else
-                    Toast.makeText(this, "storage no", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "storage no", Toast.LENGTH_LONG).show();
                 break;
         }
     }
@@ -283,41 +281,9 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             case R.id.action_discover:
                 if (!isWifiP2pEnabled) {
                     AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(this).create();
-                    wifiOnOffAlertDialog.setTitle("Turn on WiFi?");
-                    wifiOnOffAlertDialog.setMessage("WiFi is turned off. Before starting discovery MickiNet needs to enable WiFi.");
+                    wifiOnOffAlertDialog.setTitle(getString(R.string.turn_on_wifi));
+                    wifiOnOffAlertDialog.setMessage(getString(R.string.turn_on_wifi_message));
                     wifiOnOffAlertDialog.setIcon(R.drawable.ic_signal_wifi_off);
-                    wifiOnOffAlertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "turn on", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                            wifi.setWifiEnabled(true);
-                            try {
-                                Thread.sleep(700); // .5 sec is enough to wait...
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            dialog.dismiss();
-                            final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
-                            fragment.onInitiateDiscovery();
-                            manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-                                @Override
-                                public void onSuccess() {
-                                    Toast.makeText(HomeActivity.this, "Discovery started", Toast.LENGTH_LONG).show();
-                                }
-
-                                @Override
-                                public void onFailure(int reasonCode) {
-                                    Toast.makeText(HomeActivity.this, "Discovery failed.", Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        }
-                    });
-                    wifiOnOffAlertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
                     wifiOnOffAlertDialog.setCancelable(true);
                     wifiOnOffAlertDialog.show();
                     return true;
@@ -327,23 +293,25 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(HomeActivity.this, "Discovery started", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), R.string.discovery_started, Toast.LENGTH_LONG).show();
                     }
 
                     @Override
                     public void onFailure(int reasonCode) {
-                        Toast.makeText(HomeActivity.this, "Discovery failed. Reason code: " + reasonCode, Toast.LENGTH_LONG).show();
+                        if (reasonCode == WifiP2pManager.ERROR)
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_1, Toast.LENGTH_LONG).show();
+                        else if (reasonCode == WifiP2pManager.P2P_UNSUPPORTED)
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_2, Toast.LENGTH_LONG).show();
+                        else if (reasonCode == WifiP2pManager.BUSY)
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_3, Toast.LENGTH_LONG).show();
+                        else
+                            Toast.makeText(getApplicationContext(), R.string.discovery_error_4, Toast.LENGTH_LONG).show();
                     }
                 });
                 return true;
             case R.id.action_settings:
-                startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
+                startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
                 return true;
-            //        SharedPreferences sh_preference = PreferenceManager.getDefaultSharedPreferences(c);
-//        String strRingtonePreference = sh_preference.getString("notifications_new_message_ringtone", "DEFAULT_SOUND");
-//        boolean vibrate = sh_preference.getBoolean("notifications_new_message_vibrate", true);
-//        Log.e("prefKey", Uri.parse(strRingtonePreference).toString());
-//        Log.e("prefKey", vibrate + "");
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -363,5 +331,42 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public void onPause() {
         super.onPause();
         unregisterReceiver(receiver);
+    }
+
+    /**
+     * Copies a raw resource into the alarms directory on the device's shared storage
+     *
+     * @param resID The resource ID of the raw resource to copy, in the form of R.raw.*
+     */
+    private void copyRawFile(int resID) {
+        // Make sure the shared storage is currently writable
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+            return;
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_NOTIFICATIONS);
+        // Make sure the directory exists
+        // noinspection ResultOfMethodCallIgnored
+        path.mkdirs();
+        File outFile = new File(path, "MickiNet default.mp3");
+        InputStream inputStream = null;
+        FileOutputStream outputStream = null;
+        try {
+            inputStream = getResources().openRawResource(resID);
+            outputStream = new FileOutputStream(outFile);
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) > 0)
+                outputStream.write(buffer, 0, bytesRead);
+        } catch (Exception ignored) {
+
+        } finally {
+            try {
+                if (inputStream != null)
+                    inputStream.close();
+                if (outputStream != null)
+                    outputStream.close();
+            } catch (IOException e) {
+                // Means there was an error trying to close the streams, so do nothing
+            }
+        }
     }
 }

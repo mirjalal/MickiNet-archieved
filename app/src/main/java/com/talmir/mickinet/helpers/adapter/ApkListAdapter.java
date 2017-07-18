@@ -15,6 +15,10 @@ import com.talmir.mickinet.helpers.ui.IBubbleTextGetter;
 
 import java.util.List;
 
+/**
+ * @author miri
+ * @since 4/30/17
+ */
 public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewHolder> implements IBubbleTextGetter {
 
     private static SortedList<ApplicationInfo> applicationInfoSortedList;
@@ -71,7 +75,6 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
                 notifyItemMoved(fromPosition, toPosition);
             }
         });
-
         applicationInfoSortedList.addAll(applicationInfoList);
     }
 

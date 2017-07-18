@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.talmir.mickinet">
 
-    <!-- filtering for Play Store -->
     <uses-feature
             android:name="android.hardware.wifi.direct"
             android:required="true"/>
@@ -60,13 +59,17 @@
 
         <service
                 android:name=".services.FileTransferService"
+                android:exported="false"
+                android:enabled="true"/>
+
+        <service
+                android:name=".services.CountdownService"
+                android:enabled="true"
                 android:exported="false"/>
 
         <activity
                 android:name=".activities.IntroductionActivity"
-                android:label="@string/app_name"
                 android:theme="@style/AppTheme1"/>
-
         <activity
                 android:name=".activities.HomeActivity"
                 android:configChanges="orientation|keyboardHidden"
@@ -77,13 +80,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-             <!--<intent-filter>-->
-             <!--<action android:name="android.intent.action.GET_CONTENT"/>-->
-             <!--<action android:name="android.intent.action.SEND"/>-->
-             <!--<action android:name="android.intent.action.SEND_MULTIPLE"/>-->
-             <!--<category android:name="android.intent.category.DEFAULT"/>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.GET_CONTENT"/> -->
+            <!-- <action android:name="android.intent.action.SEND"/> -->
+            <!-- <action android:name="android.intent.action.SEND_MULTIPLE"/> -->
+            <!-- <category android:name="android.intent.category.DEFAULT"/> -->
             <!-- <data android:mimeType="*/*"/> -->
-             <!--</intent-filter>-->
+            <!-- </intent-filter> -->
         </activity>
         <activity
                 android:name=".activities.SettingsActivity"
@@ -96,6 +99,7 @@
         </activity>
         <activity
                 android:name=".activities.ApkShareActivity"
+                android:label="@string/pick_apk"
                 android:launchMode="singleTop"
                 android:parentActivityName=".activities.HomeActivity"
                 android:theme="@style/AppTheme">
@@ -111,6 +115,7 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="com.talmir.mickinet.activities.HomeActivity"/>
         </activity>
+
     </application>
 
 </manifest>

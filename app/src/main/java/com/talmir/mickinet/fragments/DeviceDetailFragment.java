@@ -1,5 +1,7 @@
 package com.talmir.mickinet.fragments;
 
+import com.google.firebase.crash.FirebaseCrash;
+
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -11,9 +13,8 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatDelegate;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,22 +26,20 @@ import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.ApkShareActivity;
-import com.talmir.mickinet.helpers.FileReceiverAsyncTask;
-import com.talmir.mickinet.helpers.IDeviceActionListener;
+import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
+import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 import com.talmir.mickinet.services.FileTransferService;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class DeviceDetailFragment extends Fragment implements WifiP2pManager.ConnectionInfoListener {
 
+    private static final int ACTION_CHOOSE_APP_RESULT_CODE = 290;
+    private static final int ACTION_CHOOSE_FILE_RESULT_CODE = 551;
     private static final int ACTION_TAKE_PICTURE_RESULT_CODE = 640;
     private static final int ACTION_TAKE_VIDEO_RESULT_CODE = 722;
-    private static final int ACTION_CHOOSE_FILE_RESULT_CODE = 551;
-    private static final int ACTION_CHOOSE_APP_RESULT_CODE = 290;
 
     private View mContentView = null;
     private static WifiP2pInfo info;
@@ -74,8 +73,8 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     public void onClick(View v) {
                         if (deviceType == 1) {
                             chooseAction();
-                        }
-                        else {
+                        } else {
+                            sendIpAddress();
                             if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
                                 Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
                             else {
@@ -85,6 +84,193 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     }
                 });
         return mContentView;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case ACTION_TAKE_PICTURE_RESULT_CODE:
+                // User has taken a picture. Transfer it to group owner i.e peer using FileTransferService
+                if (data != null && data.getData() != null) {
+                    Uri uri = data.getData();
+                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
+                    serviceIntent.putExtra(
+                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
+                    );
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+                    getActivity().startService(serviceIntent);
+                } else {
+                    Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
+                    t.setGravity(Gravity.CENTER, 0, 0);
+                    t.show();
+                }
+                break;
+            case ACTION_TAKE_VIDEO_RESULT_CODE:
+                // User has taken a video. Transfer it to group owner i.e peer using
+                // FileTransferService.
+                if (data != null && data.getData() != null) {
+                    Uri uri = data.getData();
+                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
+                    serviceIntent.putExtra(
+                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
+                    );
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+                    getActivity().startService(serviceIntent);
+                } else {
+                    Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
+                    t.setGravity(Gravity.CENTER, 0, 0);
+                    t.show();
+                }
+                break;
+            case ACTION_CHOOSE_FILE_RESULT_CODE:
+                // User has picked a file. Transfer it to group owner i.e peer using
+                // FileTransferService.
+                if (data != null && data.getData() != null) {
+                    Uri uri = data.getData();
+                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
+                    serviceIntent.putExtra(
+                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
+                    );
+                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+                    getActivity().startService(serviceIntent);
+                } else {
+                    Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
+                    t.setGravity(Gravity.CENTER, 0, 0);
+                    t.show();
+                }
+                break;
+            case ACTION_CHOOSE_APP_RESULT_CODE:
+                if (data != null && data.getExtras().getBoolean("share_apk")) {
+                    String apk_dir = data.getExtras().getString("apk_dir");
+                    String apk_name = data.getExtras().getString("apk_name");
+                    if (apk_dir != null && apk_name != null) {
+                        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+                        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, "file://" + apk_dir);
+                        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, apk_name + ".apk");
+                        serviceIntent.putExtra(
+                                FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                                deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
+                        );
+                        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+                        getActivity().startService(serviceIntent);
+                    } else {
+                        FirebaseCrash.log("DeviceDetailFragment");
+                    }
+                } else {
+                    Toast t = Toast.makeText(getActivity(), R.string.pick_an_app, Toast.LENGTH_LONG);
+                    t.setGravity(Gravity.CENTER, 0, 0);
+                    t.show();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+        if (progressDialog != null && progressDialog.isShowing())
+            progressDialog.dismiss();
+
+        DeviceDetailFragment.info = info;
+        this.getView().setVisibility(View.VISIBLE);
+
+        new FileReceiverAsyncTask(getActivity(), this.getView()).execute();
+
+        if (info.groupFormed && info.isGroupOwner) {
+            Thread ipReceiverThread = receiveIpAddress();
+            ipReceiverThread.setPriority(10);
+            ipReceiverThread.start();
+
+            deviceType = 0;
+            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
+
+            if (!ipReceiverThread.isInterrupted())
+                ipReceiverThread.interrupt();
+        } else if (info.groupFormed) {
+            Thread ipSenderThread = sendIpAddress();
+            ipSenderThread.setPriority(10);
+            ipSenderThread.start();
+
+            // The other device acts as the client. In this case, we enable the
+            // get file button.
+            deviceType = 1;
+
+            // TODO: create listener to receive other connected clients' detail (IP, MAC, and other details of a new connected device)
+
+            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
+            ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources().getString(R.string.client_text));
+
+            if (!ipSenderThread.isInterrupted())
+                ipSenderThread.interrupt();
+        }
+    }
+
+    @NonNull
+    private synchronized Thread sendIpAddress() {
+        return new Thread(new Runnable() {
+            public void run () {
+                Socket socket = null;
+                try {
+                    socket = new Socket();
+                    socket.bind(null);
+                    socket.connect((new InetSocketAddress("192.168.49.1", 10000)), 5000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (socket != null) {
+                        if (!socket.isClosed()) {
+                            try {
+                                socket.close();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    @NonNull
+    private synchronized Thread receiveIpAddress() {
+        return new Thread(new Runnable() {
+            public void run() {
+                ServerSocket serverSocket = null;
+                try {
+                    serverSocket = new ServerSocket();
+                    serverSocket.setReuseAddress(true);
+                    if (!serverSocket.isBound())
+                        serverSocket.bind(new InetSocketAddress(10000), 1);
+
+                    if (serverSocket != null && serverSocket.isBound() && !serverSocket.isClosed()) {
+                        String clientIP = serverSocket.accept().getRemoteSocketAddress().toString();
+                        FileReceiverAsyncTask.setClientIpAddress(clientIP.substring(1, clientIP.indexOf(':')));
+                    }
+                } catch (Exception ignored) {  } finally {
+                    try {
+                        if (serverSocket != null && !serverSocket.isClosed())
+                            serverSocket.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        });
     }
 
     private void chooseAction() {
@@ -137,7 +323,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
             }
         });
-        dialog.setTitle("Choose action");
+        dialog.setTitle(R.string.choose_action);
         dialog.setView(view);
         dialog.show();
     }
@@ -152,149 +338,15 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     cursor.close();
                 }
             } catch (NullPointerException e) {
-                Log.w("cursor exception", e.getMessage());
             }
         }
         if (result == null) {
             result = uri.getPath();
             int cut = result.lastIndexOf('/');
-            if (cut != -1) {
+            if (cut != -1)
                 result = result.substring(cut + 1);
-            }
         }
         return result;
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            case ACTION_TAKE_PICTURE_RESULT_CODE:
-                // User has taken a picture. Transfer it to group owner i.e peer using
-                // FileTransferService.
-                if (data != null && data.getData() != null) {
-                    Uri uri = data.getData();
-                    Log.e("filename", getFileName(uri));
-                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
-                    serviceIntent.putExtra(
-                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
-                                    FileReceiverAsyncTask.getClientIpAddress()
-                    );
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
-                    getActivity().startService(serviceIntent);
-                } else {
-                    Toast t = Toast.makeText(getActivity(), "No file selected", Toast.LENGTH_LONG);
-                    t.setGravity(Gravity.CENTER, 0, 0);
-                    t.show();
-                }
-                break;
-            case ACTION_TAKE_VIDEO_RESULT_CODE:
-                // User has taken a video. Transfer it to group owner i.e peer using
-                // FileTransferService.
-                if (data != null && data.getData() != null) {
-                    Uri uri = data.getData();
-                    Log.e("filename", getFileName(uri));
-                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
-                    serviceIntent.putExtra(
-                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
-                                    FileReceiverAsyncTask.getClientIpAddress()
-                    );
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
-                    getActivity().startService(serviceIntent);
-                } else {
-                    Toast t = Toast.makeText(getActivity(), "No file selected", Toast.LENGTH_LONG);
-                    t.setGravity(Gravity.CENTER, 0, 0);
-                    t.show();
-                }
-                break;
-            case ACTION_CHOOSE_FILE_RESULT_CODE:
-                // User has picked a file. Transfer it to group owner i.e peer using
-                // FileTransferService.
-                if (data != null && data.getData() != null) {
-                    Uri uri = data.getData();
-                    Log.e("filename", getFileName(uri));
-                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
-                    serviceIntent.putExtra(
-                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
-                                    FileReceiverAsyncTask.getClientIpAddress()
-                    );
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
-                    getActivity().startService(serviceIntent);
-                } else {
-                    Toast t = Toast.makeText(getActivity(), "No file selected", Toast.LENGTH_LONG);
-                    t.setGravity(Gravity.CENTER, 0, 0);
-                    t.show();
-                }
-                break;
-            case ACTION_CHOOSE_APP_RESULT_CODE:
-                if (data != null && data.getExtras().getBoolean("share_apk")) {
-                    String apk_dir = data.getExtras().getString("apk_dir");
-                    String apk_name = data.getExtras().getString("apk_name");
-                    if (apk_dir != null && apk_name != null) {
-                        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, "file://" + apk_dir);
-                        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, apk_name + ".apk");
-                        serviceIntent.putExtra(
-                                FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                                deviceType == 1 ? info.groupOwnerAddress.getHostAddress() :
-                                        FileReceiverAsyncTask.getClientIpAddress()
-                        );
-                        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
-                        getActivity().startService(serviceIntent);
-                    } else {
-                        Log.e("apk_sharing", "something went wrong.");
-                    }
-                } else {
-                    Toast t = Toast.makeText(getActivity(), "Select an application", Toast.LENGTH_LONG);
-                    t.setGravity(Gravity.CENTER, 0, 0);
-                    t.show();
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    @Override
-    public void onConnectionInfoAvailable(final WifiP2pInfo info) {
-        if (progressDialog != null && progressDialog.isShowing())
-            progressDialog.dismiss();
-
-        DeviceDetailFragment.info = info;
-        this.getView().setVisibility(View.VISIBLE);
-
-        new FileReceiverAsyncTask(getActivity()).execute();
-
-        if (info.groupFormed && info.isGroupOwner) {
-            deviceType = 0;
-            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-
-
-
-        } else if (info.groupFormed) {
-            // The other device acts as the client. In this case, we enable the
-            // get file button.
-            deviceType = 1;
-
-
-
-            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-            ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources().getString(R.string.client_text));
-        }
     }
 
     /**
@@ -317,37 +369,5 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
      */
     public void resetViews() {
         this.getView().setVisibility(View.GONE);
-    }
-
-    @Nullable
-    private byte[] getLocalIPAddress() {
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
-                        if (inetAddress instanceof Inet4Address) {
-                            return inetAddress.getAddress();
-                        }
-                    }
-                }
-            }
-        } catch (SocketException | NullPointerException ex) {
-            //Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()", ex);
-        }
-        return null;
-    }
-
-    private String getDottedDecimalIP(byte[] ipAddr) {
-        //convert to dotted decimal notation:
-        String ipAddrStr = "";
-        for (int i = 0; i < ipAddr.length; i++) {
-            if (i > 0) {
-                ipAddrStr += ".";
-            }
-            ipAddrStr += ipAddr[i] & 0xFF;
-        }
-        return ipAddrStr;
     }
 }

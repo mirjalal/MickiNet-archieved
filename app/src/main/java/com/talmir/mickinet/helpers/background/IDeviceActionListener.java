@@ -1,4 +1,4 @@
-package com.talmir.mickinet.helpers;
+package com.talmir.mickinet.helpers.background;
 
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;

@@ -1,15 +1,20 @@
 package com.talmir.mickinet.services;
 
+import com.google.firebase.crash.FirebaseCrash;
+
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v7.app.NotificationCompat;
-import android.util.Log;
 
-import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.R;
+import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,12 +41,17 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
     private static final int SOCKET_TIMEOUT = 5000;
 
-    public FileTransferService(String name) {
-        super(name);
-    }
-
     public FileTransferService() {
         super("FileTransferService");
+    }
+
+    /**
+     * Creates an IntentService.  Invoked by your subclass's constructor.
+     *
+     * @param name Used to name the worker thread, important only for debugging.
+     */
+    public FileTransferService(String name) {
+        super(name);
     }
 
     /**
@@ -80,24 +90,19 @@ public class FileTransferService extends IntentService {
                 try {
                     inputStream = cr.openInputStream(Uri.parse(fileUri));
                 } catch (FileNotFoundException e) {
-                    Log.d(HomeActivity.TAG, e.toString());
+                    FirebaseCrash.log(FileTransferService.class.getName());
                 }
-
                 // put all data to stream
                 copyFile(inputStream, outputStream, context);
-
-                Log.d(HomeActivity.TAG, "Client: Data written");
-            } catch (IOException e) {
-                Log.e(HomeActivity.TAG, e.getMessage());
+            } catch (Exception e) {
+                FirebaseCrash.log(FileReceiverAsyncTask.class.getName());
+                FirebaseCrash.report(e);
             } finally {
-                if (socket != null) {
-                    if (socket.isConnected()) {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            // Give up
-                            e.printStackTrace();
-                        }
+                if (socket.isConnected()) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        // Give up
                     }
                 }
             }
@@ -111,60 +116,78 @@ public class FileTransferService extends IntentService {
      * @return file name length as byte[]
      */
     private static byte[] getByteArrayFromInt(int value) {
-        return new byte[]{
-                (byte) (value >> 24),
-                (byte) (value >> 16),
-                (byte) (value >> 8),
-                (byte) value};
+        return new byte[]{ (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value };
     }
 
     /**
-     * Sends data
-     *
      * @param inputStream input stream
      * @param out outputstream
-     * @param c context
-     * @return true if succeeded, false otherwise
+     * @param context context
      */
-    private boolean copyFile(InputStream inputStream, OutputStream out, Context c) {
+    private void copyFile(InputStream inputStream, OutputStream out, Context context) {
         // http://stackoverflow.com/a/19561265/4057688
-        byte buf[] = new byte[8192];
+        byte buffer[] = new byte[8192];
         int len;
         try {
             // generate unique id every time to show new notification each time
             int id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
-            NotificationManager mNotifyManager = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(c);
-
+            NotificationManager mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
             // Issues the notification
-            mBuilder.setTicker("File is on the way")
-                    .setContentTitle("Sending file")
+            mBuilder.setTicker(context.getString(R.string.file_send))
+                    .setContentTitle(context.getString(R.string.sending_file))
+                    .setContentText(context.getString(R.string.sending))
                     .setOngoing(true)
-                    .setContentText("Sending...")
                     .setSmallIcon(android.R.drawable.stat_sys_upload)
                     .setProgress(0, 0, true);
-            mNotifyManager.notify(id, mBuilder.build());
 
-            while ((len = inputStream.read(buf)) != -1)
-                out.write(buf, 0, len);
+            mNotifyManager.notify(id, mBuilder.build());
+            while ((len = inputStream.read(buffer)) != -1)
+                out.write(buffer, 0, len);
 
             out.close();
             out.flush();
             inputStream.close();
 
             // When the loop is finished, updates the notification
-            mBuilder.setTicker("File sent")
-                    .setContentTitle("File sent")
-                    .setContentText("")
+            mBuilder.setTicker(context.getString(R.string.file_sent))
+                    .setContentTitle(context.getString(R.string.file_sent))
+                    .setContentText(context.getString(R.string.successful))
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done)
                     .setOngoing(false)
                     .setProgress(0, 0, false);
-            mNotifyManager.notify(id, mBuilder.build());
 
-            return true;
-        } catch (IOException e) {
-            Log.d(HomeActivity.TAG, e.toString());
-            return false;
+            SharedPreferences notificationSettings = PreferenceManager.getDefaultSharedPreferences(context);
+            if (notificationSettings.getBoolean("notifications_new_file_send", false)) {
+                mBuilder.setSound(
+                        Uri.parse(
+                                PreferenceManager.getDefaultSharedPreferences(context).getString(
+                                        "notifications_new_file_send_ringtone",
+                                        "android.resource://" + context.getPackageName() + "/" + R.raw.file_receive)
+                        )
+                );
+
+                if (notificationSettings.getBoolean("notifications_new_file_send_vibrate", true))
+                    mBuilder.setVibrate(new long[]{500});
+
+                mBuilder.setLights(
+                        Color.parseColor("#" + notificationSettings.getString("notifications_new_file_send_led_light", getString(R.string.cyan_color))),
+                        700,
+                        500
+                );
+            } else {
+                mBuilder.setSound(
+                    Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.file_receive)
+                );
+
+                mBuilder.setLights(
+                    Color.parseColor("#" + getString(R.string.cyan_color)), 700, 500
+                );
+            }
+            mNotifyManager.notify(id, mBuilder.build());
+        } catch (Exception e) {
+            FirebaseCrash.log(FileTransferService.class.getName());
+            FirebaseCrash.report(e);
         }
     }
 }

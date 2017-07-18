@@ -26,6 +26,10 @@ import com.talmir.mickinet.helpers.ui.RecyclerViewFastScroller;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author miri
+ * @since 4/30/17
+ */
 public class ApkShareActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     private PackageManager pm;
@@ -55,15 +59,16 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
 
                 final int firstVisibleItemPosition = findFirstVisibleItemPosition();
                 if (firstVisibleItemPosition != 0) {
-//                     this avoids trying to handle un-needed calls
-                    if (firstVisibleItemPosition == -1)
-//                        not initialized, or no items shown, so hide fast-scroller
+                    // this avoids trying to handle un-needed calls
+                    if (firstVisibleItemPosition == -1) {
+                        // not initialized, or no items shown, so hide fast-scroller
                         fastScroller.setVisibility(View.GONE);
+                    }
                     return;
                 }
                 final int lastVisibleItemPosition = findLastVisibleItemPosition();
                 int itemsShown = lastVisibleItemPosition - firstVisibleItemPosition + 1;
-//                if all items are shown, hide the fast-scroller
+                // if all items are shown, hide the fast-scroller
                 fastScroller.setVisibility(apkListAdapter.getItemCount() > itemsShown ? View.VISIBLE : View.GONE);
             }
         });
@@ -122,15 +127,15 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
         for (ApplicationInfo model : packages) {
             final String package_name_text = model.packageName.toLowerCase();
             final String app_name_text = model.loadLabel(pm).toString().toLowerCase();
-            if (package_name_text.contains(lowerCaseQuery) || app_name_text.contains(lowerCaseQuery)) {
+            if (package_name_text.contains(lowerCaseQuery) || app_name_text.contains(lowerCaseQuery))
                 filteredModelList.add(model);
-            }
         }
 
         ApkListAdapter mimeTypeAdapter = new ApkListAdapter(pm, filteredModelList);
         recyclerView.setAdapter(mimeTypeAdapter);
         mimeTypeAdapter.notifyDataSetChanged();
-        return false;
+
+        return true;
     }
 
     private static class RecyclerItemTouchListener implements RecyclerView.OnItemTouchListener {
@@ -149,7 +154,7 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
                 public void onLongPress(MotionEvent e) {
                     View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
                     if (child != null && clickListener != null) {
-                        clickListener.onLongClick(child, recyclerView.getChildPosition(child));
+                        clickListener.onLongClick(child, recyclerView.getChildAdapterPosition(child));
                     }
                 }
             });

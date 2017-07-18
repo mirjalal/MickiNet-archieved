@@ -29,8 +29,6 @@
                 android:id="@+id/device_details"
                 android:layout_width="fill_parent"
                 android:layout_height="0dip"
-                android:layout_weight="1"
-                android:ellipsize="marquee"
-                android:maxLines="1" />
+                android:layout_weight="1"/>
     </LinearLayout>
 </LinearLayout>

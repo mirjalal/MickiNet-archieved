@@ -41,20 +41,20 @@ public class RecyclerViewFastScroller extends LinearLayout {
 
     public RecyclerViewFastScroller(final Context context, final AttributeSet attrs, final int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        init();
     }
 
     public RecyclerViewFastScroller(final Context context) {
         super(context);
-        init(context);
+        init();
     }
 
     public RecyclerViewFastScroller(final Context context, final AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        init();
     }
 
-    protected void init(Context context) {
+    protected void init() {
         if (isInitialized)
             return;
         isInitialized = true;

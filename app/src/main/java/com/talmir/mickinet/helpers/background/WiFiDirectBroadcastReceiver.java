@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.talmir.mickinet.helpers;
+package com.talmir.mickinet.helpers.background;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

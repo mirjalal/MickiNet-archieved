@@ -8,8 +8,9 @@
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/cardView"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="wrap_content"
             android:clickable="true"
+            android:focusable="true"
             android:foreground="?android:attr/selectableItemBackground"
             android:paddingEnd="16dp"
             android:paddingStart="16dp">
@@ -17,15 +18,17 @@
         <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingBottom="6dp"
-                android:paddingTop="6dp">
+                android:paddingBottom="12dp"
+                android:paddingTop="12dp">
 
             <ImageView
                     android:id="@+id/icon"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
+                    android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
+                    android:layout_marginLeft="23dp"
                     android:layout_marginStart="23dp"
                     android:contentDescription="@string/app_icon"
                     android:src="@color/cardview_dark_background"/>
@@ -36,9 +39,10 @@
                     android:layout_height="wrap_content"
                     android:layout_alignTop="@+id/icon"
                     android:layout_marginStart="19dp"
+                    android:layout_marginLeft="19dp"
                     android:layout_toEndOf="@+id/icon"
-                    android:textStyle="bold"
-                    />
+                    android:layout_toRightOf="@+id/icon"
+                    android:textStyle="bold"/>
 
             <TextView
                     android:id="@+id/package_name"
@@ -46,6 +50,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignBottom="@+id/icon"
                     android:layout_alignStart="@+id/app_name"
+                    android:layout_alignLeft="@+id/app_name"
                     android:layout_below="@id/app_name"/>
 
         </RelativeLayout>

@@ -19,11 +19,8 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     };
 
     private static final int HORIZONTAL_LIST = LinearLayoutManager.HORIZONTAL;
-
     private static final int VERTICAL_LIST = LinearLayoutManager.VERTICAL;
-
     private Drawable mDivider;
-
     private int mOrientation;
 
     public DividerItemDecoration(Context context, int orientation) {
@@ -34,19 +31,17 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     }
 
     private void setOrientation(int orientation) {
-        if (orientation != HORIZONTAL_LIST && orientation != VERTICAL_LIST) {
+        if (orientation != HORIZONTAL_LIST && orientation != VERTICAL_LIST)
             throw new IllegalArgumentException("invalid orientation");
-        }
         mOrientation = orientation;
     }
 
     @Override
     public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
-        if (mOrientation == VERTICAL_LIST) {
+        if (mOrientation == VERTICAL_LIST)
             drawVertical(c, parent);
-        } else {
+        else
             drawHorizontal(c, parent);
-        }
     }
 
     private void drawVertical(Canvas c, RecyclerView parent) {
@@ -71,8 +66,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
         final int childCount = parent.getChildCount();
         for (int i = 0; i < childCount; i++) {
             final View child = parent.getChildAt(i);
-            final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child
-                    .getLayoutParams();
+            final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
             final int left = child.getRight() + params.rightMargin;
             final int right = left + mDivider.getIntrinsicHeight();
             mDivider.setBounds(left, top, right, bottom);
@@ -82,10 +76,9 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        if (mOrientation == VERTICAL_LIST) {
+        if (mOrientation == VERTICAL_LIST)
             outRect.set(0, 0, 0, mDivider.getIntrinsicHeight());
-        } else {
+        else
             outRect.set(0, 0, mDivider.getIntrinsicWidth(), 0);
-        }
     }
 }
