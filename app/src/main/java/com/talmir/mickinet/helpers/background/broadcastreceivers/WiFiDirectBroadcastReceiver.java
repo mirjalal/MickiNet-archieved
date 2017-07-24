@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
-package com.talmir.mickinet.helpers.background;
+package com.talmir.mickinet.helpers.background.broadcastreceivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
+import android.preference.PreferenceManager;
+import android.support.v7.widget.CardView;
+import android.widget.LinearLayout;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
+import com.talmir.mickinet.helpers.background.services.CountDownService;
 
 /**
  * A BroadcastReceiver that notifies of important wifi p2p events.
@@ -37,6 +42,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager manager;
     private Channel channel;
     private HomeActivity activity;
+    private boolean isConnected;
 
     /**
      * @param manager WifiP2pManager system service
@@ -58,7 +64,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        
+
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
             // UI update to indicate wifi p2p status.
             int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
@@ -69,17 +75,19 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 activity.setIsWifiP2pEnabled(false);
                 activity.resetData();
             }
-//            Log.d(WiFiDirectActivity.TAG, "P2P state changed - " + state);
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             // request available peers from the wifi p2p manager. This is an
             // asynchronous call and the calling activity is notified with a
             // callback on PeerListListener.onPeersAvailable()
             if (manager != null)
                 manager.requestPeers(channel, (PeerListListener) activity.getFragmentManager().findFragmentById(R.id.frag_list));
-
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             if (manager == null)
                 return;
+
+            DeviceListFragment listFragment = (DeviceListFragment) activity.getFragmentManager().findFragmentById(R.id.frag_list);
+            LinearLayout ll = (LinearLayout)listFragment.getView();
+            int c = ll.getChildCount();
 
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
             if (networkInfo.isConnected()) {
@@ -87,13 +95,61 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 // info to find group owner IP
                 DeviceDetailFragment fragment = (DeviceDetailFragment) activity.getFragmentManager().findFragmentById(R.id.frag_detail);
                 manager.requestConnectionInfo(channel, fragment);
+
+                if (!CountDownService.isRunning())
+                    startCountDownIfNecessary(context);
+
+                for (int i = 0; i < c; i++) {
+                    ll.getChildAt(i).setEnabled(false);
+                    if (i == 1) {
+                        CardView cv = (CardView)ll.getChildAt(i);
+                        int cc = cv.getChildCount();
+                        for (int j = 0; j < cc; j++)
+                            cv.getChildAt(j).setEnabled(false);
+                    }
+                }
             } else {
                 // It's a disconnect
                 activity.resetData();
+                for (int i = 0; i < c; i++) {
+                    ll.getChildAt(i).setEnabled(true);
+                    if (i == 1) {
+                        CardView cv = (CardView)ll.getChildAt(i);
+                        int cc = cv.getChildCount();
+                        for (int j = 0; j < cc; j++)
+                            cv.getChildAt(j).setEnabled(true);
+                    }
+                }
             }
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             DeviceListFragment fragment = (DeviceListFragment) activity.getFragmentManager().findFragmentById(R.id.frag_list);
             fragment.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
+        }
+    }
+
+    private synchronized void startCountDownIfNecessary(Context context) {
+        /*
+         * We should do our battery related optimisation things here.
+         * Thus, this part has HIGH priority.
+         *
+         * get charging status and/or battery level from {@link batteryInfoBroadcastReceiver}
+         * before starting {@see CountDownService} and creating its object on memory.
+         */
+
+        SharedPreferences timerPreference = PreferenceManager.getDefaultSharedPreferences(context);
+        if (timerPreference.getBoolean("pref_show_advanced_confs", false) && timerPreference.getBoolean("pref_enable_countdown", false)) {
+            float level = BatteryPowerConnectionReceiver.getLevel();
+            int chargePlugType = BatteryPowerConnectionReceiver.getChargePlugType();
+
+            Intent countDownServiceIntent = new Intent(context, CountDownService.class);
+            if (BatteryPowerConnectionReceiver.isCharging()) {
+                countDownServiceIntent.putExtra("battery_charge_level", level);
+                countDownServiceIntent.putExtra("battery_charge_type", chargePlugType);
+            } else {
+                countDownServiceIntent.putExtra("battery_charge_level", level);
+                countDownServiceIntent.putExtra("battery_charge_type", -1);
+            }
+            context.startService(countDownServiceIntent);
         }
     }
 }

@@ -6,6 +6,7 @@
             android:id="@+id/action_discover"
             android:icon="@drawable/ic_discover"
             android:title="@string/discover_peers_button"
+            android:visible="false"
             app:showAsAction="ifRoom|withText"/>
     <item
             android:id="@+id/action_settings"

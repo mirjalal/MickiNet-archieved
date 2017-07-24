@@ -12,13 +12,20 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
-import android.text.TextUtils;
-import android.view.MenuItem;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import com.talmir.mickinet.R;
 
@@ -63,7 +70,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 if (TextUtils.isEmpty(stringValue)) {
                     // Empty values correspond to 'silent' (no ringtone).
                     preference.setSummary(R.string.pref_ringtone_silent);
-
                 } else {
                     Ringtone ringtone = RingtoneManager.getRingtone(preference.getContext(), Uri.parse(stringValue));
 
@@ -77,7 +83,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         preference.setSummary(name);
                     }
                 }
-
             } else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
@@ -121,7 +126,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-
     }
 
     /**
@@ -170,52 +174,66 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
-//                || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-//                || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
-                || NotificationPreferenceFragment.class.getName().equals(fragmentName);
+                || GeneralPreferenceFragment.class.getName().equals(fragmentName)
+                || NotificationPreferenceFragment.class.getName().equals(fragmentName)
+                || FileStatisticsPreferenceFragment.class.getName().equals(fragmentName)
+                || HelpPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     /**
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-//    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-//    public static class GeneralPreferenceFragment extends PreferenceFragment {
-//        @Override
-//        public void onCreate(Bundle savedInstanceState) {
-//            super.onCreate(savedInstanceState);
-//            addPreferencesFromResource(R.xml.pref_general);
-//            setHasOptionsMenu(true);
-//
-//            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-//            // to their values. When their values change, their summaries are
-//            // updated to reflect the new value, per the Android Design
-//            // guidelines.
-//            bindPreferenceSummaryToValue(findPreference("example_text"));
-//            bindPreferenceSummaryToValue(findPreference("example_list"));
-//        }
-//
-//        @Override
-//        public boolean onOptionsItemSelected(MenuItem item) {
-//            int id = item.getItemId();
-//            if (id == android.R.id.home) {
-//                startActivity(new Intent(getActivity(), SettingsActivity.class));
-//                return true;
-//            }
-//            return super.onOptionsItemSelected(item);
-//        }
-//    }
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class GeneralPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_general);
+            setHasOptionsMenu(true);
 
-    /**
-     * This fragment shows notification preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
+            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
+            // to their values. When their values change, their summaries are
+            // updated to reflect the new value, per the Android Design
+            // guidelines.
+            bindPreferenceSummaryToValue(findPreference("pref_advanced_wps_modes"));
+        }
+
+        @Override
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            super.onCreateOptionsMenu(menu, inflater);
+            inflater.inflate(R.menu.action_wps_types_help, menu);
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            switch (item.getItemId())
+            {
+                case android.R.id.home:
+                    startActivity(new Intent(getActivity(), SettingsActivity.class));
+                    return true;
+                case R.id.help:
+                    View content = View.inflate(getActivity(), R.layout.wps_info, null);
+                    TextView link = (TextView) content.findViewById(R.id.contentText);
+                    link.setMovementMethod(LinkMovementMethod.getInstance());
+
+                    AlertDialog dialog = new AlertDialog.Builder(getActivity()).create();
+                    dialog.setTitle(R.string.what_is_wps);
+                    dialog.setView(content);
+                    dialog.show();
+                    return true;
+                default:
+                    return super.onOptionsItemSelected(item);
+            }
+        }
+    }
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class NotificationPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_notification);
+            addPreferencesFromResource(R.xml.pref_notifications);
             setHasOptionsMenu(true);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
@@ -230,42 +248,58 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
+            switch (item.getItemId())
+            {
+                case android.R.id.home:
+                    startActivity(new Intent(getActivity(), SettingsActivity.class));
+                    return true;
+                default:
+                    return super.onOptionsItemSelected(item);
             }
-            return super.onOptionsItemSelected(item);
         }
     }
 
-//    /**
-//     * This fragment shows data and sync preferences only. It is used when the
-//     * activity is showing a two-pane settings UI.
-//     */
-//    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-//    public static class DataSyncPreferenceFragment extends PreferenceFragment {
-//        @Override
-//        public void onCreate(Bundle savedInstanceState) {
-//            super.onCreate(savedInstanceState);
-//            addPreferencesFromResource(R.xml.pref_data_sync);
-//            setHasOptionsMenu(true);
-//
-//            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-//            // to their values. When their values change, their summaries are
-//            // updated to reflect the new value, per the Android Design
-//            // guidelines.
-//            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
-//        }
-//
-//        @Override
-//        public boolean onOptionsItemSelected(MenuItem item) {
-//            int id = item.getItemId();
-//            if (id == android.R.id.home) {
-//                startActivity(new Intent(getActivity(), SettingsActivity.class));
-//                return true;
-//            }
-//            return super.onOptionsItemSelected(item);
-//        }
-//    }
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class FileStatisticsPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setHasOptionsMenu(true);
+            addPreferencesFromResource(R.xml.pref_file_statistics);
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            switch (item.getItemId())
+            {
+                case android.R.id.home:
+                    startActivity(new Intent(getActivity(), SettingsActivity.class));
+                    return true;
+                default:
+                    return super.onOptionsItemSelected(item);
+            }
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class HelpPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setHasOptionsMenu(true);
+            addPreferencesFromResource(R.xml.pref_help);
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            switch (item.getItemId())
+            {
+                case android.R.id.home:
+                    startActivity(new Intent(getActivity(), SettingsActivity.class));
+                    return true;
+                default:
+                    return super.onOptionsItemSelected(item);
+            }
+        }
+    }
 }

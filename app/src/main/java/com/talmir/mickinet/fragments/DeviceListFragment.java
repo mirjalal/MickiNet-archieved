@@ -4,12 +4,17 @@ import android.app.ListFragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.BatteryManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
@@ -58,7 +63,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        this.setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.row_devices, peers));
+        setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.row_devices, peers));
     }
 
     @Override
@@ -79,11 +84,20 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
      */
     @Override
     public void onListItemClick(ListView listView, View view, int position, long id) {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = getActivity().registerReceiver(null, ifilter);
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level / (float)scale;
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
+        alertDialog.setTitle(R.string.connect_to_device).setCancelable(false);
+
         final WifiP2pDevice device = (WifiP2pDevice) getListAdapter().getItem(position);
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
-        alertDialogBuilder.setTitle(R.string.connect_to_device);
-        alertDialogBuilder
-                .setMessage(
+
+        if (batteryPct <= 0.20) {
+            alertDialog
+                    .setMessage("Battery about die. Do you really want to connect?\n\n" +
                         Html.fromHtml(
                                 String.format(
                                         "<b>" + getString(R.string.name) + "</b>%1$s<br>" +
@@ -96,25 +110,61 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                                         device.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
                                 )
                         )
-                )
-                .setCancelable(false)
+                    );
+        } else if (batteryPct < 0.33 && batteryPct > 0.20) {
+            alertDialog
+                    .setMessage("Wi-Fi Direct drains battery fast. Do you really want to connect?\n\n" +
+                            Html.fromHtml(
+                                    String.format(
+                                            "<b>" + getString(R.string.name) + "</b>%1$s<br>" +
+                                            "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
+                                            "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
+                                            "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
+                                            device.deviceName,
+                                            getDeviceStatus(device.status),
+                                            device.deviceAddress,
+                                            device.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
+                                    )
+                            )
+                    );
+        } else {
+            alertDialog
+                    .setMessage(
+                            Html.fromHtml(
+                                    String.format(
+                                            "<b>" + getString(R.string.name) + "</b>%1$s<br>" +
+                                            "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
+                                            "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
+                                            "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
+                                            device.deviceName,
+                                            getDeviceStatus(device.status),
+                                            device.deviceAddress,
+                                            device.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
+                                    )
+                            )
+                    );
+        }
+        alertDialog
                 .setPositiveButton(R.string.connect, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         final WifiP2pConfig config = new WifiP2pConfig();
                         config.deviceAddress = device.deviceAddress;
-                        config.wps.setup = WpsInfo.PBC;
-                        // connect to device
+                        SharedPreferences wpsSetting = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                        config.wps.setup =
+                                wpsSetting.getBoolean("pref_show_advanced_confs", false) ?
+                                        wpsSetting.getInt("pref_advanced_wps_modes", 0x00000000) :
+                                        WpsInfo.PBC;
+
                         ((IDeviceActionListener) getActivity()).connect(config);
                     }
                 })
-                .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
                     }
-                });
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
+                })
+                .show();
     }
 
     /**
@@ -151,9 +201,8 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
      *
      */
     public void onInitiateDiscovery() {
-        if (progressDialog != null && progressDialog.isShowing()) {
+        if (progressDialog != null && progressDialog.isShowing())
             progressDialog.dismiss();
-        }
         progressDialog = ProgressDialog.show(
                 getActivity(),
                 getString(R.string.cancel_tip),

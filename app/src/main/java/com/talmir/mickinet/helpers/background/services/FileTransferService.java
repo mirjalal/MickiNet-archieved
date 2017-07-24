@@ -1,6 +1,4 @@
-package com.talmir.mickinet.services;
-
-import com.google.firebase.crash.FirebaseCrash;
+package com.talmir.mickinet.helpers.background.services;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -15,6 +13,7 @@ import android.support.v7.app.NotificationCompat;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
+import com.talmir.mickinet.helpers.background.ReportCrash;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -90,13 +89,12 @@ public class FileTransferService extends IntentService {
                 try {
                     inputStream = cr.openInputStream(Uri.parse(fileUri));
                 } catch (FileNotFoundException e) {
-                    FirebaseCrash.log(FileTransferService.class.getName());
+                    ReportCrash.report(getApplicationContext(), FileTransferService.class.getName(), e);
                 }
                 // put all data to stream
                 copyFile(inputStream, outputStream, context);
             } catch (Exception e) {
-                FirebaseCrash.log(FileReceiverAsyncTask.class.getName());
-                FirebaseCrash.report(e);
+                ReportCrash.report(getApplicationContext(), FileReceiverAsyncTask.class.getName(), e);
             } finally {
                 if (socket.isConnected()) {
                     try {
@@ -186,8 +184,7 @@ public class FileTransferService extends IntentService {
             }
             mNotifyManager.notify(id, mBuilder.build());
         } catch (Exception e) {
-            FirebaseCrash.log(FileTransferService.class.getName());
-            FirebaseCrash.report(e);
+            ReportCrash.report(getApplicationContext(), FileTransferService.class.getName(), e);
         }
     }
 }

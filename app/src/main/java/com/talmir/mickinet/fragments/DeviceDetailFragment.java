@@ -1,13 +1,10 @@
 package com.talmir.mickinet.fragments;
 
-import com.google.firebase.crash.FirebaseCrash;
-
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -19,16 +16,14 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.ApkShareActivity;
 import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
-import com.talmir.mickinet.services.FileTransferService;
+import com.talmir.mickinet.helpers.background.ReportCrash;
+import com.talmir.mickinet.helpers.background.services.FileTransferService;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -44,6 +39,8 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     private View mContentView = null;
     private static WifiP2pInfo info;
     public ProgressDialog progressDialog = null;
+
+    // 0 - group owner (server), 1 - client
     private static int deviceType = -1;
 
     // Great article!
@@ -60,6 +57,69 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(R.layout.fragment_device_detail, null);
+
+        mContentView.findViewById(R.id.photo_camera_action).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (deviceType == 1) {
+                    startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), ACTION_TAKE_PICTURE_RESULT_CODE);
+                } else {
+                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                    else {
+                        startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), ACTION_TAKE_PICTURE_RESULT_CODE);
+                    }
+                }
+            }
+        });
+        mContentView.findViewById(R.id.video_camera_action).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (deviceType == 1) {
+                    startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), ACTION_TAKE_VIDEO_RESULT_CODE);
+                } else {
+                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                    else {
+                        startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), ACTION_TAKE_VIDEO_RESULT_CODE);
+                    }
+                }
+            }
+        });
+        mContentView.findViewById(R.id.file_action).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (deviceType == 1) {
+                    Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                    fileIntent.setType("*/*");
+                    fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                    startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
+                } else {
+                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                    else {
+                        Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                        fileIntent.setType("*/*");
+                        fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                        startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
+                    }
+                }
+            }
+        });
+        mContentView.findViewById(R.id.pick_app_action).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (deviceType == 1) {
+                    startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
+                } else {
+                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                    else {
+                        startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
+                    }
+                }
+            }
+        });
         mContentView.findViewById(R.id.btn_disconnect).setOnClickListener(
                 new View.OnClickListener() {
                     @Override
@@ -67,22 +127,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         ((IDeviceActionListener) getActivity()).disconnect();
                     }
                 });
-        mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (deviceType == 1) {
-                            chooseAction();
-                        } else {
-                            sendIpAddress();
-                            if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
-                                Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
-                            else {
-                                chooseAction();
-                            }
-                        }
-                    }
-                });
+
         return mContentView;
     }
 
@@ -169,7 +214,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
                         getActivity().startService(serviceIntent);
                     } else {
-                        FirebaseCrash.log("DeviceDetailFragment");
+                        ReportCrash.report(getActivity(), DeviceDetailFragment.class.getName());
                     }
                 } else {
                     Toast t = Toast.makeText(getActivity(), R.string.pick_an_app, Toast.LENGTH_LONG);
@@ -188,9 +233,9 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
             progressDialog.dismiss();
 
         DeviceDetailFragment.info = info;
-        this.getView().setVisibility(View.VISIBLE);
+        getView().setVisibility(View.VISIBLE);
 
-        new FileReceiverAsyncTask(getActivity(), this.getView()).execute();
+        new FileReceiverAsyncTask(getActivity(), getView()).execute();
 
         if (info.groupFormed && info.isGroupOwner) {
             Thread ipReceiverThread = receiveIpAddress();
@@ -198,7 +243,6 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
             ipReceiverThread.start();
 
             deviceType = 0;
-            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
 
             if (!ipReceiverThread.isInterrupted())
                 ipReceiverThread.interrupt();
@@ -207,20 +251,22 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
             ipSenderThread.setPriority(10);
             ipSenderThread.start();
 
-            // The other device acts as the client. In this case, we enable the
-            // get file button.
             deviceType = 1;
-
-            // TODO: create listener to receive other connected clients' detail (IP, MAC, and other details of a new connected device)
-
-            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-            ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources().getString(R.string.client_text));
 
             if (!ipSenderThread.isInterrupted())
                 ipSenderThread.interrupt();
         }
+        getActivity().findViewById(R.id.start_discover).setVisibility(View.INVISIBLE);
     }
 
+    /**
+     * This method performs simple socket connection
+     * between client device and server one. On the server
+     * side we could get that IP address.
+     *
+     * @return  a new thread that sends client's
+     *          Wi-Fi Direct IP address to the server.
+     */
     @NonNull
     private synchronized Thread sendIpAddress() {
         return new Thread(new Runnable() {
@@ -247,6 +293,13 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         });
     }
 
+    /**
+     * This method accepts incoming socket connection
+     * and gets remote socket address of the client.
+     *
+     * @return  a new thread that receives clients'
+     *          Wi-Fi Direct IP addresses
+     */
     @NonNull
     private synchronized Thread receiveIpAddress() {
         return new Thread(new Runnable() {
@@ -258,7 +311,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     if (!serverSocket.isBound())
                         serverSocket.bind(new InetSocketAddress(10000), 1);
 
-                    if (serverSocket != null && serverSocket.isBound() && !serverSocket.isClosed()) {
+                    if (serverSocket.isBound() && !serverSocket.isClosed()) {
                         String clientIP = serverSocket.accept().getRemoteSocketAddress().toString();
                         FileReceiverAsyncTask.setClientIpAddress(clientIP.substring(1, clientIP.indexOf(':')));
                     }
@@ -271,61 +324,6 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 }
             }
         });
-    }
-
-    private void chooseAction() {
-        final android.support.v7.app.AlertDialog dialog = new android.support.v7.app.AlertDialog.Builder(getActivity()).create();
-        final View view = getActivity().getLayoutInflater().inflate(R.layout.choose_action, null);
-
-        final RelativeLayout photoCameraAction = (RelativeLayout) view.findViewById(R.id.photo_camera_action);
-        ImageView photoCameraActionImageView = (ImageView) photoCameraAction.getChildAt(0);
-        photoCameraActionImageView.setImageResource(R.drawable.ic_photo_camera_action);
-        photoCameraAction.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), ACTION_TAKE_PICTURE_RESULT_CODE);
-            }
-        });
-
-        final RelativeLayout videoCameraAction = (RelativeLayout) view.findViewById(R.id.video_camera_action);
-        ImageView videoCameraActionImageView = (ImageView) videoCameraAction.getChildAt(0);
-        videoCameraActionImageView.setImageResource(R.drawable.ic_video_camera_action);
-        videoCameraAction.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), ACTION_TAKE_VIDEO_RESULT_CODE);
-            }
-        });
-
-        final RelativeLayout folderAction = (RelativeLayout) view.findViewById(R.id.file_action);
-        ImageView folderActionImageView = (ImageView) folderAction.getChildAt(0);
-        folderActionImageView.setImageResource(R.drawable.ic_folder_action);
-        folderAction.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                fileIntent.setType("*/*");
-                fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
-            }
-        });
-
-        final RelativeLayout chooseAppAction = (RelativeLayout) view.findViewById(R.id.pick_app_action);
-        ImageView chooseAppActionImageView = (ImageView) chooseAppAction.getChildAt(0);
-        chooseAppActionImageView.setImageResource(R.drawable.ic_pick_apk_action);
-        chooseAppAction.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
-            }
-        });
-        dialog.setTitle(R.string.choose_action);
-        dialog.setView(view);
-        dialog.show();
     }
 
     private String getFileName(Uri uri) {
@@ -350,24 +348,9 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     }
 
     /**
-     * Updates the UI with device data
-     *
-     * @param device the device to be displayed
-     */
-    public void showDetails(WifiP2pDevice device) {
-//        this.device = device;
-        this.getView().setVisibility(View.VISIBLE);
-//        TextView view = (TextView) mContentView.findViewById(R.id.device_address);
-//        view.setText(device.deviceAddress);
-//        view = (TextView) mContentView.findViewById(R.id.device_info);
-//        view.setText(device.toString());
-
-    }
-
-    /**
      * Clears the UI fields after a disconnect or direct mode disable operation.
      */
     public void resetViews() {
-        this.getView().setVisibility(View.GONE);
+        getView().setVisibility(View.GONE);
     }
 }

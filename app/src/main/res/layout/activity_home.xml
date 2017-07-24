@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/activity_home"
         android:layout_width="match_parent"
@@ -14,7 +15,7 @@
             android:id="@+id/frag_list"
             class="com.talmir.mickinet.fragments.DeviceListFragment"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/phone_list_height">
+            android:layout_height="wrap_content">
         <!-- Preview: layout=@layout/row_devices -->
     </fragment>
 
@@ -26,4 +27,16 @@
         <!-- Preview: layout=@layout/device_detail -->
     </fragment>
 
+    <android.support.design.widget.FloatingActionButton
+            android:id="@+id/start_discover"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            app:fabSize="normal"
+            app:srcCompat="@drawable/ic_search"
+            android:layout_margin="16dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
 </RelativeLayout>

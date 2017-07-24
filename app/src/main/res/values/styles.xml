@@ -1,13 +1,10 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="ApplicationTheme">
         <item name="android:typeface">serif</item>
     </style>
 
-    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-
         <!-- To change font of whole app uncomment line below -->
         <!--<item name="android:typeface">normal</item>-->
         <!--<item name="android:textColor">@color/black_russian</item>-->
@@ -15,6 +12,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/colorPrimary</item>
     </style>
 
     <style name="AppTheme1" parent="Theme.AppCompat.Light.NoActionBar">

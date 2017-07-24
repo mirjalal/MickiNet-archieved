@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:title="@string/contact_us" android:key="contact_us" android:summary="@string/contact_us_summary">
+        <intent android:action="android.intent.action.MAIN"
+                android:targetPackage="com.talmir.mickinet"
+                android:targetClass="com.talmir.mickinet.activities.ContactActivity"/>
+    </Preference>
+    <Preference android:title="@string/terms_and_privacy" android:key="privacy_policy"/>
+    <Preference android:title="@string/app_info" android:key="app_info"/>
+</PreferenceScreen>

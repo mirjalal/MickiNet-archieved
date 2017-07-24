@@ -18,8 +18,9 @@
     <color name="colorSlide5">#4DD0E1</color>
     <color name="status_bar_color">#FF000000</color>
     <color name="layout_border_color">#FF111111</color>
-    <color name="snow">#FCFCFC</color>
+    <color name="snow">#FFFCFCFC</color>
     <color name="black_russian">#FF1B1B1C</color>
     <color name="shade_of_gray">#FF999999</color>
     <color name="mime_type_name">#FF222222</color>
+    <color name="white">#FFFFFFFF</color>
 </resources>

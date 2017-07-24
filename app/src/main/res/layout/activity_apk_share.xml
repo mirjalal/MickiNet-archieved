@@ -16,6 +16,7 @@
             android:layout_height="match_parent"
             android:layout_alignBottom="@id/recycler_view"
             android:layout_alignParentEnd="true"
-            android:layout_alignTop="@id/recycler_view" />
+            android:layout_alignTop="@id/recycler_view"
+            android:layout_alignParentRight="true"/>
 
 </RelativeLayout>

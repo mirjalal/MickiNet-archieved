@@ -66,8 +66,8 @@ public class IntroductionActivity extends AppIntro {
 //        setFlowAnimation();
 //        setSlideOverAnimation();
 //        setZoomAnimation();
-//        askForPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3);
-//        askForPermissions(new String[]{Manifest.permission.CAMERA}, 4);
+        askForPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3);
+        askForPermissions(new String[]{Manifest.permission.CAMERA}, 4);
     }
 
 //    @Override

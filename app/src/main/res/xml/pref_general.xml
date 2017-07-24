@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+            android:title="@string/basic_conf"
+            android:selectable="false">
+
+        <CheckBoxPreference
+            android:key="auto_enable_wifi"
+            android:defaultValue="false"
+            android:title="@string/auto_turn_on_wifi"
+            android:summary="@string/auto_turn_on_wifi_summary"/>
+
+        <CheckBoxPreference
+                android:key="pref_auto_open_received_file"
+                android:defaultValue="false"
+                android:title="@string/auto_open_file"
+                android:summary="@string/auto_open_summary"/>
+
+        <SwitchPreference
+                android:key="pref_auto_submit_crashes"
+                android:defaultValue="true"
+                android:title="@string/send_crash_reports"
+                android:summary="@string/crash_report_summary"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+            android:title="@string/advanced_conf"
+            android:selectable="false"
+            android:key="advanced_confs">
+
+        <CheckBoxPreference
+                android:key="pref_show_advanced_confs"
+                android:defaultValue="false"
+                android:shouldDisableView="true"
+                android:title="@string/show_adv_confs"
+                android:summary="@string/advanced_confs_summary"/>
+
+        <ListPreference
+                android:dependency="pref_show_advanced_confs"
+                android:key="pref_advanced_wps_modes"
+                android:title="@string/wps_modes"
+                android:entries="@array/pref_wps_setup_type_titles"
+                android:entryValues="@array/pref_wps_setup_values"
+                android:defaultValue="@string/_0"
+                android:negativeButtonText="@string/cancel"
+                android:summary="@string/choose_wps_mode"/>
+
+        <SwitchPreference
+                android:dependency="pref_show_advanced_confs"
+                android:key="pref_enable_countdown"
+                android:defaultValue="false"
+                android:title="Enable timer"
+                android:summary="A countdown starts when the connection is established."/>
+
+    </PreferenceCategory>
+</PreferenceScreen>

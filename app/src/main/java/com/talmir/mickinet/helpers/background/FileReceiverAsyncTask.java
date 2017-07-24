@@ -1,7 +1,5 @@
 package com.talmir.mickinet.helpers.background;
 
-import com.google.firebase.crash.FirebaseCrash;
-
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -127,9 +125,6 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             ServerSocket serverSocket = new ServerSocket(4126);
             Socket client = serverSocket.accept();
 
-            final String temp_str = client.getRemoteSocketAddress().toString();
-            clientIpAddress = temp_str.substring(1, temp_str.indexOf(':'));
-
             // generate unique id to show a new notification each time a file received
             id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
             mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -141,13 +136,9 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                     .setContentText(mContext.getString(R.string.receiving_file))
                     .setSmallIcon(android.R.drawable.stat_sys_download)
                     .setOngoing(true)
-//                    .setSound(Uri.parse("android.resource://" + mContext.getPackageName() + "/" + R.raw.file_receive))
                     .setProgress(0, 0, true);
 
             mNotifyManager.notify(id, mBuilder.build());
-
-//            final String temp_str = client.getRemoteSocketAddress().toString();
-//            clientIpAddress = temp_str.substring(1, temp_str.indexOf(':'));
 
             InputStream inputStream = client.getInputStream();
             final String result = saveFile(inputStream);
@@ -157,8 +148,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             return result;
         } catch (Exception e) {
-            FirebaseCrash.log(FileReceiverAsyncTask.class.getName());
-            FirebaseCrash.report(e);
+            ReportCrash.report(mContext, FileReceiverAsyncTask.class.getName(), e);
             return null;
         }
     }
@@ -183,8 +173,10 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                     .setOngoing(false)
                     .setContentIntent(notificationPendingIntent);
 
-            SharedPreferences notificationSettings = PreferenceManager.getDefaultSharedPreferences(mContext);
-            if (notificationSettings.getBoolean("notifications_new_file_receive", false)) {
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mContext);
+
+            // get notification settings & apply them to notification
+            if (settings.getBoolean("notifications_new_file_receive", false)) {
                 mBuilder.setSound(
                         Uri.parse(
                                 PreferenceManager.getDefaultSharedPreferences(mContext).getString(
@@ -193,11 +185,11 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                         )
                 );
 
-                if (notificationSettings.getBoolean("notifications_new_file_receive_vibrate", true))
+                if (settings.getBoolean("notifications_new_file_receive_vibrate", true))
                     mBuilder.setVibrate(new long[]{500});
 
                 mBuilder.setLights(
-                        Color.parseColor("#" + notificationSettings.getString("notifications_new_file_receive_led_light", mContext.getString(R.string.cyan_color))),
+                        Color.parseColor("#" + settings.getString("notifications_new_file_receive_led_light", mContext.getString(R.string.cyan_color))),
                         700,
                         500
                 );
@@ -211,14 +203,19 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             mNotifyManager.notify(id, mBuilder.build());
 
-            Snackbar.make(mView, mContext.getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
-                    .setAction(mContext.getString(R.string.open_file), new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            mContext.startActivity(openReceivedFile);
-                        }
-                    })
-                    .show();
+            // if preference checked open file, show snackbar otherwise
+            if (settings.getBoolean("pref_auto_open_received_file", false)) {
+                mContext.startActivity(openReceivedFile);
+            } else {
+                Snackbar.make(mView, mContext.getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
+                        .setAction(mContext.getString(R.string.open_file), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                mContext.startActivity(openReceivedFile);
+                            }
+                        })
+                        .show();
+            }
         } else {
             mBuilder.setContentText(mContext.getString(R.string.file_receive_fail))
                     .setTicker(mContext.getString(R.string.file_is_not_received))

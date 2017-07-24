@@ -8,18 +8,18 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="client_text">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
-    <string name="empty_message">No devices found. Turn on WiFi and perform discovery from the again.</string>
-    <string name="wifi_off_warning">Enable WiFi from system settings</string>
+    <string name="empty_message">No devices found. Turn on Wi-Fi and perform discovery from the again.</string>
+    <string name="wifi_off_warning">Enable Wi-Fi from system settings</string>
     <string name="label_me">Device information</string>
-    <string name="turn_on_wifi">Turn on WiFi</string>
-    <string name="turn_on_wifi_message">WiFi is turned off. To start discovery enable WiFi.</string>
+    <string name="turn_on_wifi">Turn on Wi-Fi</string>
+    <string name="turn_on_wifi_message">Wi-Fi is turned off. To start discovery enable Wi-Fi.</string>
     <string name="discovery_started">Discovery started</string>
     <string name="discovery_cancelled">Discovery cancelled</string>
     <string name="aborting_connection">Aborting connection…</string>
     <string name="channel_lost">Channel lost. Trying again.</string>
-    <string name="connection_lost_permanently">Severe! Channel is probably lost permanently. Try disable/re-Enable WiFi.</string>
+    <string name="connection_lost_permanently">Severe! Channel is probably lost permanently. Try disable/re-Enable Wi-Fi.</string>
     <string name="discovery_error_1">The operation failed due to an internal error.</string>
-    <string name="discovery_error_2">The operation failed because WiFi Direct is unsupported on the device.</string>
+    <string name="discovery_error_2">The operation failed because Wi-Fi Direct is unsupported on the device.</string>
     <string name="discovery_error_3">The device is busy and unable to service the request.</string>
     <string name="discovery_error_4">An unknown error occurred.</string>
     <string name="cancel_tip">Press back to cancel</string>
@@ -34,7 +34,7 @@
 
     <string name="connect">Connect</string>
     <string name="connect_to_device">Connect to device?</string>
-    <string name="close">Close</string>
+    <string name="cancel">Cancel</string>
     <string name="label_peers">Nearby devices</string>
     <string name="my_machine" translatable="false">my_machine</string>
     <string name="name">Name:\u00A0</string>
@@ -66,18 +66,20 @@
     <string name="video">Take a video</string>
     <string name="clear_history">Clear search history</string>
     <string name="save">Save</string>
-    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
 
     <string name="settings">Settings</string>
     <string name="title_activity_settings">Settings</string>
     <string name="pref_header_general">General</string>
     <string-array name="multi_select_list_preference_default_value"/>
     <string name="pref_header_notifications">Notifications</string>
+    <string name="pref_header_advanced">Advanced</string>
     <string name="pref_title_use_default_notifications">Use custom notifications</string>
     <string name="pref_title_ringtone">Ringtone</string>
     <string name="pref_ringtone_silent">Silent</string>
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="pref_title_light">Light</string>
+
     <string name="none">None</string>
     <string name="app_default">App default</string>
     <string name="white">White</string>
@@ -130,4 +132,61 @@
     <string name="outgoing_notifications">File receive notifications</string>
     <string name="app_icon" translatable="false">app_icon</string>
     <string name="image_of_fast_scroller" translatable="false">image_of_fast_scroller</string>
+
+    <string name="help">Help</string>
+    <string name="conn_conf">Connection configuration</string>
+    <string name="wps_modes">WPS mode</string>
+    <string name="pbc" translatable="false">PBC</string>
+    <string name="pbc_help">Push button configuration</string>
+    <string name="display" translatable="false">Display</string>
+    <string name="display_help">Display pin method configuration - pin is generated and displayed on device</string>
+    <string name="keypad" translatable="false">Keypad</string>
+    <string name="keypad_help">Keypad pin method configuration - pin is entered on device</string>
+    <string name="label" translatable="false">Label</string>
+    <string name="label_help">Label pin method configuration - pin is labelled on device</string>
+    <string-array name="pref_wps_setup_type_titles">
+        <item>@string/pbc</item>
+        <item>@string/display</item>
+        <item>@string/keypad</item>
+        <item>@string/label</item>
+    </string-array>
+
+    <string name="_0" translatable="false">0x00000000</string>
+    <string name="_1" translatable="false">0x00000001</string>
+    <string name="_2" translatable="false">0x00000002</string>
+    <string name="_3" translatable="false">0x00000003</string>
+    <string-array name="pref_wps_setup_values">
+        <item>@string/_0</item>
+        <item>@string/_1</item>
+        <item>@string/_2</item>
+        <item>@string/_3</item>
+    </string-array>
+
+    <string name="basic_conf">Basic configurations</string>
+
+    <string name="warning">Warning!</string>
+    <string name="advanced_conf_warning_msg">These configurations are for advanced users. If you don\'t know what are you doing, please </string>
+    <string name="what_is_wps">WPS modes</string>
+    <string name="define_wps_modes"><b>PBC</b> - Push-button configuration.\n\n<b>Display</b> - Display pin method configuration - pin is generated and displayed on device.\n\n<b>Keypad</b> - Keypad pin method configuration - pin is entered on device.\n\n<b>Label</b> - Label pin method configuration - pin is labelled on device.\n\nFor more information read <a href="http://www.wi-fi.org/knowledge-center/faq/how-does-wi-fi-protected-setup-work">official documentation</a> or <a href="https://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup">wiki</a>.</string>
+    <string name="auto_open_file">Open file when received</string>
+    <string name="auto_open_summary">Check this setting to automatically open the received file.</string>
+    <string name="send_crash_reports">Send crash reports</string>
+    <string name="crash_report_summary">Turn on this setting to send crash reports. Enabling this option help us to get error messages when something went wrong in application. We don\'t collect any private information.</string>
+    <string name="advanced_conf">Advanced configurations</string>
+    <string name="show_adv_confs">Enable advanced settings</string>
+    <string name="advanced_confs_summary">These settings are recommended only for advanced users.</string>
+    <string name="choose_wps_mode">Choose WPS mode.</string>
+    <string name="pref_header_help">Help</string>
+    <string name="pref_header_statistics">File statistics</string>
+    <string name="contact_activity">Contact us</string>
+    <string name="describe_problem">Please describe your problem in a detail</string>
+    <string name="contact_us_summary">Questions? Need help? Find a bug?</string>
+    <string name="contact_us">Contact us</string>
+    <string name="app_info">App info</string>
+    <string name="terms_and_privacy">Terms and Privacy Policy</string>
+    <string name="send">Send</string>
+    <string name="include_logs">Include logs</string>
+    <string name="auto_turn_on_wifi">Turn on Wi-Fi when app starts</string>
+    <string name="auto_turn_on_wifi_summary">Automatically turns on Wi-Fi when app started.</string>
+
 </resources>

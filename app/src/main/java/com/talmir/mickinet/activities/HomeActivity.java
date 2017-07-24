@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
@@ -27,7 +28,9 @@ import com.talmir.mickinet.R;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
-import com.talmir.mickinet.helpers.background.WiFiDirectBroadcastReceiver;
+import com.talmir.mickinet.helpers.background.broadcastreceivers.BatteryPowerConnectionReceiver;
+import com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver;
+import com.talmir.mickinet.helpers.background.services.CountDownService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,20 +39,20 @@ import java.io.InputStream;
 
 public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
 
-    // ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ /
+    // ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ //
     private static final int INITIAL_REQUEST = 603;
     private static final int CAMERA_REQUEST = 376;
     private static final int STORAGE_REQUEST = 759;
-//    private static final int CONTACTS_REQUEST = 623;
+    private static final int CONTACTS_REQUEST = 623;
 
     private static final String CAMERA_PERMISSIONS = Manifest.permission.CAMERA;
-    private static final String CONTACTS_PERMISSION = Manifest.permission.READ_CONTACTS;
+    private static final String CONTACTS_READ_PERMISSION = Manifest.permission.READ_CONTACTS;
     private static final String READ_STORAGE_PERMISSION = Manifest.permission.READ_EXTERNAL_STORAGE;
     private static final String WRITE_STORAGE_PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
     private static final String[] INITIAL_PERMISSIONS = {
             CAMERA_PERMISSIONS,
-//            CONTACTS_PERMISSION,
+            CONTACTS_READ_PERMISSION,
             READ_STORAGE_PERMISSION,
             WRITE_STORAGE_PERMISSION
     };
@@ -65,7 +68,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
     private boolean canAccessContacts() {
-        return hasPermission(CONTACTS_PERMISSION);
+        return hasPermission(CONTACTS_READ_PERMISSION);
     }
 
     private boolean hasPermission(String permission) {
@@ -75,11 +78,11 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     // +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++ //
     private final IntentFilter intentFilter = new IntentFilter();
-    private WifiP2pManager manager;
+    private static WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
-    private WifiP2pManager.Channel channel;
-    private BroadcastReceiver receiver = null;
+    private static WifiP2pManager.Channel channel;
+    private BroadcastReceiver wifiDirectBroadcastReceiver = null;
 
     /**
      * @param isWifiP2pEnabled the isWifiP2pEnabled to set
@@ -101,13 +104,11 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
         if (fragmentDetails != null)
             fragmentDetails.resetViews();
-    }
 
-    @Override
-    public void showDetails(WifiP2pDevice device) {
-        // cihaz haqqinda etrafli melumat
-        DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager().findFragmentById(R.id.frag_detail);
-        fragment.showDetails(device);
+        if (CountDownService.isRunning())
+            stopService(new Intent(getApplicationContext(), CountDownService.class));
+
+        start_discovery.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -204,6 +205,10 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
     // --------------------------- WiFi Direct specific -------------------------------- //
 
+
+    private BroadcastReceiver batteryInfoBroadcastReceiver = null;
+    private FloatingActionButton start_discovery;
+
     // Great article!
     // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
     static {
@@ -216,18 +221,18 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             @Override
             public void run() {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-                boolean previouslyStarted = prefs.getBoolean("firstTimeRun?", false);
-                if (!previouslyStarted)
+                if (!prefs.getBoolean("firstTimeRun?", false))
                     startActivity(new Intent(getApplicationContext(), IntroductionActivity.class));
+                else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        if (!canAccessCamera() || !canAccessExternalStorage() || !canAccessContacts())
+                            requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
+                }
             }
         });
         t.start();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            if (!canAccessCamera() || !canAccessExternalStorage() || !canAccessContacts())
-                requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
 
         copyRawFile(R.raw.file_receive);
 
@@ -240,53 +245,18 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(getApplicationContext(), getMainLooper(), null);
 
-//        Intent intent = getIntent();
-//        if (intent.getAction().equals(Intent.ACTION_SEND) && intent.getType() != null) {
-//            Toast toast = Toast.makeText(this, "send intent", Toast.LENGTH_LONG);
-//            toast.setGravity(Gravity.CENTER, 0, 0);
-//            toast.show();
-//            Uri fileUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-//            DeviceDetailFragment.executeSendIntent(this, fileUri);
-//        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case CAMERA_REQUEST:
-                if (canAccessCamera())
-                    Toast.makeText(getApplicationContext(), "camera thing", Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(getApplicationContext(), "camera thing no", Toast.LENGTH_LONG).show();
-                break;
-            case STORAGE_REQUEST:
-                if (canAccessExternalStorage())
-                    Toast.makeText(getApplicationContext(), "storage thing", Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(getApplicationContext(), "storage no", Toast.LENGTH_LONG).show();
-                break;
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.action_items, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_discover:
+        start_discovery = (FloatingActionButton) findViewById(R.id.start_discover);
+        start_discovery.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 if (!isWifiP2pEnabled) {
-                    AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(this).create();
+                    AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(getApplicationContext()).create();
                     wifiOnOffAlertDialog.setTitle(getString(R.string.turn_on_wifi));
                     wifiOnOffAlertDialog.setMessage(getString(R.string.turn_on_wifi_message));
                     wifiOnOffAlertDialog.setIcon(R.drawable.ic_signal_wifi_off);
                     wifiOnOffAlertDialog.setCancelable(true);
                     wifiOnOffAlertDialog.show();
-                    return true;
+                    return;
                 }
                 final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
                 fragment.onInitiateDiscovery();
@@ -308,6 +278,50 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                             Toast.makeText(getApplicationContext(), R.string.discovery_error_4, Toast.LENGTH_LONG).show();
                     }
                 });
+            }
+        });
+//        Intent intent = getIntent();
+//        if (intent.getAction().equals(Intent.ACTION_SEND) && intent.getType() != null) {
+//            Toast toast = Toast.makeText(this, "send intent", Toast.LENGTH_LONG);
+//            toast.setGravity(Gravity.CENTER, 0, 0);
+//            toast.show();
+//            Uri fileUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+//            DeviceDetailFragment.executeSendIntent(this, fileUri);
+//        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case CAMERA_REQUEST:
+                if (!canAccessCamera())
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        requestPermissions(new String[]{CAMERA_PERMISSIONS}, STORAGE_REQUEST);
+                break;
+            case STORAGE_REQUEST:
+                if (!canAccessExternalStorage())
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        requestPermissions(new String[]{READ_STORAGE_PERMISSION, WRITE_STORAGE_PERMISSION}, STORAGE_REQUEST);
+                break;
+            case CONTACTS_REQUEST:
+                if (!canAccessContacts())
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        requestPermissions(new String[]{CONTACTS_READ_PERMISSION}, STORAGE_REQUEST);
+                break;
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.action_items, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_discover:
                 return true;
             case R.id.action_settings:
                 startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
@@ -323,14 +337,30 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public void onResume() {
         super.onResume();
-        receiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
-        registerReceiver(receiver, intentFilter);
+        wifiDirectBroadcastReceiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
+        registerReceiver(wifiDirectBroadcastReceiver, intentFilter);
+        batteryInfoBroadcastReceiver = new BatteryPowerConnectionReceiver();
+        registerReceiver(batteryInfoBroadcastReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
 
     @Override
     public void onPause() {
+        unregisterReceiver(wifiDirectBroadcastReceiver);
+        unregisterReceiver(batteryInfoBroadcastReceiver);
         super.onPause();
-        unregisterReceiver(receiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (CountDownService.isRunning())
+            stopService(new Intent(getApplicationContext(), CountDownService.class));
+        try {
+            unregisterReceiver(wifiDirectBroadcastReceiver);
+            wifiDirectBroadcastReceiver = null;
+            unregisterReceiver(batteryInfoBroadcastReceiver);
+            batteryInfoBroadcastReceiver = null;
+        } catch (IllegalArgumentException ignored) {}
+        super.onDestroy();
     }
 
     /**

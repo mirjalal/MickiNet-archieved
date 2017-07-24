@@ -1,20 +1,23 @@
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- These settings headers are only used on tablets. -->
-
-    <!--<header-->
-            <!--android:fragment="com.talmir.mickinet.activities.SettingsActivity$GeneralPreferenceFragment"-->
-            <!--android:title="@string/pref_header_general"-->
-            <!--android:icon="@drawable/ic_info"/>-->
+    <header
+        android:fragment="com.talmir.mickinet.activities.SettingsActivity$GeneralPreferenceFragment"
+        android:title="@string/pref_header_general"
+        android:icon="@drawable/ic_general_settings"/>
 
     <header
-            android:fragment="com.talmir.mickinet.activities.SettingsActivity$NotificationPreferenceFragment"
-            android:title="@string/pref_header_notifications"
-            android:icon="@drawable/ic_notifications"/>
+        android:fragment="com.talmir.mickinet.activities.SettingsActivity$NotificationPreferenceFragment"
+        android:title="@string/pref_header_notifications"
+        android:icon="@drawable/ic_notification_settings"/>
 
-    <!--<header-->
-            <!--android:fragment="com.talmir.mickinet.activities.SettingsActivity$DataSyncPreferenceFragment"-->
-            <!--android:title="@string/pref_header_data_sync"-->
-            <!--android:icon="@drawable/ic_sync"/>-->
+    <header
+        android:fragment="com.talmir.mickinet.activities.SettingsActivity$FileStatisticsPreferenceFragment"
+        android:title="@string/pref_header_statistics"
+        android:icon="@drawable/ic_file_statistics_settings"/>
+
+    <header
+        android:fragment="com.talmir.mickinet.activities.SettingsActivity$HelpPreferenceFragment"
+        android:title="@string/pref_header_help"
+        android:icon="@drawable/ic_help_settings"/>
 
 </preference-headers>

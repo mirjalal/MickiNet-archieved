@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.talmir.mickinet.activities.ContactActivity">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="6dp">
+
+        <EditText
+                android:gravity="top"
+                android:id="@+id/problem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/describe_problem"
+                android:minLines="2"
+                android:maxLines="15"
+                android:selectAllOnFocus="true"/>
+
+        <CheckBox
+                android:id="@+id/system_logs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/include_logs"
+                android:checked="true"/>
+
+        <Button
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:id="@+id/send_problem"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/send"/>
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>
