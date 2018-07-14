@@ -49,3 +49,6 @@ build
 /build
 /captures
 .externalNativeBuild
+app/google-services.json
+app/release/output.json
+keystore.properties

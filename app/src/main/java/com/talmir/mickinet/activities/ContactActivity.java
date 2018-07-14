@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.MenuItem;
@@ -69,6 +70,7 @@ public class ContactActivity extends AppCompatActivity {
      * @since   22.7.17
      * @return  a string that contains device information
      */
+    @NonNull
     private String getInfoAboutDevice() {
         StringBuilder log = new StringBuilder("\n\n\n--System and Hardware Info--");
         try {
@@ -152,6 +154,7 @@ public class ContactActivity extends AppCompatActivity {
         return log.toString();
     }
 
+    @NonNull
     private String formatSize(long size) {
         String suffix = null;
         if (size >= 1024) {

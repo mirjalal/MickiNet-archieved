@@ -3,11 +3,9 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-            android:id="@+id/action_discover"
-            android:icon="@drawable/ic_discover"
-            android:title="@string/discover_peers_button"
-            android:visible="false"
-            app:showAsAction="ifRoom|withText"/>
+            android:id="@+id/action_file_statistics"
+            android:title="@string/pref_header_statistics"
+            app:showAsAction="collapseActionView"/>
     <item
             android:id="@+id/action_settings"
             android:title="@string/settings"

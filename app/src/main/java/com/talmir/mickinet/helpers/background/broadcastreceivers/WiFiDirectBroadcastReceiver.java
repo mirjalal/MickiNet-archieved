@@ -21,13 +21,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.NetworkInfo;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
+import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
@@ -89,6 +90,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             LinearLayout ll = (LinearLayout)listFragment.getView();
             int c = ll.getChildCount();
 
+            View rootView = activity.findViewById(R.id.view);
+
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
             if (networkInfo.isConnected()) {
                 // we are connected with the other device, request connection
@@ -96,34 +99,37 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 DeviceDetailFragment fragment = (DeviceDetailFragment) activity.getFragmentManager().findFragmentById(R.id.frag_detail);
                 manager.requestConnectionInfo(channel, fragment);
 
-                if (!CountDownService.isRunning())
-                    startCountDownIfNecessary(context);
+//                if (!CountDownService.isRunning())
+//                    startCountDownIfNecessary(context);
 
+                // disable views
                 for (int i = 0; i < c; i++) {
                     ll.getChildAt(i).setEnabled(false);
                     if (i == 1) {
                         CardView cv = (CardView)ll.getChildAt(i);
-                        int cc = cv.getChildCount();
+                        RelativeLayout rl = (RelativeLayout) cv.getChildAt(0);
+                        int cc = rl.getChildCount();
                         for (int j = 0; j < cc; j++)
-                            cv.getChildAt(j).setEnabled(false);
+                            rl.getChildAt(j).setEnabled(false);
                     }
                 }
             } else {
-                // It's a disconnect
+                // It's a disconnect. enable view elements
                 activity.resetData();
                 for (int i = 0; i < c; i++) {
                     ll.getChildAt(i).setEnabled(true);
                     if (i == 1) {
                         CardView cv = (CardView)ll.getChildAt(i);
-                        int cc = cv.getChildCount();
+                        RelativeLayout rl = (RelativeLayout) cv.getChildAt(0);
+                        int cc = rl.getChildCount();
                         for (int j = 0; j < cc; j++)
-                            cv.getChildAt(j).setEnabled(true);
+                            rl.getChildAt(j).setEnabled(true);
                     }
                 }
             }
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             DeviceListFragment fragment = (DeviceListFragment) activity.getFragmentManager().findFragmentById(R.id.frag_list);
-            fragment.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
+            fragment.updateThisDevice(intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
         }
     }
 
@@ -137,7 +143,9 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
          */
 
         SharedPreferences timerPreference = PreferenceManager.getDefaultSharedPreferences(context);
-        if (timerPreference.getBoolean("pref_show_advanced_confs", false) && timerPreference.getBoolean("pref_enable_countdown", false)) {
+        if (timerPreference.getBoolean("pref_show_advanced_confs", false) &&
+            timerPreference.getBoolean("pref_enable_countdown", false))
+        {
             float level = BatteryPowerConnectionReceiver.getLevel();
             int chargePlugType = BatteryPowerConnectionReceiver.getChargePlugType();
 

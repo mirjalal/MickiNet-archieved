@@ -21,6 +21,7 @@
             android:largeScreens="true"
             android:normalScreens="true"
             android:smallScreens="false"/>
+
     <!-- <compatible-screens> -->
     <!-- all small size screens -->
     <!-- <screen android:screenSize="small" android:screenDensity="ldpi" /> -->
@@ -127,9 +128,19 @@
         </activity>
         <activity
                 android:name=".activities.ContactActivity"
-                android:label="@string/contact_activity"
                 android:configChanges="orientation|keyboardHidden"
+                android:label="@string/contact_activity"
                 android:screenOrientation="portrait"
                 android:theme="@style/AppTheme"/>
+        <activity
+                android:name=".activities.FileStatisticsActivity"
+                android:label="@string/title_activity_file_statistics"
+                android:parentActivityName=".activities.HomeActivity"
+                android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="com.talmir.mickinet.activities.HomeActivity"/>
+        </activity>
     </application>
+
 </manifest>

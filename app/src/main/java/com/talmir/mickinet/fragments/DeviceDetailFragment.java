@@ -29,7 +29,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class DeviceDetailFragment extends Fragment implements WifiP2pManager.ConnectionInfoListener {
+public class DeviceDetailFragment extends Fragment implements WifiP2pManager.ConnectionInfoListener  {
 
     private static final int ACTION_CHOOSE_APP_RESULT_CODE = 290;
     private static final int ACTION_CHOOSE_FILE_RESULT_CODE = 551;
@@ -58,75 +58,61 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(R.layout.fragment_device_detail, null);
 
-        mContentView.findViewById(R.id.photo_camera_action).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (deviceType == 1) {
+        mContentView.findViewById(R.id.photo_camera_action).setOnClickListener(v -> {
+            if (deviceType == 1) {
+                startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), ACTION_TAKE_PICTURE_RESULT_CODE);
+            } else {
+                if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                    Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                else {
                     startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), ACTION_TAKE_PICTURE_RESULT_CODE);
-                } else {
-                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
-                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
-                    else {
-                        startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), ACTION_TAKE_PICTURE_RESULT_CODE);
-                    }
                 }
             }
         });
-        mContentView.findViewById(R.id.video_camera_action).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (deviceType == 1) {
+
+        mContentView.findViewById(R.id.video_camera_action).setOnClickListener(v -> {
+            if (deviceType == 1) {
+                startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), ACTION_TAKE_VIDEO_RESULT_CODE);
+            } else {
+                if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                    Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                else {
                     startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), ACTION_TAKE_VIDEO_RESULT_CODE);
-                } else {
-                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
-                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
-                    else {
-                        startActivityForResult(new Intent(MediaStore.ACTION_VIDEO_CAPTURE), ACTION_TAKE_VIDEO_RESULT_CODE);
-                    }
                 }
             }
         });
-        mContentView.findViewById(R.id.file_action).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (deviceType == 1) {
+
+        mContentView.findViewById(R.id.file_action).setOnClickListener(v -> {
+            if (deviceType == 1) {
+                Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                fileIntent.setType("*/*");
+                fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
+            } else {
+                if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                    Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                else {
                     Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
                     fileIntent.setType("*/*");
                     fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
                     startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
-                } else {
-                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
-                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
-                    else {
-                        Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                        fileIntent.setType("*/*");
-                        fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
-                        startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
-                    }
                 }
             }
         });
-        mContentView.findViewById(R.id.pick_app_action).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (deviceType == 1) {
+
+        mContentView.findViewById(R.id.pick_app_action).setOnClickListener(v -> {
+            if (deviceType == 1) {
+                startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
+            } else {
+                if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
+                    Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
+                else {
                     startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
-                } else {
-                    if (FileReceiverAsyncTask.getClientIpAddress().equals(""))
-                        Toast.makeText(getActivity(), "Sorry! You'll be able to send files after a successful connection.", Toast.LENGTH_LONG).show();
-                    else {
-                        startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
-                    }
                 }
             }
         });
-        mContentView.findViewById(R.id.btn_disconnect).setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ((IDeviceActionListener) getActivity()).disconnect();
-                    }
-                });
+
+        mContentView.findViewById(R.id.disconnect_action).setOnClickListener(v -> ((IDeviceActionListener) getActivity()).disconnect());
 
         return mContentView;
     }
@@ -157,7 +143,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 }
                 break;
             case ACTION_TAKE_VIDEO_RESULT_CODE:
-                // User has taken a video. Transfer it to group owner i.e peer using
+                // User has taken a video_camera. Transfer it to group owner i.e peer using
                 // FileTransferService.
                 if (data != null && data.getData() != null) {
                     Uri uri = data.getData();
@@ -259,6 +245,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         getActivity().findViewById(R.id.start_discover).setVisibility(View.INVISIBLE);
     }
 
+
     /**
      * This method performs simple socket connection
      * between client device and server one. On the server
@@ -269,23 +256,21 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
      */
     @NonNull
     private synchronized Thread sendIpAddress() {
-        return new Thread(new Runnable() {
-            public void run () {
-                Socket socket = null;
-                try {
-                    socket = new Socket();
-                    socket.bind(null);
-                    socket.connect((new InetSocketAddress("192.168.49.1", 10000)), 5000);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    if (socket != null) {
-                        if (!socket.isClosed()) {
-                            try {
-                                socket.close();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+        return new Thread(() -> {
+            Socket socket = null;
+            try {
+                socket = new Socket();
+                socket.bind(null);
+                socket.connect((new InetSocketAddress("192.168.49.1", 10000)), 5000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (socket != null) {
+                    if (!socket.isClosed()) {
+                        try {
+                            socket.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -302,25 +287,23 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
      */
     @NonNull
     private synchronized Thread receiveIpAddress() {
-        return new Thread(new Runnable() {
-            public void run() {
-                ServerSocket serverSocket = null;
-                try {
-                    serverSocket = new ServerSocket();
-                    serverSocket.setReuseAddress(true);
-                    if (!serverSocket.isBound())
-                        serverSocket.bind(new InetSocketAddress(10000), 1);
+        return new Thread(() -> {
+            ServerSocket serverSocket = null;
+            try {
+                serverSocket = new ServerSocket();
+                serverSocket.setReuseAddress(true);
+                if (!serverSocket.isBound())
+                    serverSocket.bind(new InetSocketAddress(10000), 1);
 
-                    if (serverSocket.isBound() && !serverSocket.isClosed()) {
-                        String clientIP = serverSocket.accept().getRemoteSocketAddress().toString();
-                        FileReceiverAsyncTask.setClientIpAddress(clientIP.substring(1, clientIP.indexOf(':')));
-                    }
-                } catch (Exception ignored) {  } finally {
-                    try {
-                        if (serverSocket != null && !serverSocket.isClosed())
-                            serverSocket.close();
-                    } catch (Exception ignored) {
-                    }
+                if (serverSocket.isBound() && !serverSocket.isClosed()) {
+                    String clientIP = serverSocket.accept().getRemoteSocketAddress().toString();
+                    FileReceiverAsyncTask.setClientIpAddress(clientIP.substring(1, clientIP.indexOf(':')));
+                }
+            } catch (Exception ignored) {  } finally {
+                try {
+                    if (serverSocket != null && !serverSocket.isClosed())
+                        serverSocket.close();
+                } catch (Exception ignored) {
                 }
             }
         });

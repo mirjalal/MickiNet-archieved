@@ -1,9 +1,9 @@
 package com.talmir.mickinet.fragments;
 
+import android.app.AlertDialog;
 import android.app.ListFragment;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -16,7 +16,6 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,7 +39,8 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     ProgressDialog progressDialog = null;
     View mContentView = null;
     private List<WifiP2pDevice> peers = new ArrayList<>();
-    private WifiP2pDevice device;
+    private WifiP2pDevice device; // this device
+    public static WifiP2pDevice connectedDevice = null; // connected device (used in WiFiDirectBroadcastReceiver class)
 
     @NonNull
     private String getDeviceStatus(int deviceStatus) {
@@ -92,8 +92,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
 
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
         alertDialog.setTitle(R.string.connect_to_device).setCancelable(false);
-
-        final WifiP2pDevice device = (WifiP2pDevice) getListAdapter().getItem(position);
+        connectedDevice = (WifiP2pDevice) getListAdapter().getItem(position);
 
         if (batteryPct <= 0.20) {
             alertDialog
@@ -104,10 +103,10 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                                         "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
                                         "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
                                         "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
-                                        device.deviceName,
-                                        getDeviceStatus(device.status),
-                                        device.deviceAddress,
-                                        device.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
+                                        connectedDevice.deviceName,
+                                        getDeviceStatus(connectedDevice.status),
+                                        connectedDevice.deviceAddress,
+                                        connectedDevice.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
                                 )
                         )
                     );
@@ -120,10 +119,10 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                                             "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
                                             "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
                                             "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
-                                            device.deviceName,
-                                            getDeviceStatus(device.status),
-                                            device.deviceAddress,
-                                            device.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
+                                            connectedDevice.deviceName,
+                                            getDeviceStatus(connectedDevice.status),
+                                            connectedDevice.deviceAddress,
+                                            connectedDevice.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
                                     )
                             )
                     );
@@ -136,34 +135,27 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                                             "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
                                             "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
                                             "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
-                                            device.deviceName,
-                                            getDeviceStatus(device.status),
-                                            device.deviceAddress,
-                                            device.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
+                                            connectedDevice.deviceName,
+                                            getDeviceStatus(connectedDevice.status),
+                                            connectedDevice.deviceAddress,
+                                            connectedDevice.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
                                     )
                             )
                     );
         }
         alertDialog
-                .setPositiveButton(R.string.connect, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        final WifiP2pConfig config = new WifiP2pConfig();
-                        config.deviceAddress = device.deviceAddress;
-                        SharedPreferences wpsSetting = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                        config.wps.setup =
-                                wpsSetting.getBoolean("pref_show_advanced_confs", false) ?
-                                        wpsSetting.getInt("pref_advanced_wps_modes", 0x00000000) :
-                                        WpsInfo.PBC;
+                .setPositiveButton(R.string.connect, (dialogInterface, i) -> {
+                    final WifiP2pConfig config = new WifiP2pConfig();
+                    config.deviceAddress = connectedDevice.deviceAddress;
+                    SharedPreferences wpsSetting = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                    config.wps.setup =
+                            wpsSetting.getBoolean("pref_show_advanced_confs", false) ?
+                                    wpsSetting.getInt("pref_advanced_wps_modes", 0x00000000) :
+                                    WpsInfo.PBC;
 
-                        ((IDeviceActionListener) getActivity()).connect(config);
-                    }
+                    ((IDeviceActionListener) getActivity()).connect(config);
                 })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                })
+                .setNegativeButton(R.string.cancel, (dialog, id1) -> dialog.cancel())
                 .show();
     }
 
@@ -174,11 +166,11 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
      */
     public void updateThisDevice(WifiP2pDevice device) {
         this.device = device;
-        TextView view = (TextView) mContentView.findViewById(R.id.my_name);
+        TextView view = mContentView.findViewById(R.id.my_name);
         view.setText(device.deviceName);
-        view = (TextView) mContentView.findViewById(R.id.my_status);
+        view = mContentView.findViewById(R.id.my_status);
         view.setText(getDeviceStatus(device.status));
-        view = (TextView) mContentView.findViewById(R.id.my_address);
+        view = mContentView.findViewById(R.id.my_address);
         view.setText(device.deviceAddress);
     }
 
@@ -203,19 +195,16 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     public void onInitiateDiscovery() {
         if (progressDialog != null && progressDialog.isShowing())
             progressDialog.dismiss();
-        progressDialog = ProgressDialog.show(
-                getActivity(),
-                getString(R.string.cancel_tip),
-                getString(R.string.finding_devices),
-                true,
-                true,
-                new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        Toast.makeText(getActivity(), R.string.discovery_cancelled, Toast.LENGTH_LONG).show();
-                    }
-                }
-        );
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.setTitle(getString(R.string.cancel_tip));
+        progressDialog.setMessage(getString(R.string.finding_devices));
+        progressDialog.setIndeterminate(true);
+        progressDialog.setCancelable(true);
+        progressDialog.setProgressNumberFormat(null);
+        progressDialog.setProgressPercentFormat(null);
+        progressDialog.setOnCancelListener(dialog -> Toast.makeText(getActivity(), R.string.discovery_cancelled, Toast.LENGTH_LONG).show());
+        progressDialog.show();
     }
 
     /**

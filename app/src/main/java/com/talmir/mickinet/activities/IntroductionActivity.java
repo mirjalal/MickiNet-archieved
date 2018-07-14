@@ -60,7 +60,7 @@ public class IntroductionActivity extends AppIntro {
         addSlide(SlideFragment.newInstance(R.layout.slide1));
         addSlide(SlideFragment.newInstance(R.layout.slide2));
         addSlide(AppIntroFragment.newInstance("Storage permission required", "This permission required to receive and send files.", R.drawable.ic_storage, ContextCompat.getColor(this, R.color.colorSlide2)));
-        addSlide(AppIntroFragment.newInstance("We need camera permission", "Give us permission to share your media instantly.", R.drawable.ic_photo_camera, ContextCompat.getColor(this, R.color.colorSlide3)));
+        addSlide(AppIntroFragment.newInstance("We need photo_camera permission", "Give us permission to share your media instantly.", R.drawable.ic_photo_camera, ContextCompat.getColor(this, R.color.colorSlide3)));
         addSlide(SlideFragment.newInstance(R.layout.slide3));
         setDepthAnimation();
 //        setFlowAnimation();
@@ -117,10 +117,5 @@ public class IntroductionActivity extends AppIntro {
     @Override
     protected void onRestart() {
         super.onRestart();
-    }
-
-    private void LoadFragments(boolean fromFirst)
-    {
-
     }
 }

@@ -14,7 +14,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
@@ -48,15 +48,27 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
         mView = view;
     }
 
-    public static void setClientIpAddress(@NonNull String ipAddress) { clientIpAddress = ipAddress; }
-
     public static String getClientIpAddress() {
         return clientIpAddress;
     }
 
+    public static void setClientIpAddress(@NonNull String ipAddress) {
+        clientIpAddress = ipAddress;
+    }
+
     /**
-     * Saves received input stream as a file in
-     * device's internal storage.
+     * Helps to convert byte[] to int
+     *
+     * @param bytes to be converted to int
+     * @return int value of bytes
+     */
+    private static int getIntFromByteArray(byte[] bytes) {
+        return bytes[0] << 24 | (bytes[1] & 0xFF) << 16 | (bytes[2] & 0xFF) << 8 | (bytes[3] & 0xFF);
+    }
+
+    /**
+     * Saves received input stream as a file to proper folder
+     * in device's internal storage.
      *
      * First 4 bytes of the stream represents length
      * of file name (int). Next bytes contains file name.
@@ -69,7 +81,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     @Nullable
     private String saveFile(InputStream inputStream) {
         // recommended max buffer size is 8192.
-        // read about more: http://stackoverflow.com/a/19561265/4057688
+        // read more: http://stackoverflow.com/a/19561265/4057688
         byte buf[] = new byte[8192];
 
         int len;
@@ -86,12 +98,37 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             // get file name as string from byte[]
             final String fileName = new String(buffer_fileName, Charset.forName("UTF-8"));
 
-            // create a file in internal storage to dump data to it
-            final File receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/" + fileName);
+            // by calling this func make sure that folder structure is OK
+            createNestedFolders();
+
+            // get mimetype to determine that in which folder'll be used
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
+            // check for mimetypes
+            final File receivedFile;
+            if (mimeType.startsWith("image"))
+                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Photos/Received/" + fileName);
+            else if (mimeType.startsWith("video"))
+                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Videos/Received/" + fileName);
+            else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Musics/Received/" + fileName);
+            else if (mimeType.equals("application/vnd.android.package-archive"))
+                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/APKs/Received/" + fileName);
+            else
+                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Others/Received/" + fileName);
+
             File dirs = new File(receivedFile.getParent());
             if (!dirs.exists())
                 dirs.mkdirs();
+            // save data as a file
             receivedFile.createNewFile();
+
+//            Cursor returnCursor =
+//                    mContext.getContentResolver().query(
+//                            (Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/MickiNet/Photos/Received/" + fileName))), null, null, null, null);
+//            int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+//            returnCursor.moveToFirst();
+//            int size = (int) returnCursor.getLong(sizeIndex);
+//            Log.e("size", "" + size);
 
             OutputStream outputStream = new FileOutputStream(receivedFile);
 
@@ -107,16 +144,6 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    /**
-     * Helps to convert byte[] to int
-     *
-     * @param bytes to be converted to int
-     * @return int value of bytes
-     */
-    private static int getIntFromByteArray(byte[] bytes) {
-        return bytes[0] << 24 | (bytes[1] & 0xFF) << 16 | (bytes[2] & 0xFF) << 8 | (bytes[3] & 0xFF);
     }
 
     @Override
@@ -195,9 +222,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                 );
             } else {
                 mBuilder.setSound(Uri.parse("android.resource://" + mContext.getPackageName() + "/" + R.raw.file_receive));
-
                 mBuilder.setLights(
-                    Color.parseColor("#" + mContext.getString(R.string.cyan_color)), 700, 500
+                        Color.parseColor("#" + mContext.getString(R.string.cyan_color)), 700, 500
                 );
             }
 
@@ -208,12 +234,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                 mContext.startActivity(openReceivedFile);
             } else {
                 Snackbar.make(mView, mContext.getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
-                        .setAction(mContext.getString(R.string.open_file), new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                mContext.startActivity(openReceivedFile);
-                            }
-                        })
+                        .setAction(mContext.getString(R.string.open_file), v -> mContext.startActivity(openReceivedFile))
                         .show();
             }
         } else {
@@ -225,5 +246,35 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             mNotifyManager.notify(id, mBuilder.build());
         }
+    }
+
+    private void createNestedFolders() {
+        File rootDir = new File(Environment.getExternalStorageDirectory() + "/MickiNet/");
+        rootDir.mkdirs();
+
+        File p = new File(rootDir, "/Photos/");
+        p.mkdirs();
+        new File(p, "/Sent/").mkdirs();
+        new File(p, "/Received/").mkdirs();
+
+        File v = new File(rootDir, "/Videos/");
+        v.mkdirs();
+        new File(v, "/Sent/").mkdirs();
+        new File(v, "/Received/").mkdirs();
+
+        File m = new File(rootDir, "/Musics/");
+        m.mkdirs();
+        new File(m, "/Sent/").mkdirs();
+        new File(m, "/Received/").mkdirs();
+
+        File f = new File(rootDir, "/Others/");
+        f.mkdirs();
+        new File(f, "/Sent/").mkdirs();
+        new File(f, "/Received/").mkdirs();
+
+        File a = new File(rootDir, "/APKs/");
+        a.mkdirs();
+        new File(a, "/Sent/").mkdirs();
+        new File(a, "/Received/").mkdirs();
     }
 }
