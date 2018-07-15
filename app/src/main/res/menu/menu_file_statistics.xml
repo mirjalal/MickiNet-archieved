@@ -3,8 +3,8 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.talmir.mickinet.activities.FileStatisticsActivity">
     <item
-            android:id="@+id/action_settings"
-            android:title="@string/action_settings"
+            android:id="@+id/action_reset_statistics"
+            android:title="@string/action_reset_statistics"
             android:orderInCategory="100"
             app:showAsAction="never"/>
 </menu>

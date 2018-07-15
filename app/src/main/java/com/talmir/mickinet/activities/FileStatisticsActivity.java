@@ -1,25 +1,28 @@
 package com.talmir.mickinet.activities;
 
+import android.os.Bundle;
 import android.support.design.widget.TabLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-
-import android.widget.TextView;
+import android.widget.ExpandableListView;
+import android.widget.Toast;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.helpers.adapter.ExpandableListAdapter;
+import com.talmir.mickinet.helpers.room.received.ReceivedViewModel;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class FileStatisticsActivity extends AppCompatActivity {
 
@@ -33,17 +36,14 @@ public class FileStatisticsActivity extends AppCompatActivity {
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
-    private ViewPager mViewPager;
+    private ReceivedViewModel mReceiveddViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_statistics);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         // Create the adapter that will return a fragment for each of the three
@@ -51,17 +51,22 @@ public class FileStatisticsActivity extends AppCompatActivity {
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.container);
+        /*
+      The {@link ViewPager} that will host the section contents.
+     */
+        ViewPager mViewPager = findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
-
+        final TabLayout tabLayout = findViewById(R.id.tabs);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
+//        RecyclerView recyclerView = findViewById(R.id.recyclerview);
+//        final ReceivedListAdapter adapter = new ReceivedListAdapter(this);
+//        recyclerView.setAdapter(adapter);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+//        mReceiveddViewModel = ViewModelProviders.of(this).get(ReceivedViewModel.class);
     }
 
     @Override
@@ -79,7 +84,7 @@ public class FileStatisticsActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         // noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_reset_statistics) {
             return true;
         }
 
@@ -95,6 +100,10 @@ public class FileStatisticsActivity extends AppCompatActivity {
          * fragment.
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
+        static ExpandableListAdapter listAdapter;
+        static ExpandableListView expListView;
+        static List<String> listDataHeader;
+        static HashMap<String, List<String>> listDataChild;
 
         public PlaceholderFragment() {
         }
@@ -111,13 +120,101 @@ public class FileStatisticsActivity extends AppCompatActivity {
             return fragment;
         }
 
+        /*
+         * Preparing the list data
+         */
+        private static void prepareListData() {
+            listDataHeader = new ArrayList<>();
+            listDataChild = new HashMap<>();
+
+            // Adding child data
+            listDataHeader.add("Top 250");
+            listDataHeader.add("Now Showing");
+            listDataHeader.add("Coming Soon..");
+
+            // Adding child data
+            List<String> top250 = new ArrayList<>();
+            top250.add("The Shawshank Redemption");
+            top250.add("The Godfather");
+            top250.add("The Godfather: Part II");
+            top250.add("Pulp Fiction");
+            top250.add("The Good, the Bad and the Ugly");
+            top250.add("The Dark Knight");
+            top250.add("12 Angry Men");
+
+            List<String> nowShowing = new ArrayList<>();
+            nowShowing.add("The Conjuring");
+            nowShowing.add("Despicable Me 2");
+            nowShowing.add("Turbo");
+            nowShowing.add("Grown Ups 2");
+            nowShowing.add("Red 2");
+            nowShowing.add("The Wolverine");
+
+            List<String> comingSoon = new ArrayList<>();
+            comingSoon.add("2 Guns");
+            comingSoon.add("The Smurfs 2");
+            comingSoon.add("The Spectacular Now");
+            comingSoon.add("The Canyons");
+            comingSoon.add("Europa Report");
+
+            listDataChild.put(listDataHeader.get(0), top250); // Header, Child data
+            listDataChild.put(listDataHeader.get(1), nowShowing);
+            listDataChild.put(listDataHeader.get(2), comingSoon);
+        }
+
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_file_statistics, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            if (getArguments().getInt(ARG_SECTION_NUMBER) == 0) {
+                View rootView = inflater.inflate(R.layout.fragment_sent, container, false);
+
+//                TextView textView = rootView.findViewById(R.id.section_label);
+//                textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
+                return rootView;
+            } else {
+                View rootView = inflater.inflate(R.layout.fragment_received, container, false);
+                expListView = rootView.findViewById(R.id.expandedlistview_received);
+
+                // preparing list data
+                prepareListData();
+
+                listAdapter = new ExpandableListAdapter(getContext(), listDataHeader, listDataChild);
+
+                // setting list adapter
+                expListView.setAdapter(listAdapter);
+
+                // Listview Group click listener
+                expListView.setOnGroupClickListener((parent, v, groupPosition, id) -> {
+                    // Toast.makeText(getApplicationContext(),
+                    // "Group Clicked " + listDataHeader.get(groupPosition),
+                    // Toast.LENGTH_SHORT).show();
+                    return false;
+                });
+
+                // Listview Group expanded listener
+                expListView.setOnGroupExpandListener(groupPosition -> Toast.makeText(getContext(),
+                        listDataHeader.get(groupPosition) + " Expanded",
+                        Toast.LENGTH_SHORT).show());
+
+                // Listview Group collasped listener
+                expListView.setOnGroupCollapseListener(groupPosition -> Toast.makeText(getContext(),
+                        listDataHeader.get(groupPosition) + " Collapsed",
+                        Toast.LENGTH_SHORT).show());
+
+                // Listview on child click listener
+                expListView.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
+                    // TODO Auto-generated method stub
+                    Toast.makeText(
+                            getContext(),
+                            listDataHeader.get(groupPosition)
+                                    + " : "
+                                    + listDataChild.get(
+                                    listDataHeader.get(groupPosition)).get(
+                                    childPosition), Toast.LENGTH_SHORT)
+                            .show();
+                    return false;
+                });
+                return rootView;
+            }
         }
     }
 
@@ -133,9 +230,9 @@ public class FileStatisticsActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+//             getItem is called to instantiate the fragment for the given page.
+//             Return a PlaceholderFragment (defined as a static inner class below).
+            return PlaceholderFragment.newInstance(position);
         }
 
         @Override

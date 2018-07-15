@@ -318,7 +318,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_settings:
+            case R.id.action_reset_statistics:
                 startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
                 return true;
             case R.id.action_file_statistics:

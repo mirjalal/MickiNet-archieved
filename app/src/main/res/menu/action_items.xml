@@ -7,7 +7,7 @@
             android:title="@string/pref_header_statistics"
             app:showAsAction="collapseActionView"/>
     <item
-            android:id="@+id/action_settings"
+            android:id="@+id/action_reset_statistics"
             android:title="@string/settings"
             app:showAsAction="collapseActionView"/>
 </menu>
