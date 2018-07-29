@@ -19,6 +19,11 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,7 +32,9 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * A custom class that receives stream and saves it
@@ -43,11 +50,16 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
 
-    public FileReceiverAsyncTask(Context context, View view) {
+    private ReceivedFilesViewModel rfvm;
+    private ReceivedFilesEntity rfe;
+
+    public FileReceiverAsyncTask(Context context, View view, ReceivedFilesViewModel rfvm) {
         mContext = context;
         mView = view;
+        this.rfvm = rfvm;
     }
 
+    @Contract(pure = true)
     public static String getClientIpAddress() {
         return clientIpAddress;
     }
@@ -62,7 +74,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
      * @param bytes to be converted to int
      * @return int value of bytes
      */
-    private static int getIntFromByteArray(byte[] bytes) {
+    @Contract(pure = true)
+    private static int getIntFromByteArray(@NotNull byte[] bytes) {
         return bytes[0] << 24 | (bytes[1] & 0xFF) << 16 | (bytes[2] & 0xFF) << 8 | (bytes[3] & 0xFF);
     }
 
@@ -103,32 +116,41 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             // get mimetype to determine that in which folder'll be used
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
+
+            rfe = new ReceivedFilesEntity();
+            rfe.f_name = fileName;
+
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
+            rfe.f_time = sdf.format(/*Calendar.getInstance().getTime()*/new Date());
+
             // check for mimetypes
             final File receivedFile;
-            if (mimeType.startsWith("image"))
+            if (mimeType.startsWith("image")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Photos/Received/" + fileName);
-            else if (mimeType.startsWith("video"))
+                rfe.f_type = "1";
+            }
+            else if (mimeType.startsWith("video")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Videos/Received/" + fileName);
-            else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                rfe.f_type = "2";
+            }
+            else if (mimeType.startsWith("music") || mimeType.startsWith("audio")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Musics/Received/" + fileName);
-            else if (mimeType.equals("application/vnd.android.package-archive"))
+                rfe.f_type = "4"; // for now, music types are accepted as others
+            }
+            else if (mimeType.equals("application/vnd.android.package-archive")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/APKs/Received/" + fileName);
-            else
+                rfe.f_type = "3";
+            }
+            else {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Others/Received/" + fileName);
+                rfe.f_type = "4";
+            }
 
             File dirs = new File(receivedFile.getParent());
             if (!dirs.exists())
                 dirs.mkdirs();
             // save data as a file
             receivedFile.createNewFile();
-
-//            Cursor returnCursor =
-//                    mContext.getContentResolver().query(
-//                            (Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/MickiNet/Photos/Received/" + fileName))), null, null, null, null);
-//            int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
-//            returnCursor.moveToFirst();
-//            int size = (int) returnCursor.getLong(sizeIndex);
-//            Log.e("size", "" + size);
 
             OutputStream outputStream = new FileOutputStream(receivedFile);
 
@@ -175,7 +197,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             return result;
         } catch (Exception e) {
-            ReportCrash.report(mContext, FileReceiverAsyncTask.class.getName(), e);
+            CrashReport.report(mContext, FileReceiverAsyncTask.class.getName(), e);
             return null;
         }
     }
@@ -237,6 +259,9 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                         .setAction(mContext.getString(R.string.open_file), v -> mContext.startActivity(openReceivedFile))
                         .show();
             }
+
+            rfe.f_operation_status = "1";
+            rfvm.insert(rfe);
         } else {
             mBuilder.setContentText(mContext.getString(R.string.file_receive_fail))
                     .setTicker(mContext.getString(R.string.file_is_not_received))
@@ -245,6 +270,9 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                     .setOngoing(false);
 
             mNotifyManager.notify(id, mBuilder.build());
+
+            rfe.f_operation_status = "0";
+            rfvm.insert(rfe);
         }
     }
 

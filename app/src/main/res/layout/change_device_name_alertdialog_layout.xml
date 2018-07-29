@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="30dp">
+
+    <android.support.design.widget.TextInputLayout
+            android:id="@+id/newDeviceNameParent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="16dp">
+
+        <EditText
+                android:id="@+id/newDeviceName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:hint="Enter new device name"
+                android:imeOptions="actionDone"
+                android:layout_alignParentLeft="true"
+                android:inputType="text"/>
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.v7.widget.ButtonBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            app:layout_constraintHorizontal_bias="0.0"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@+id/newDeviceNameParent"
+            android:id="@+id/buttonBarLayout2">
+
+        <Button
+                android:id="@+id/submit"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="Change"/>
+    </android.support.v7.widget.ButtonBarLayout>
+
+    <android.support.v7.widget.ButtonBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            app:layout_constraintHorizontal_bias="0.0"
+            android:id="@+id/buttonBarLayout"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/buttonBarLayout2"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            android:layout_marginBottom="16dp">
+
+        <Button
+                android:id="@+id/cancel"
+                android:text="@string/cancel"
+                style="@style/Widget.AppCompat.Button"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"/>
+    </android.support.v7.widget.ButtonBarLayout>
+</android.support.constraint.ConstraintLayout>

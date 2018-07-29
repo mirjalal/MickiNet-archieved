@@ -13,6 +13,8 @@ import android.widget.TextView;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.ui.IBubbleTextGetter;
 
+import org.jetbrains.annotations.Contract;
+
 import java.util.List;
 
 /**
@@ -30,9 +32,9 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
 
         ApkViewHolder(View itemView) {
             super(itemView);
-            icon = (ImageView) itemView.findViewById(R.id.icon);
-            app_name = (TextView) itemView.findViewById(R.id.app_name);
-            package_name = (TextView) itemView.findViewById(R.id.package_name);
+            icon = itemView.findViewById(R.id.icon);
+            app_name = itemView.findViewById(R.id.app_name);
+            package_name = itemView.findViewById(R.id.package_name);
         }
     }
 
@@ -78,6 +80,7 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
         applicationInfoSortedList.addAll(applicationInfoList);
     }
 
+    @Contract(pure = true)
     public static SortedList<ApplicationInfo> getApplicationInfoSortedList() {
         return applicationInfoSortedList;
     }

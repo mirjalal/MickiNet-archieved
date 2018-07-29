@@ -15,7 +15,7 @@ import com.crashlytics.android.Crashlytics;
  * @author miri
  * @since 7/21/2017
  */
-public final class ReportCrash {
+public final class CrashReport {
     public static void report(@NonNull Context context, @Nullable String className) {
         report(context, className, null);
     }

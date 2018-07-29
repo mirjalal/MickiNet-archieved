@@ -16,11 +16,20 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputLayout;
+import android.support.v7.widget.CardView;
+import android.text.Editable;
 import android.text.Html;
+import android.text.TextWatcher;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,8 +37,12 @@ import android.widget.Toast;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.os.Looper.getMainLooper;
 
 /**
  * A ListFragment that displays available peers on discovery and requests the parent activity to
@@ -69,6 +82,12 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(R.layout.fragment_device_list, null);
+
+        CardView c = mContentView.findViewById(R.id.this_device);
+        c.setOnClickListener(v -> {
+            changeDeviceName();
+        });
+
         return mContentView;
     }
 
@@ -232,8 +251,8 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
             }
             WifiP2pDevice device = items.get(position);
             if (device != null) {
-                TextView top = (TextView) convertView.findViewById(R.id.device_name);
-                TextView bottom = (TextView) convertView.findViewById(R.id.device_details);
+                TextView top = convertView.findViewById(R.id.device_name);
+                TextView bottom = convertView.findViewById(R.id.device_details);
                 if (top != null)
                     top.setText(device.deviceName);
                 if (bottom != null)
@@ -241,5 +260,118 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
             }
             return convertView;
         }
+    }
+
+    /**
+     * Changes device name with entered text.
+     *
+     * @return true if device name successfully changed, false otherwise.
+     */
+    private void changeDeviceName() {
+
+        final android.app.AlertDialog alert = new android.app.AlertDialog.Builder(getActivity()).create();
+        alert.setTitle("Change device name");
+
+        final View view = getActivity().getLayoutInflater().inflate(R.layout.change_device_name_alertdialog_layout, null);
+
+        final TextInputLayout mNewDeviceNameParent = view.findViewById(R.id.newDeviceNameParent);
+        final EditText mNewDeviceName = view.findViewById(R.id.newDeviceName);
+
+        final Button mSubmit = view.findViewById(R.id.submit);
+        final Button mCancel = view.findViewById(R.id.cancel);
+
+        mNewDeviceName.setCustomSelectionActionModeCallback(new ActionMode.Callback() {
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+
+            }
+        });
+        mNewDeviceName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                mNewDeviceNameParent.setError(s.toString().length() < 3 ? "Enter 3 characters at least" : null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        mSubmit.setOnClickListener(v -> {
+            if (mNewDeviceName.getText().toString().trim().length() > 0 && mNewDeviceNameParent.getError() == null) {
+
+                final WifiP2pManager[] mManager = new WifiP2pManager[1];
+                WifiP2pManager.Channel channel;
+                try {
+                    mManager[0] = (WifiP2pManager) getActivity().getSystemService(Context.WIFI_P2P_SERVICE);
+                    channel = mManager[0].initialize(
+                            getActivity(),
+                            getMainLooper(),
+                            () -> mManager[0] = (WifiP2pManager) getActivity().getSystemService(Context.WIFI_P2P_SERVICE)
+                    );
+                    Class[] paramTypes = new Class[3];
+                    paramTypes[0] = WifiP2pManager.Channel.class;
+                    paramTypes[1] = String.class;
+                    paramTypes[2] = WifiP2pManager.ActionListener.class;
+                    Method setDeviceName = mManager[0].getClass().getMethod("setDeviceName", paramTypes);
+                    setDeviceName.setAccessible(true);
+
+                    Object arglist[] = new Object[3];
+                    arglist[0] = channel;
+                    arglist[1] = mNewDeviceName.getText().toString().trim();
+                    arglist[2] = new WifiP2pManager.ActionListener() {
+                        @Override
+                        public void onSuccess() {
+                            alert.dismiss();
+                            Toast.makeText(getActivity(), "Device name changed!", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onFailure(int reason) {
+                            Toast.makeText(getActivity(), "Device name not changed!", Toast.LENGTH_SHORT).show();
+                        }
+                    };
+                    setDeviceName.invoke(mManager[0], arglist);
+
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            }
+            else
+                mNewDeviceNameParent.setError("Enter valid device name.");
+        });
+
+        mCancel.setOnClickListener(v -> alert.dismiss());
+
+        alert.setView(view);
+        alert.setCancelable(true);
+        alert.show();
     }
 }

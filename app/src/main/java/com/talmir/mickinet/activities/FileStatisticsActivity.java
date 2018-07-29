@@ -1,5 +1,8 @@
 package com.talmir.mickinet.activities;
 
+import android.arch.lifecycle.ViewModelProviders;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -7,36 +10,35 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ExpandableListView;
-import android.widget.Toast;
+import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.helpers.adapter.ExpandableListAdapter;
-import com.talmir.mickinet.helpers.room.received.ReceivedViewModel;
+import com.talmir.mickinet.helpers.adapter.ReceivedFilesListAdapter;
+import com.talmir.mickinet.helpers.adapter.SentFilesListAdapter;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
+import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class FileStatisticsActivity extends AppCompatActivity {
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
-    private SectionsPagerAdapter mSectionsPagerAdapter;
-
-    private ReceivedViewModel mReceiveddViewModel;
+    private static final String[] xData = { "Photos", "Videos", "APKs", "Others" };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,27 +48,18 @@ public class FileStatisticsActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        SectionsPagerAdapter mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
-        /*
-      The {@link ViewPager} that will host the section contents.
-     */
         ViewPager mViewPager = findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         final TabLayout tabLayout = findViewById(R.id.tabs);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
-
-//        RecyclerView recyclerView = findViewById(R.id.recyclerview);
-//        final ReceivedListAdapter adapter = new ReceivedListAdapter(this);
-//        recyclerView.setAdapter(adapter);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-//        mReceiveddViewModel = ViewModelProviders.of(this).get(ReceivedViewModel.class);
     }
 
     @Override
@@ -95,18 +88,9 @@ public class FileStatisticsActivity extends AppCompatActivity {
      * A placeholder fragment containing a simple view.
      */
     public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
         private static final String ARG_SECTION_NUMBER = "section_number";
-        static ExpandableListAdapter listAdapter;
-        static ExpandableListView expListView;
-        static List<String> listDataHeader;
-        static HashMap<String, List<String>> listDataChild;
 
-        public PlaceholderFragment() {
-        }
+        public PlaceholderFragment() {  }
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -120,99 +104,155 @@ public class FileStatisticsActivity extends AppCompatActivity {
             return fragment;
         }
 
-        /*
-         * Preparing the list data
-         */
-        private static void prepareListData() {
-            listDataHeader = new ArrayList<>();
-            listDataChild = new HashMap<>();
-
-            // Adding child data
-            listDataHeader.add("Top 250");
-            listDataHeader.add("Now Showing");
-            listDataHeader.add("Coming Soon..");
-
-            // Adding child data
-            List<String> top250 = new ArrayList<>();
-            top250.add("The Shawshank Redemption");
-            top250.add("The Godfather");
-            top250.add("The Godfather: Part II");
-            top250.add("Pulp Fiction");
-            top250.add("The Good, the Bad and the Ugly");
-            top250.add("The Dark Knight");
-            top250.add("12 Angry Men");
-
-            List<String> nowShowing = new ArrayList<>();
-            nowShowing.add("The Conjuring");
-            nowShowing.add("Despicable Me 2");
-            nowShowing.add("Turbo");
-            nowShowing.add("Grown Ups 2");
-            nowShowing.add("Red 2");
-            nowShowing.add("The Wolverine");
-
-            List<String> comingSoon = new ArrayList<>();
-            comingSoon.add("2 Guns");
-            comingSoon.add("The Smurfs 2");
-            comingSoon.add("The Spectacular Now");
-            comingSoon.add("The Canyons");
-            comingSoon.add("Europa Report");
-
-            listDataChild.put(listDataHeader.get(0), top250); // Header, Child data
-            listDataChild.put(listDataHeader.get(1), nowShowing);
-            listDataChild.put(listDataHeader.get(2), comingSoon);
-        }
-
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             if (getArguments().getInt(ARG_SECTION_NUMBER) == 0) {
                 View rootView = inflater.inflate(R.layout.fragment_sent, container, false);
 
-//                TextView textView = rootView.findViewById(R.id.section_label);
-//                textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
+                RecyclerView recyclerView = rootView.findViewById(R.id.recycler_view);
+                TextView emptyView = rootView.findViewById(R.id.empty_view);
+
+                final SentFilesListAdapter adapter = new SentFilesListAdapter(getContext());
+                recyclerView.setAdapter(adapter);
+                recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+                // Get a new or existing ViewModel from the ViewModelProvider.
+                SentFilesViewModel mSentFilesViewModel = ViewModelProviders.of(this).get(SentFilesViewModel.class);
+
+                // Add an observer on the LiveData returned by getAlphabetizedWords.
+                // The onChanged() method fires when the observed data changes and the activity is
+                // in the foreground.
+                // Update the cached copy of the words in the adapter.
+                mSentFilesViewModel.getAllSentFiles().observe(this, adapter::setSentFiles);
+
+                if (adapter.getItemCount() > 0) {
+                    recyclerView.setVisibility(View.VISIBLE);
+                    emptyView.setVisibility(View.GONE);
+                } else {
+                    recyclerView.setVisibility(View.GONE);
+                    emptyView.setVisibility(View.VISIBLE);
+                }
+
                 return rootView;
             } else {
                 View rootView = inflater.inflate(R.layout.fragment_received, container, false);
-                expListView = rootView.findViewById(R.id.expandedlistview_received);
 
-                // preparing list data
-                prepareListData();
+                final PieChart pie = rootView.findViewById(R.id.received_pie);
+                // configure pie chart
+                final Description d = new Description();
+                d.setEnabled(true);
+                d.setTypeface(Typeface.DEFAULT_BOLD);
+                d.setText("Description");
+                pie.setDescription(d);
+                pie.setUsePercentValues(true);
 
-                listAdapter = new ExpandableListAdapter(getContext(), listDataHeader, listDataChild);
+                // enable hole and configure
+                pie.setDrawHoleEnabled(true);
+                pie.setDrawSlicesUnderHole(true); // extra
+                pie.setDrawEntryLabels(true);     // extra
+                pie.setHoleRadius(7);
+                pie.setTransparentCircleRadius(10);
 
-                // setting list adapter
-                expListView.setAdapter(listAdapter);
+                // enable rotation of the pie by gesture
+                pie.setRotationAngle(0);
+                pie.setRotationEnabled(true);
 
-                // Listview Group click listener
-                expListView.setOnGroupClickListener((parent, v, groupPosition, id) -> {
-                    // Toast.makeText(getApplicationContext(),
-                    // "Group Clicked " + listDataHeader.get(groupPosition),
-                    // Toast.LENGTH_SHORT).show();
-                    return false;
-                });
+                final RecyclerView recyclerView = rootView.findViewById(R.id.recycler_view);
+                final TextView emptyView = rootView.findViewById(R.id.empty_view);
 
-                // Listview Group expanded listener
-                expListView.setOnGroupExpandListener(groupPosition -> Toast.makeText(getContext(),
-                        listDataHeader.get(groupPosition) + " Expanded",
-                        Toast.LENGTH_SHORT).show());
+                final ReceivedFilesListAdapter adapter = new ReceivedFilesListAdapter(getContext());
+                recyclerView.setAdapter(adapter);
+                recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-                // Listview Group collasped listener
-                expListView.setOnGroupCollapseListener(groupPosition -> Toast.makeText(getContext(),
-                        listDataHeader.get(groupPosition) + " Collapsed",
-                        Toast.LENGTH_SHORT).show());
+                // Get a new or existing ViewModel from the ViewModelProvider.
+                ReceivedFilesViewModel mReceivedFilesViewModel = ViewModelProviders.of(this).get(ReceivedFilesViewModel.class);
 
-                // Listview on child click listener
-                expListView.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
-                    // TODO Auto-generated method stub
-                    Toast.makeText(
-                            getContext(),
-                            listDataHeader.get(groupPosition)
-                                    + " : "
-                                    + listDataChild.get(
-                                    listDataHeader.get(groupPosition)).get(
-                                    childPosition), Toast.LENGTH_SHORT)
-                            .show();
-                    return false;
-                });
+                // Add an observer on the LiveData returned by getAlphabetizedWords.
+                // The onChanged() method fires when the observed data changes and the activity is
+                // in the foreground.
+                // Update the cached copy of the words in the adapter.
+                mReceivedFilesViewModel.getAllReceivedFiles().observe(this, adapter::setReceivedFiles);
+
+                if (adapter.getItemCount() > 0) {
+                    recyclerView.setVisibility(View.VISIBLE);
+                    emptyView.setVisibility(View.GONE);
+                } else {
+                    recyclerView.setVisibility(View.GONE);
+                    emptyView.setVisibility(View.VISIBLE);
+                }
+
+                // We must set data right here. Because just before our adapter initialized
+                // we couldn't do anything with pie.
+                adapter.getReceivedFilesCountByTypes();
+                float[] yData = {
+                        adapter.getPhotoFilesCount(), adapter.getVideoFilesCount(),
+                        adapter.getAPKFilesCount(),   adapter.getOtherFilesCount()
+                };
+
+                // set data
+                ArrayList<PieEntry> yVals = new ArrayList<>(4);
+                for (int i = 0; i < 4; i++)
+                    yVals.add(new PieEntry(yData[i], i));
+
+                ArrayList<String> xVals = new ArrayList<>(4);
+                for (int i = 0; i < 4; i++)
+                    xVals.add(xVals.get(i));
+
+                // create pie dataset
+                PieDataSet pieDataSet = new PieDataSet(yVals, "Dataset String");
+                pieDataSet.setSliceSpace(3);
+                pieDataSet.setSelectionShift(10);
+
+                // add colors
+                ArrayList<Integer> colors = new ArrayList<>();
+
+                for (int color : ColorTemplate.COLORFUL_COLORS)
+                    colors.add(color);
+
+                for (int color : ColorTemplate.JOYFUL_COLORS)
+                    colors.add(color);
+
+                for (int color : ColorTemplate.LIBERTY_COLORS)
+                    colors.add(color);
+
+                for (int color : ColorTemplate.MATERIAL_COLORS)
+                    colors.add(color);
+
+                for (int color : ColorTemplate.PASTEL_COLORS)
+                    colors.add(color);
+
+                for (int color : ColorTemplate.VORDIPLOM_COLORS)
+                    colors.add(color);
+
+                colors.add(ColorTemplate.getHoloBlue());
+                pieDataSet.setColors(colors);
+
+                // instantiate pie data object
+                PieData pieData = new PieData();
+                pieData.setValueFormatter(new PercentFormatter());
+                pieData.setValueTextSize(12f);
+                pieData.setValueTextColor(Color.GRAY);
+
+                pie.setData(pieData);
+
+                // undo all highlights
+                pie.highlightValue(null);
+
+                // update pie
+                pie.invalidate();
+
+                // customize legends
+                Legend legend = pie.getLegend();
+                legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+                legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+                legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+                legend.setDrawInside(false);
+                legend.setXEntrySpace(7);
+                legend.setYEntrySpace(5);
+
+//                legend.setPosition(Legend.LegendPosition.BELOW_CHART_CENTER);
+
+
                 return rootView;
             }
         }

@@ -5,6 +5,5 @@
     <item
             android:id="@+id/action_reset_statistics"
             android:title="@string/action_reset_statistics"
-            android:orderInCategory="100"
-            app:showAsAction="never"/>
+            app:showAsAction="collapseActionView"/>
 </menu>

@@ -2,6 +2,7 @@ package com.talmir.mickinet.fragments;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatDelegate;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,8 +24,11 @@ import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.ApkShareActivity;
 import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
-import com.talmir.mickinet.helpers.background.ReportCrash;
+import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.background.services.FileTransferService;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -43,6 +48,8 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     // 0 - group owner (server), 1 - client
     private static int deviceType = -1;
 
+    private ReceivedFilesViewModel rfvm;
+
     // Great article!
     // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
     static {
@@ -56,6 +63,8 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        rfvm = ViewModelProviders.of((FragmentActivity) getActivity()).get(ReceivedFilesViewModel.class);
+
         mContentView = inflater.inflate(R.layout.fragment_device_detail, null);
 
         mContentView.findViewById(R.id.photo_camera_action).setOnClickListener(v -> {
@@ -200,7 +209,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
                         getActivity().startService(serviceIntent);
                     } else {
-                        ReportCrash.report(getActivity(), DeviceDetailFragment.class.getName());
+                        CrashReport.report(getActivity(), DeviceDetailFragment.class.getName());
                     }
                 } else {
                     Toast t = Toast.makeText(getActivity(), R.string.pick_an_app, Toast.LENGTH_LONG);
@@ -221,7 +230,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         DeviceDetailFragment.info = info;
         getView().setVisibility(View.VISIBLE);
 
-        new FileReceiverAsyncTask(getActivity(), getView()).execute();
+        new FileReceiverAsyncTask(getActivity(), getView(), rfvm).execute();
 
         if (info.groupFormed && info.isGroupOwner) {
             Thread ipReceiverThread = receiveIpAddress();
@@ -244,7 +253,6 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         }
         getActivity().findViewById(R.id.start_discover).setVisibility(View.INVISIBLE);
     }
-
 
     /**
      * This method performs simple socket connection
@@ -309,7 +317,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         });
     }
 
-    private String getFileName(Uri uri) {
+    private String getFileName(@NotNull Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
             try {

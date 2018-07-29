@@ -11,11 +11,6 @@
         android:icon="@drawable/ic_notification_settings"/>
 
     <header
-        android:fragment="com.talmir.mickinet.activities.SettingsActivity$FileStatisticsPreferenceFragment"
-        android:title="@string/pref_header_statistics"
-        android:icon="@drawable/ic_file_statistics_settings"/>
-
-    <header
         android:fragment="com.talmir.mickinet.activities.SettingsActivity$HelpPreferenceFragment"
         android:title="@string/pref_header_help"
         android:icon="@drawable/ic_help_settings"/>

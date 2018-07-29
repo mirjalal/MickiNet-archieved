@@ -1,6 +1,7 @@
 package com.talmir.mickinet.activities;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +17,6 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
 import android.view.Menu;
@@ -231,6 +231,9 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+//        SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
+//        Log.e("current date & time", sdf.format(/*Calendar.getInstance().getTime()*/new Date()));
+
         File rootDir = new File(Environment.getExternalStorageDirectory() + "/MickiNet/");
         rootDir.mkdirs();
 
@@ -248,7 +251,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         start_discovery = findViewById(R.id.start_discover);
         start_discovery.setOnClickListener(v -> {
             if (!isWifiP2pEnabled) {
-                AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(getApplicationContext()).create();
+                AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(this).create();
                 wifiOnOffAlertDialog.setTitle(getString(R.string.turn_on_wifi));
                 wifiOnOffAlertDialog.setMessage(getString(R.string.turn_on_wifi_message));
                 wifiOnOffAlertDialog.setIcon(R.drawable.ic_signal_wifi_off);

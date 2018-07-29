@@ -1,19 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<android.support.constraint.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:id="@+id/linearLayout2">
 
     <TextView
-            android:id="@+id/lblListItem"
-            android:layout_width="match_parent"
+            android:id="@+id/file_name"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="17sp"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
-            android:paddingLeft="?android:attr/expandableListPreferredChildPaddingLeft"
-            android:paddingStart="?android:attr/expandableListPreferredChildPaddingLeft"
-            android:paddingRight="?android:attr/expandableListPreferredChildPaddingLeft"
-            android:paddingEnd="?android:attr/expandableListPreferredChildPaddingLeft"/>
-</LinearLayout>
+            android:paddingLeft="?android:attr/expandableListPreferredItemPaddingLeft"
+            android:paddingRight="?android:attr/expandableListPreferredItemPaddingLeft"
+            android:paddingStart="?android:attr/expandableListPreferredItemPaddingLeft"
+            android:paddingEnd="?android:attr/expandableListPreferredItemPaddingLeft"
+            android:textSize="18sp"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.17"/>
+
+    <TextView
+            android:id="@+id/operation_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginRight="24dp"
+            android:layout_marginEnd="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintVertical_bias="0.235"
+            app:layout_constraintStart_toEndOf="@+id/lblListHeader"
+            android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintHorizontal_bias="1.0"/>
+
+    <TextView
+            android:id="@+id/date_time"
+            android:text="16 July 2018 15:18"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="@+id/operation_status"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/operation_status"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"/>
+
+</android.support.constraint.ConstraintLayout>

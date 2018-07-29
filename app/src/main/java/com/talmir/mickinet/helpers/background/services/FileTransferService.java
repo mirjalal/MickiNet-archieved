@@ -9,11 +9,11 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.preference.PreferenceManager;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
-import com.talmir.mickinet.helpers.background.ReportCrash;
+import com.talmir.mickinet.helpers.background.CrashReport;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -89,12 +89,12 @@ public class FileTransferService extends IntentService {
                 try {
                     inputStream = cr.openInputStream(Uri.parse(fileUri));
                 } catch (FileNotFoundException e) {
-                    ReportCrash.report(getApplicationContext(), FileTransferService.class.getName(), e);
+                    CrashReport.report(getApplicationContext(), FileTransferService.class.getName(), e);
                 }
                 // put all data to stream
                 copyFile(inputStream, outputStream, context);
             } catch (Exception e) {
-                ReportCrash.report(getApplicationContext(), FileReceiverAsyncTask.class.getName(), e);
+                CrashReport.report(getApplicationContext(), FileReceiverAsyncTask.class.getName(), e);
             } finally {
                 if (socket.isConnected()) {
                     try {
@@ -183,8 +183,10 @@ public class FileTransferService extends IntentService {
                 );
             }
             mNotifyManager.notify(id, mBuilder.build());
+
+
         } catch (Exception e) {
-            ReportCrash.report(getApplicationContext(), FileTransferService.class.getName(), e);
+            CrashReport.report(getApplicationContext(), FileTransferService.class.getName(), e);
         }
     }
 }

@@ -191,9 +191,7 @@
     <string name="title_activity_file_statistics">FileStatisticsActivity</string>
     <string name="tab_text_1">Sent</string>
     <string name="tab_text_2">Received</string>
-    <string name="action_reset_statistics">Settings</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="action_reset_statistics">Reset statistics</string>
+    <string name="no_data_available">No data available.</string>
 
 </resources>
