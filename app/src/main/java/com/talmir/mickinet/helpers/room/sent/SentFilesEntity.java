@@ -4,11 +4,10 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
-
 /**
  * A basic class representing an entity that
  * is a row in a five-columns database table
- * to store date about received files.
+ * to store date about sent files.
  *
  * See the documentation for the full rich set of annotations.
  * https://developer.android.com/topic/libraries/architecture/room.html

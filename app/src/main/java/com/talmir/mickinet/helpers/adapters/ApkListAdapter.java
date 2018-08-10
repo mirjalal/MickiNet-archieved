@@ -1,4 +1,4 @@
-package com.talmir.mickinet.helpers.adapter;
+package com.talmir.mickinet.helpers.adapters;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -94,7 +94,7 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
     public ApkViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         /* Big hack: http://stackoverflow.com/a/2605838 */
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View itemView = inflater.inflate(R.layout.list_item, parent, false);
+        View itemView = inflater.inflate(R.layout.list_item_apk_adapter, parent, false);
         return new ApkViewHolder(itemView);
     }
 

@@ -3,6 +3,7 @@ package com.talmir.mickinet.helpers.room.received;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
 /**
  * A basic class representing an entity that
@@ -17,7 +18,10 @@ import android.arch.persistence.room.PrimaryKey;
  */
 @Entity(tableName = "received")
 public class ReceivedFilesEntity {
+
     @PrimaryKey(autoGenerate = true)
+    @NonNull
+    @ColumnInfo(name = "id")
     public int id;
 
     @ColumnInfo(name = "name")

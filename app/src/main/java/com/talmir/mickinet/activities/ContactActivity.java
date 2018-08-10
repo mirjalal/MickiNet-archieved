@@ -14,12 +14,12 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.helpers.background.CrashReport;
 
 import java.io.File;
 
@@ -31,28 +31,25 @@ public class ContactActivity extends AppCompatActivity {
         setContentView(R.layout.activity_contact);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        final EditText messageBody = (EditText) findViewById(R.id.problem);
+        final EditText messageBody = findViewById(R.id.problem);
 
-        findViewById(R.id.send_problem).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (messageBody.getText().toString().length() > 0) {
-                    Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setType("message/rfc822");
-                    i.putExtra(Intent.EXTRA_EMAIL, new String[]{"mirjalal.talishinski@gmail.com"});
-                    i.putExtra(Intent.EXTRA_SUBJECT, "Help/Feedback/Question about MickiNet");
-                    i.putExtra(
-                            Intent.EXTRA_TEXT,
-                            messageBody.getText().toString() + (((CheckBox) findViewById(R.id.system_logs)).isChecked() ? getInfoAboutDevice() : "")
-                    );
-                    try {
-                        startActivity(Intent.createChooser(i, "Send email"));
-                    } catch (android.content.ActivityNotFoundException ignored) {
-                        Toast.makeText(getApplicationContext(), "There are no email clients installed.", Toast.LENGTH_SHORT).show();
-                    }
-                } else
-                    Toast.makeText(getApplicationContext(), "Please describe your problem.", Toast.LENGTH_SHORT).show();
-            }
+        findViewById(R.id.send_problem).setOnClickListener(v -> {
+            if (messageBody.getText().toString().length() > 0) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("message/rfc822");
+                i.putExtra(Intent.EXTRA_EMAIL, new String[]{"mirjalal.talishinski@gmail.com"});
+                i.putExtra(Intent.EXTRA_SUBJECT, "Help/Feedback/Question about MickiNet");
+                i.putExtra(
+                        Intent.EXTRA_TEXT,
+                        messageBody.getText().toString() + (((CheckBox) findViewById(R.id.system_logs)).isChecked() ? getInfoAboutDevice() : "")
+                );
+                try {
+                    startActivity(Intent.createChooser(i, "Send email"));
+                } catch (android.content.ActivityNotFoundException ignored) {
+                    Toast.makeText(getApplicationContext(), "There are no email clients installed.", Toast.LENGTH_SHORT).show();
+                }
+            } else
+                Toast.makeText(getApplicationContext(), "Please describe your problem.", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -133,8 +130,8 @@ public class ContactActivity extends AppCompatActivity {
                     log.append("Wireless");
             }
             log.append("\nBattery level: ").append((int)((level / (float)scale) * 100));
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+        } catch (/*PackageManager.NameNotFound*/Exception e) {
+            CrashReport.report(getApplicationContext(), ContactActivity.class.getName());
         }
 
         //Properties p = System.getProperties();

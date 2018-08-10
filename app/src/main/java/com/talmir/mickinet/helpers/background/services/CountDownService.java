@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.os.BatteryManager;
 import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 
 import com.talmir.mickinet.R;
 

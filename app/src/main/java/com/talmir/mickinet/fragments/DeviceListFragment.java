@@ -72,6 +72,10 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                 return getString(R.string.unknown);
         }
     }
+//
+//    static {
+//        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+//    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -227,7 +231,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     }
 
     /**
-     * Array adapter for ListFragment that maintains WifiP2pDevice list.
+     * Array adapters for ListFragment that maintains WifiP2pDevice list.
      */
     private class WiFiPeerListAdapter extends ArrayAdapter<WifiP2pDevice> {
         private List<WifiP2pDevice> items;

@@ -29,6 +29,8 @@ import android.widget.TextView;
 
 import com.talmir.mickinet.R;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 /**
@@ -92,7 +94,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * Helper method to determine if the device has an extra-large screen. For
      * example, 10" tablets are extra-large.
      */
-    private static boolean isXLargeTablet(Context context) {
+    private static boolean isXLargeTablet(@NotNull Context context) {
         return (context.getResources().getConfiguration().screenLayout
                 & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
     }
@@ -106,7 +108,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      *
      * @see #sBindPreferenceSummaryToValueListener
      */
-    private static void bindPreferenceSummaryToValue(Preference preference) {
+    private static void bindPreferenceSummaryToValue(@NotNull Preference preference) {
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
@@ -208,7 +210,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     return true;
                 case R.id.help:
                     View content = View.inflate(getActivity(), R.layout.wps_info, null);
-                    TextView link = (TextView) content.findViewById(R.id.contentText);
+                    TextView link = content.findViewById(R.id.contentText);
                     link.setMovementMethod(LinkMovementMethod.getInstance());
 
                     AlertDialog dialog = new AlertDialog.Builder(getActivity()).create();

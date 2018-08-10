@@ -1,21 +1,16 @@
 package com.talmir.mickinet.activities;
 
-import android.Manifest;
 import android.app.AlertDialog;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
@@ -27,10 +22,15 @@ import android.widget.Toast;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
+import com.talmir.mickinet.helpers.adapters.ReceivedFilesListAdapter;
+import com.talmir.mickinet.helpers.adapters.SentFilesListAdapter;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
-import com.talmir.mickinet.helpers.background.broadcastreceivers.BatteryPowerConnectionReceiver;
 import com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver;
 import com.talmir.mickinet.helpers.background.services.CountDownService;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
+import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
+
+import org.jetbrains.annotations.Contract;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,43 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
-
-    // ++++++++++++++++++++++++++++++++ Permissions ++++++++++++++++++++++++++++++++++++ //
-    private static final int INITIAL_REQUEST = 603;
-    private static final int CAMERA_REQUEST = 376;
-    private static final int STORAGE_REQUEST = 759;
-    private static final int CONTACTS_REQUEST = 623;
-
-    private static final String CAMERA_PERMISSIONS = Manifest.permission.CAMERA;
-    private static final String CONTACTS_READ_PERMISSION = Manifest.permission.READ_CONTACTS;
-    private static final String READ_STORAGE_PERMISSION = Manifest.permission.READ_EXTERNAL_STORAGE;
-    private static final String WRITE_STORAGE_PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-
-    private static final String[] INITIAL_PERMISSIONS = {
-            CAMERA_PERMISSIONS,
-            CONTACTS_READ_PERMISSION,
-            READ_STORAGE_PERMISSION,
-            WRITE_STORAGE_PERMISSION
-    };
-
-    private boolean canAccessCamera() {
-        // holy crap! WTF ? why I wrote Location thing instead of CAMERA ?
-        // return (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION));
-        return hasPermission(CAMERA_PERMISSIONS);
-    }
-
-    private boolean canAccessExternalStorage() {
-        return hasPermission(READ_STORAGE_PERMISSION) && hasPermission(WRITE_STORAGE_PERMISSION);
-    }
-
-    private boolean canAccessContacts() {
-        return hasPermission(CONTACTS_READ_PERMISSION);
-    }
-
-    private boolean hasPermission(String permission) {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (PackageManager.PERMISSION_GRANTED == checkSelfPermission(permission));
-    }
-    // -------------------------------- Permissions ------------------------------------ //
 
     // +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++ //
     private final IntentFilter intentFilter = new IntentFilter();
@@ -209,6 +172,31 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private BroadcastReceiver batteryInfoBroadcastReceiver = null;
     private FloatingActionButton start_discovery;
 
+    private static SentFilesViewModel mSentFilesViewModel;
+    private static SentFilesListAdapter mSentFilesListAdapter;
+    private static ReceivedFilesViewModel mReceivedFilesViewModel;
+    private static ReceivedFilesListAdapter mReceivedFilesListAdapter;
+
+    @Contract(pure = true)
+    public static SentFilesViewModel getSentFilesViewModel() {
+        return mSentFilesViewModel;
+    }
+
+    @Contract(pure = true)
+    public static SentFilesListAdapter getSentFilesListAdapter() {
+        return mSentFilesListAdapter;
+    }
+
+    @Contract(pure = true)
+    public static ReceivedFilesViewModel getReceivedFilesViewModel() {
+        return mReceivedFilesViewModel;
+    }
+
+    @Contract(pure = true)
+    public static ReceivedFilesListAdapter getReceivedFilesListAdapter() {
+        return mReceivedFilesListAdapter;
+    }
+
     // Great article!
     // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
     static {
@@ -217,22 +205,16 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Thread t = new Thread(() -> {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-            if (!prefs.getBoolean("firstTimeRun?", false))
-                startActivity(new Intent(getApplicationContext(), IntroductionActivity.class));
-            else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                    if (!canAccessCamera() || !canAccessExternalStorage() || !canAccessContacts())
-                        requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
-            }
-        });
-        t.start();
         super.onCreate(savedInstanceState);
+
+        mSentFilesViewModel = ViewModelProviders.of(this).get(SentFilesViewModel.class);
+        mReceivedFilesViewModel = ViewModelProviders.of(this).get(ReceivedFilesViewModel.class);
+
         setContentView(R.layout.activity_home);
 
-//        SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
-//        Log.e("current date & time", sdf.format(/*Calendar.getInstance().getTime()*/new Date()));
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+//            if (canAccessCamera() || canAccessExternalStorage() || canAccessContacts())
+//                requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
 
         File rootDir = new File(Environment.getExternalStorageDirectory() + "/MickiNet/");
         rootDir.mkdirs();
@@ -280,36 +262,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 }
             });
         });
-//        Intent intent = getIntent();
-//        if (intent.getAction().equals(Intent.ACTION_SEND) && intent.getType() != null) {
-//            Toast toast = Toast.makeText(this, "send intent", Toast.LENGTH_LONG);
-//            toast.setGravity(Gravity.CENTER, 0, 0);
-//            toast.show();
-//            Uri fileUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-//            DeviceDetailFragment.executeSendIntent(this, fileUri);
-//        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case CAMERA_REQUEST:
-                if (!canAccessCamera())
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                        requestPermissions(new String[]{CAMERA_PERMISSIONS}, STORAGE_REQUEST);
-                break;
-            case STORAGE_REQUEST:
-                if (!canAccessExternalStorage())
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                        requestPermissions(new String[]{READ_STORAGE_PERMISSION, WRITE_STORAGE_PERMISSION}, STORAGE_REQUEST);
-                break;
-            case CONTACTS_REQUEST:
-                if (!canAccessContacts())
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                        requestPermissions(new String[]{CONTACTS_READ_PERMISSION}, STORAGE_REQUEST);
-                break;
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -325,6 +277,11 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
                 return true;
             case R.id.action_file_statistics:
+                mSentFilesListAdapter = new SentFilesListAdapter(this);
+                mSentFilesViewModel.getAllSentFiles().observe(this, mSentFilesListAdapter::setSentFiles);
+                mReceivedFilesListAdapter = new ReceivedFilesListAdapter(this);
+                mReceivedFilesViewModel.getAllReceivedFiles().observe(this, mReceivedFilesListAdapter::setReceivedFiles);
+
                 startActivity(new Intent(getApplicationContext(), FileStatisticsActivity.class));
                 return true;
             default:
@@ -340,14 +297,14 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         super.onResume();
         wifiDirectBroadcastReceiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
         registerReceiver(wifiDirectBroadcastReceiver, intentFilter);
-        batteryInfoBroadcastReceiver = new BatteryPowerConnectionReceiver();
-        registerReceiver(batteryInfoBroadcastReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+//        batteryInfoBroadcastReceiver = new BatteryPowerConnectionReceiver();
+//        registerReceiver(batteryInfoBroadcastReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
 
     @Override
     public void onPause() {
         unregisterReceiver(wifiDirectBroadcastReceiver);
-        unregisterReceiver(batteryInfoBroadcastReceiver);
+//        unregisterReceiver(batteryInfoBroadcastReceiver);
         super.onPause();
     }
 
@@ -358,8 +315,8 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         try {
             unregisterReceiver(wifiDirectBroadcastReceiver);
             wifiDirectBroadcastReceiver = null;
-            unregisterReceiver(batteryInfoBroadcastReceiver);
-            batteryInfoBroadcastReceiver = null;
+//            unregisterReceiver(batteryInfoBroadcastReceiver);
+//            batteryInfoBroadcastReceiver = null;
         } catch (IllegalArgumentException ignored) {}
         super.onDestroy();
     }

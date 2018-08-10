@@ -13,14 +13,13 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
-import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -50,13 +49,13 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
 
-    private ReceivedFilesViewModel rfvm;
+//    private ReceivedFilesViewModel mReceivedFilesViewModel;
     private ReceivedFilesEntity rfe;
 
-    public FileReceiverAsyncTask(Context context, View view, ReceivedFilesViewModel rfvm) {
+    public FileReceiverAsyncTask(Context context, View view/*, ReceivedFilesViewModel mReceivedFilesViewModel*/) {
         mContext = context;
         mView = view;
-        this.rfvm = rfvm;
+//        this.mReceivedFilesViewModel = mReceivedFilesViewModel;
     }
 
     @Contract(pure = true)
@@ -177,7 +176,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             // generate unique id to show a new notification each time a file received
             id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
             mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-            mBuilder = new NotificationCompat.Builder(mContext);
+            mBuilder = new NotificationCompat.Builder(mContext, null);
 
             // Issues the notification
             mBuilder.setTicker(mContext.getString(R.string.receiving_file))
@@ -255,13 +254,13 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             if (settings.getBoolean("pref_auto_open_received_file", false)) {
                 mContext.startActivity(openReceivedFile);
             } else {
-                Snackbar.make(mView, mContext.getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
-                        .setAction(mContext.getString(R.string.open_file), v -> mContext.startActivity(openReceivedFile))
-                        .show();
+//                Snackbar.make(mView, mContext.getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
+//                        .setAction(mContext.getString(R.string.open_file), v -> mContext.startActivity(openReceivedFile))
+//                        .show();
             }
 
             rfe.f_operation_status = "1";
-            rfvm.insert(rfe);
+            HomeActivity.getReceivedFilesViewModel().insert(rfe);
         } else {
             mBuilder.setContentText(mContext.getString(R.string.file_receive_fail))
                     .setTicker(mContext.getString(R.string.file_is_not_received))
@@ -272,7 +271,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             mNotifyManager.notify(id, mBuilder.build());
 
             rfe.f_operation_status = "0";
-            rfvm.insert(rfe);
+            HomeActivity.getReceivedFilesViewModel().insert(rfe);
         }
     }
 

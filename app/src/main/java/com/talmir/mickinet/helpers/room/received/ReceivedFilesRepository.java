@@ -25,12 +25,11 @@ public class ReceivedFilesRepository {
 
     LiveData<List<ReceivedFilesEntity>> getAllReceivedFiles() { return mAllReceivedFiles; }
 
-    public void insert(ReceivedFilesEntity word) {
-        new insertAsyncTask(mReceivedFilesDao).execute(word);
+    public void insert(ReceivedFilesEntity entity) {
+        new insertAsyncTask(mReceivedFilesDao).execute(entity);
     }
 
     private static class insertAsyncTask extends AsyncTask<ReceivedFilesEntity, Void, Void> {
-
         private ReceivedFilesDao mAsyncTaskDao;
 
         insertAsyncTask(ReceivedFilesDao dao) {

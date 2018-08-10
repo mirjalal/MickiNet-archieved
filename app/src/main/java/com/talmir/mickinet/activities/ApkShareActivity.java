@@ -18,7 +18,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.helpers.adapter.ApkListAdapter;
+import com.talmir.mickinet.helpers.adapters.ApkListAdapter;
 import com.talmir.mickinet.helpers.ui.DividerItemDecoration;
 import com.talmir.mickinet.helpers.ui.IRecyclerItemClickListener;
 import com.talmir.mickinet.helpers.ui.RecyclerViewFastScroller;

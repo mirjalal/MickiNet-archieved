@@ -24,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:hint="Enter new device name"
+                android:hint="@string/enter_new_device_name"
                 android:imeOptions="actionDone"
                 android:layout_alignParentLeft="true"
                 android:inputType="text"/>
@@ -47,8 +47,10 @@
         <Button
                 android:id="@+id/submit"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="Change"/>
+                android:layout_height="40dp"
+                android:text="@string/change"
+                android:background="@drawable/buttons_background"
+                android:textColor="@color/colorPrimary"/>
     </android.support.v7.widget.ButtonBarLayout>
 
     <android.support.v7.widget.ButtonBarLayout

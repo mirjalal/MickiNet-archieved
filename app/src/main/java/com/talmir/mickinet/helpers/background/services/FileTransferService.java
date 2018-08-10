@@ -1,5 +1,6 @@
 package com.talmir.mickinet.helpers.background.services;
 
+import android.app.Application;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.ContentResolver;
@@ -9,11 +10,18 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
+import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
+import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.helpers.background.CrashReport;
+import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
+import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,7 +30,10 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+import java.util.Objects;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -40,8 +51,12 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
     private static final int SOCKET_TIMEOUT = 5000;
 
+//    private SentFilesViewModel sfvm;
+    private SentFilesEntity sfe;
+
     public FileTransferService() {
         super("FileTransferService");
+//        sfvm = HomeActivity.getSentFilesViewModel();
     }
 
     /**
@@ -59,13 +74,31 @@ public class FileTransferService extends IntentService {
      */
     @Override
     protected void onHandleIntent(Intent intent) {
-        Context context = getApplicationContext();
+        Application context = getApplication();
 
-        if (intent.getAction().equals(ACTION_SEND_FILE)) {
-            String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
+        if (Objects.requireNonNull(intent.getAction()).equals(ACTION_SEND_FILE)) {
+            String fileUri = Objects.requireNonNull(intent.getExtras()).getString(EXTRAS_FILE_PATH);
             String fileName = intent.getExtras().getString(EXTRAS_FILE_NAME);
             String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
+
+            sfe = new SentFilesEntity();
+            sfe.f_name = fileName;
+
+            // get mimetype to determine that in which folder'll be used
+            assert fileName != null;
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
+            assert mimeType != null;
+            if (mimeType.startsWith("image"))
+                sfe.f_type = "1";
+            else if (mimeType.startsWith("video"))
+                sfe.f_type = "2";
+//            else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+//                sfe.f_type = "4"; // for now, music types are accepted as others
+            else if (mimeType.equals("application/vnd.android.package-archive"))
+                sfe.f_type = "3";
+            else
+                sfe.f_type = "4";
 
             Socket socket = new Socket();
             try {
@@ -113,6 +146,8 @@ public class FileTransferService extends IntentService {
      * @param value file name length
      * @return file name length as byte[]
      */
+    @NonNull
+    @Contract(pure = true)
     private static byte[] getByteArrayFromInt(int value) {
         return new byte[]{ (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value };
     }
@@ -120,25 +155,31 @@ public class FileTransferService extends IntentService {
     /**
      * @param inputStream input stream
      * @param out outputstream
-     * @param context context
+     * @param app context
      */
-    private void copyFile(InputStream inputStream, OutputStream out, Context context) {
-        // http://stackoverflow.com/a/19561265/4057688
+    private void copyFile(InputStream inputStream, OutputStream out, @NotNull Application app) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
+        sfe.f_time = sdf.format(new Date());
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(app, null);
+        NotificationManager mNotifyManager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
+        // generate unique id every time to show new notification each time
+        int id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
+
+        // Q) Why 8192 ?
+        // A) http://stackoverflow.com/a/19561265/4057688
         byte buffer[] = new byte[8192];
         int len;
         try {
-            // generate unique id every time to show new notification each time
-            int id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
-            NotificationManager mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
             // Issues the notification
-            mBuilder.setTicker(context.getString(R.string.file_send))
-                    .setContentTitle(context.getString(R.string.sending_file))
-                    .setContentText(context.getString(R.string.sending))
+            mBuilder.setTicker(app.getString(R.string.file_send))
+                    .setContentTitle(app.getString(R.string.sending_file))
+                    .setContentText(app.getString(R.string.sending))
                     .setOngoing(true)
                     .setSmallIcon(android.R.drawable.stat_sys_upload)
                     .setProgress(0, 0, true);
 
+            assert mNotifyManager != null;
             mNotifyManager.notify(id, mBuilder.build());
             while ((len = inputStream.read(buffer)) != -1)
                 out.write(buffer, 0, len);
@@ -148,20 +189,20 @@ public class FileTransferService extends IntentService {
             inputStream.close();
 
             // When the loop is finished, updates the notification
-            mBuilder.setTicker(context.getString(R.string.file_sent))
-                    .setContentTitle(context.getString(R.string.file_sent))
-                    .setContentText(context.getString(R.string.successful))
+            mBuilder.setTicker(app.getString(R.string.successful))
+//                    .setContentTitle(app.getString(R.string.file_sent))
+                    .setContentText(app.getString(R.string.file_sent))
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done)
                     .setOngoing(false)
                     .setProgress(0, 0, false);
 
-            SharedPreferences notificationSettings = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences notificationSettings = PreferenceManager.getDefaultSharedPreferences(app);
             if (notificationSettings.getBoolean("notifications_new_file_send", false)) {
                 mBuilder.setSound(
                         Uri.parse(
-                                PreferenceManager.getDefaultSharedPreferences(context).getString(
+                                PreferenceManager.getDefaultSharedPreferences(app).getString(
                                         "notifications_new_file_send_ringtone",
-                                        "android.resource://" + context.getPackageName() + "/" + R.raw.file_receive)
+                                        "android.resource://" + app.getPackageName() + "/" + R.raw.file_receive)
                         )
                 );
 
@@ -175,7 +216,7 @@ public class FileTransferService extends IntentService {
                 );
             } else {
                 mBuilder.setSound(
-                    Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.file_receive)
+                    Uri.parse("android.resource://" + app.getPackageName() + "/" + R.raw.file_receive)
                 );
 
                 mBuilder.setLights(
@@ -184,9 +225,22 @@ public class FileTransferService extends IntentService {
             }
             mNotifyManager.notify(id, mBuilder.build());
 
-
+            sfe.f_operation_status = "1";
+            HomeActivity.getSentFilesViewModel().insert(sfe);
         } catch (Exception e) {
             CrashReport.report(getApplicationContext(), FileTransferService.class.getName(), e);
+
+            mBuilder.setContentText(app.getString(R.string.file_sent_fail))
+                    .setTicker(app.getString(R.string.file_is_not_sent))
+                    .setSmallIcon(android.R.drawable.stat_notify_error)
+                    .setProgress(0, 0, false)
+                    .setOngoing(false);
+
+            assert mNotifyManager != null;
+            mNotifyManager.notify(id, mBuilder.build());
+
+            sfe.f_operation_status = "0";
+            HomeActivity.getSentFilesViewModel().insert(sfe);
         }
     }
 }

@@ -54,6 +54,8 @@
     <string name="file_receive">File receive</string>
     <string name="file_receive_fail">An error occurred. File receive failed.</string>
     <string name="file_is_not_received">File is not received.</string>
+    <string name="file_sent_fail">An error occurred. File send failed.</string>
+    <string name="file_is_not_sent">File is not sent.</string>
     <string name="string_first_slide">Welcome!</string>
     <string name="string_second_slide">To begin with, we need some permissions</string>
     <string name="string_third_slide">We are done!</string>
@@ -188,10 +190,13 @@
     <string name="include_logs">Include logs</string>
     <string name="auto_turn_on_wifi">Turn on Wi-Fi when app starts</string>
     <string name="auto_turn_on_wifi_summary">Automatically turns on Wi-Fi when app started.</string>
-    <string name="title_activity_file_statistics">FileStatisticsActivity</string>
+    <string name="title_activity_file_statistics">File Statistics</string>
     <string name="tab_text_1">Sent</string>
     <string name="tab_text_2">Received</string>
     <string name="action_reset_statistics">Reset statistics</string>
     <string name="no_data_available">No data available.</string>
+    <string name="enter_new_device_name">Enter new device name</string>
+    <string name="change">Change</string>
+    <string name="splash_logo">splash_logo</string>
 
 </resources>

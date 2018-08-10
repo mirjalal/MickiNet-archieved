@@ -26,7 +26,6 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -89,8 +88,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             DeviceListFragment listFragment = (DeviceListFragment) activity.getFragmentManager().findFragmentById(R.id.frag_list);
             LinearLayout ll = (LinearLayout)listFragment.getView();
             int c = ll.getChildCount();
-
-            View rootView = activity.findViewById(R.id.view);
 
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
             if (networkInfo.isConnected()) {

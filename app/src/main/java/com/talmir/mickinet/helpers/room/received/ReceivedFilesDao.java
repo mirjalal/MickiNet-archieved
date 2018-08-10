@@ -3,6 +3,7 @@ package com.talmir.mickinet.helpers.room.received;
 import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public interface ReceivedFilesDao {
 
     // We do not need a conflict strategy, because the id is our primary key, and you cannot
     // add two items with the same primary key to the database.
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(ReceivedFilesEntity file);
 
     @Query("DELETE FROM received")

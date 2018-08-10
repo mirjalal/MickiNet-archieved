@@ -2,7 +2,6 @@ package com.talmir.mickinet.fragments;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -12,7 +11,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatDelegate;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,11 +20,10 @@ import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.ApkShareActivity;
+import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
-import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.background.services.FileTransferService;
-import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,14 +38,13 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     private static final int ACTION_TAKE_PICTURE_RESULT_CODE = 640;
     private static final int ACTION_TAKE_VIDEO_RESULT_CODE = 722;
 
-    private View mContentView = null;
     private static WifiP2pInfo info;
     public ProgressDialog progressDialog = null;
 
     // 0 - group owner (server), 1 - client
     private static int deviceType = -1;
 
-    private ReceivedFilesViewModel rfvm;
+//    private ReceivedFilesViewModel mReceivedFilesViewModel;
 
     // Great article!
     // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
@@ -59,13 +55,13 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+//        mReceivedFilesViewModel = HomeActivity.getReceivedFilesViewModel();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rfvm = ViewModelProviders.of((FragmentActivity) getActivity()).get(ReceivedFilesViewModel.class);
-
-        mContentView = inflater.inflate(R.layout.fragment_device_detail, null);
+        View mContentView = inflater.inflate(R.layout.fragment_device_detail, null);
 
         mContentView.findViewById(R.id.photo_camera_action).setOnClickListener(v -> {
             if (deviceType == 1) {
@@ -130,20 +126,21 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+        serviceIntent.putExtra(
+            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
+        );
+        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
+
         switch (requestCode) {
             case ACTION_TAKE_PICTURE_RESULT_CODE:
                 // User has taken a picture. Transfer it to group owner i.e peer using FileTransferService
                 if (data != null && data.getData() != null) {
                     Uri uri = data.getData();
-                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
-                    serviceIntent.putExtra(
-                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
-                    );
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
                     getActivity().startService(serviceIntent);
                 } else {
                     Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
@@ -152,19 +149,11 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 }
                 break;
             case ACTION_TAKE_VIDEO_RESULT_CODE:
-                // User has taken a video_camera. Transfer it to group owner i.e peer using
-                // FileTransferService.
+                // User has taken a video_camera. Transfer it to group owner i.e peer using FileTransferService.
                 if (data != null && data.getData() != null) {
                     Uri uri = data.getData();
-                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
-                    serviceIntent.putExtra(
-                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
-                    );
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
                     getActivity().startService(serviceIntent);
                 } else {
                     Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
@@ -173,19 +162,11 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 }
                 break;
             case ACTION_CHOOSE_FILE_RESULT_CODE:
-                // User has picked a file. Transfer it to group owner i.e peer using
-                // FileTransferService.
+                // User has picked a file. Transfer it to group owner i.e peer using FileTransferService.
                 if (data != null && data.getData() != null) {
                     Uri uri = data.getData();
-                    Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
                     serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, getFileName(uri));
-                    serviceIntent.putExtra(
-                            FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                            deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
-                    );
-                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
                     getActivity().startService(serviceIntent);
                 } else {
                     Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
@@ -198,15 +179,8 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     String apk_dir = data.getExtras().getString("apk_dir");
                     String apk_name = data.getExtras().getString("apk_name");
                     if (apk_dir != null && apk_name != null) {
-                        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-                        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
                         serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, "file://" + apk_dir);
                         serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_NAME, apk_name + ".apk");
-                        serviceIntent.putExtra(
-                                FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                                deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : FileReceiverAsyncTask.getClientIpAddress()
-                        );
-                        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 4126);
                         getActivity().startService(serviceIntent);
                     } else {
                         CrashReport.report(getActivity(), DeviceDetailFragment.class.getName());
@@ -230,7 +204,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         DeviceDetailFragment.info = info;
         getView().setVisibility(View.VISIBLE);
 
-        new FileReceiverAsyncTask(getActivity(), getView(), rfvm).execute();
+        new FileReceiverAsyncTask(getActivity(), getView()/*, mReceivedFilesViewModel*/).execute();
 
         if (info.groupFormed && info.isGroupOwner) {
             Thread ipReceiverThread = receiveIpAddress();
