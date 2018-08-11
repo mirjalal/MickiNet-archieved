@@ -18,7 +18,7 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
 
 import org.jetbrains.annotations.Contract;
@@ -117,32 +117,32 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
 
             rfe = new ReceivedFilesEntity();
-            rfe.f_name = fileName;
+            rfe.r_f_name = fileName;
 
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
-            rfe.f_time = sdf.format(/*Calendar.getInstance().getTime()*/new Date());
+            rfe.r_f_time = sdf.format(/*Calendar.getInstance().getTime()*/new Date());
 
             // check for mimetypes
             final File receivedFile;
             if (mimeType.startsWith("image")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Photos/Received/" + fileName);
-                rfe.f_type = "1";
+                rfe.r_f_type = "1";
             }
             else if (mimeType.startsWith("video")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Videos/Received/" + fileName);
-                rfe.f_type = "2";
+                rfe.r_f_type = "2";
             }
             else if (mimeType.startsWith("music") || mimeType.startsWith("audio")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Musics/Received/" + fileName);
-                rfe.f_type = "4"; // for now, music types are accepted as others
+                rfe.r_f_type = "4"; // for now, music types are accepted as others
             }
             else if (mimeType.equals("application/vnd.android.package-archive")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/APKs/Received/" + fileName);
-                rfe.f_type = "3";
+                rfe.r_f_type = "3";
             }
             else {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Others/Received/" + fileName);
-                rfe.f_type = "4";
+                rfe.r_f_type = "4";
             }
 
             File dirs = new File(receivedFile.getParent());
@@ -173,7 +173,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             ServerSocket serverSocket = new ServerSocket(4126);
             Socket client = serverSocket.accept();
 
-            // generate unique id to show a new notification each time a file received
+            // generate unique s_f_id to show a new notification each time a file received
             id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
             mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
             mBuilder = new NotificationCompat.Builder(mContext, null);
@@ -259,8 +259,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 //                        .show();
             }
 
-            rfe.f_operation_status = "1";
-            HomeActivity.getReceivedFilesViewModel().insert(rfe);
+            rfe.r_f_operation_status = "1";
+            DeviceDetailFragment.getReceivedFilesViewModel().insert(rfe);
         } else {
             mBuilder.setContentText(mContext.getString(R.string.file_receive_fail))
                     .setTicker(mContext.getString(R.string.file_is_not_received))
@@ -270,8 +270,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             mNotifyManager.notify(id, mBuilder.build());
 
-            rfe.f_operation_status = "0";
-            HomeActivity.getReceivedFilesViewModel().insert(rfe);
+            rfe.r_f_operation_status = "0";
+            DeviceDetailFragment.getReceivedFilesViewModel().insert(rfe);
         }
     }
 

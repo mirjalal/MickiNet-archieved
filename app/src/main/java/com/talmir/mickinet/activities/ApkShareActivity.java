@@ -49,7 +49,7 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
         final ApkListAdapter apkListAdapter = new ApkListAdapter(pm, packages);
         apkListAdapter.notifyDataSetChanged();
 
-        recyclerView = findViewById(R.id.recycler_view);
+        recyclerView = findViewById(R.id.sent_recycler_view);
         recyclerView.setAdapter(apkListAdapter);
         final RecyclerViewFastScroller fastScroller = this.findViewById(R.id.fastscroller);
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false) {

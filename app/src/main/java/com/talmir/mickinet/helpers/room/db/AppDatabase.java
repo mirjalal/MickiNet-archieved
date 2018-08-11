@@ -16,7 +16,7 @@ import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
  * This is the backend. The database. This used to be done by the OpenHelper.
  * The fact that this has very few comments emphasizes its coolness.
  */
-@Database(entities = {SentFilesEntity.class, ReceivedFilesEntity.class}, version = 1, exportSchema = false)
+@Database(entities = {SentFilesEntity.class, ReceivedFilesEntity.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract ReceivedFilesDao mReceivedFilesDao();

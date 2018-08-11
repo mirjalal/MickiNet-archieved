@@ -1,7 +1,6 @@
 package com.talmir.mickinet.activities;
 
 import android.app.AlertDialog;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -27,8 +26,6 @@ import com.talmir.mickinet.helpers.adapters.SentFilesListAdapter;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 import com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver;
 import com.talmir.mickinet.helpers.background.services.CountDownService;
-import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
-import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
 import org.jetbrains.annotations.Contract;
 
@@ -36,6 +33,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
 
@@ -103,7 +101,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                fragment.getView().setVisibility(View.GONE);
+                Objects.requireNonNull(fragment.getView()).setVisibility(View.GONE);
             }
 
             @Override
@@ -172,24 +170,12 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private BroadcastReceiver batteryInfoBroadcastReceiver = null;
     private FloatingActionButton start_discovery;
 
-    private static SentFilesViewModel mSentFilesViewModel;
     private static SentFilesListAdapter mSentFilesListAdapter;
-    private static ReceivedFilesViewModel mReceivedFilesViewModel;
     private static ReceivedFilesListAdapter mReceivedFilesListAdapter;
-
-    @Contract(pure = true)
-    public static SentFilesViewModel getSentFilesViewModel() {
-        return mSentFilesViewModel;
-    }
 
     @Contract(pure = true)
     public static SentFilesListAdapter getSentFilesListAdapter() {
         return mSentFilesListAdapter;
-    }
-
-    @Contract(pure = true)
-    public static ReceivedFilesViewModel getReceivedFilesViewModel() {
-        return mReceivedFilesViewModel;
     }
 
     @Contract(pure = true)
@@ -206,10 +192,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        mSentFilesViewModel = ViewModelProviders.of(this).get(SentFilesViewModel.class);
-        mReceivedFilesViewModel = ViewModelProviders.of(this).get(ReceivedFilesViewModel.class);
-
         setContentView(R.layout.activity_home);
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -262,6 +244,14 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 }
             });
         });
+
+        mSentFilesListAdapter = new SentFilesListAdapter(this);
+        DeviceDetailFragment.getSentFilesViewModel().getAllSentFiles().observe(this, mSentFilesListAdapter::setSentFiles);
+        mSentFilesListAdapter.getSentFilesCountByTypes();
+
+        mReceivedFilesListAdapter = new ReceivedFilesListAdapter(this);
+        DeviceDetailFragment.getReceivedFilesViewModel().getAllReceivedFiles().observe(this, mReceivedFilesListAdapter::setReceivedFiles);
+        mReceivedFilesListAdapter.getReceivedFilesCountByTypes();
     }
 
     @Override
@@ -277,10 +267,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
                 return true;
             case R.id.action_file_statistics:
-                mSentFilesListAdapter = new SentFilesListAdapter(this);
-                mSentFilesViewModel.getAllSentFiles().observe(this, mSentFilesListAdapter::setSentFiles);
-                mReceivedFilesListAdapter = new ReceivedFilesListAdapter(this);
-                mReceivedFilesViewModel.getAllReceivedFiles().observe(this, mReceivedFilesListAdapter::setReceivedFiles);
 
                 startActivity(new Intent(getApplicationContext(), FileStatisticsActivity.class));
                 return true;

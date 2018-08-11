@@ -44,7 +44,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/tab_text_1">
                 <!--<android.support.v7.widget.RecyclerView-->
-                        <!--android:id="@+id/recyclerview"-->
+                        <!--android:s_f_id="@+s_f_id/recyclerview"-->
                         <!--android:layout_width="match_parent"-->
                         <!--android:layout_height="match_parent"-->
                         <!--android:background="@android:color/darker_gray"-->

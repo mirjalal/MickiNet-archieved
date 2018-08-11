@@ -3,6 +3,7 @@ package com.talmir.mickinet.helpers.adapters;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,6 @@ import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.FileStatisticsActivity;
 import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -47,9 +47,9 @@ public class SentFilesListAdapter extends RecyclerView.Adapter<SentFilesListAdap
     @Override
     public void onBindViewHolder(@NonNull SentFilesListAdapter.SentFilesViewHolder holder, int position) {
         SentFilesEntity rfe = mListOfFiles.get(position);
-        holder.file_name.setText(rfe.f_name);
-        holder.operation_status.setText(rfe.f_operation_status.equals("1") ? "Operation status: Succeeded" : "Operation status: Failed");
-        holder.date_time.setText(rfe.f_time);
+        holder.file_name.setText(rfe.s_f_name);
+        holder.operation_status.setText(rfe.s_f_operation_status.equals("1") ? "Operation status: Succeeded" : "Operation status: Failed");
+        holder.date_time.setText(rfe.s_f_time);
     }
 
     // getItemCount() is called many times, and when it is first called,
@@ -67,11 +67,11 @@ public class SentFilesListAdapter extends RecyclerView.Adapter<SentFilesListAdap
     public void getSentFilesCountByTypes() {
         if (mListOfFiles != null) {
             for (SentFilesEntity temp : mListOfFiles) {
-                if (temp.f_type.equals("1"))
+                if (temp.s_f_type.equals("1"))
                     FileStatisticsActivity.sentPhotoFilesCount = FileStatisticsActivity.sentPhotoFilesCount + 1.0f;
-                else if (temp.f_type.equals("2"))
+                else if (temp.s_f_type.equals("2"))
                     FileStatisticsActivity.sentVideoFilesCount = FileStatisticsActivity.sentVideoFilesCount + 1.0f;
-                else if (temp.f_type.equals("3"))
+                else if (temp.s_f_type.equals("3"))
                     FileStatisticsActivity.sentAPKFilesCount = FileStatisticsActivity.sentAPKFilesCount + 1.0f;
                 else
                     FileStatisticsActivity.sentOtherFilesCount = FileStatisticsActivity.sentOtherFilesCount + 1.0f;

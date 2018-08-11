@@ -18,17 +18,18 @@ import android.arch.persistence.room.PrimaryKey;
 @Entity(tableName = "sent")
 public class SentFilesEntity {
     @PrimaryKey(autoGenerate = true)
-    public int id;
+    @ColumnInfo(name = "id")
+    public int s_f_id;
 
     @ColumnInfo(name = "name")
-    public String f_name;
+    public String s_f_name;
 
     @ColumnInfo(name = "type")
-    public String f_type;
+    public String s_f_type;
 
     @ColumnInfo(name = "status")
-    public String f_operation_status;
+    public String s_f_operation_status;
 
     @ColumnInfo(name = "dateTime")
-    public String f_time;
+    public String s_f_time;
 }

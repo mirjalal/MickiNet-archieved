@@ -2,6 +2,7 @@ package com.talmir.mickinet.fragments;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatDelegate;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -24,7 +26,10 @@ import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 import com.talmir.mickinet.helpers.background.services.FileTransferService;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
+import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
@@ -44,7 +49,18 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     // 0 - group owner (server), 1 - client
     private static int deviceType = -1;
 
-//    private ReceivedFilesViewModel mReceivedFilesViewModel;
+    private static SentFilesViewModel mSentFilesViewModel;
+    private static ReceivedFilesViewModel mReceivedFilesViewModel;
+
+    @Contract(pure = true)
+    public static SentFilesViewModel getSentFilesViewModel() {
+        return mSentFilesViewModel;
+    }
+
+    @Contract(pure = true)
+    public static ReceivedFilesViewModel getReceivedFilesViewModel() {
+        return mReceivedFilesViewModel;
+    }
 
     // Great article!
     // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
@@ -55,13 +71,14 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-//        mReceivedFilesViewModel = HomeActivity.getReceivedFilesViewModel();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View mContentView = inflater.inflate(R.layout.fragment_device_detail, null);
+
+        mSentFilesViewModel = ViewModelProviders.of((FragmentActivity) getActivity()).get(SentFilesViewModel.class);
+        mReceivedFilesViewModel = ViewModelProviders.of((FragmentActivity) getActivity()).get(ReceivedFilesViewModel.class);
 
         mContentView.findViewById(R.id.photo_camera_action).setOnClickListener(v -> {
             if (deviceType == 1) {

@@ -11,7 +11,6 @@ import java.util.List;
  * @since 7/29/2018
  */
 public class SentFilesViewModel extends AndroidViewModel {
-
     private SentFilesRepository mRepository;
     private LiveData<List<SentFilesEntity>> mAllSentFiles;
 

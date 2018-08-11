@@ -14,17 +14,16 @@ import java.util.List;
  * @since 7/29/2018
  */
 public class SentFilesRepository {
-
     private SentFilesDao mSentFilesDao;
     private LiveData<List<SentFilesEntity>> mAllSentFiles;
 
-    public SentFilesRepository(Application application) {
+    SentFilesRepository(Application application) {
         AppDatabase db = AppDatabase.getDatabase(application);
         mSentFilesDao = db.mSentFilesDao();
         mAllSentFiles = mSentFilesDao.getAllSentFiles();
     }
 
-    public LiveData<List<SentFilesEntity>> getAllSentFiles() { return mAllSentFiles; }
+    LiveData<List<SentFilesEntity>> getAllSentFiles() { return mAllSentFiles; }
 
     public void insert(SentFilesEntity sentFilesEntity) {
         new SentFilesRepository.insertAsyncTask(mSentFilesDao).execute(sentFilesEntity);

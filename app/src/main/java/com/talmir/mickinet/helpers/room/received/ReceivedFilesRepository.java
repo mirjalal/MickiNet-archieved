@@ -13,7 +13,6 @@ import java.util.List;
  * @since 7/26/2018
  */
 public class ReceivedFilesRepository {
-
     private ReceivedFilesDao mReceivedFilesDao;
     private LiveData<List<ReceivedFilesEntity>> mAllReceivedFiles;
 

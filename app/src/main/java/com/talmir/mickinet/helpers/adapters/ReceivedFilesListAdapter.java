@@ -46,9 +46,9 @@ public class ReceivedFilesListAdapter extends RecyclerView.Adapter<ReceivedFiles
     @Override
     public void onBindViewHolder(@NonNull ReceivedFilesViewHolder holder, int position) {
         ReceivedFilesEntity rfe = mListOfFiles.get(position);
-        holder.file_name.setText(rfe.f_name);
-        holder.operation_status.setText(rfe.f_operation_status.equals("1") ? "Operation status: Succeeded" : "Operation status: Failed");
-        holder.date_time.setText(rfe.f_time);
+        holder.file_name.setText(rfe.r_f_name);
+        holder.operation_status.setText(rfe.r_f_operation_status.equals("1") ? "Operation status: Succeeded" : "Operation status: Failed");
+        holder.date_time.setText(rfe.r_f_time);
     }
 
     // getItemCount() is called many times, and when it is first called,
@@ -66,11 +66,11 @@ public class ReceivedFilesListAdapter extends RecyclerView.Adapter<ReceivedFiles
     public void getReceivedFilesCountByTypes() {
         if (mListOfFiles != null) {
             for (ReceivedFilesEntity temp : mListOfFiles) {
-                if (temp.f_type.equals("1"))
+                if (temp.r_f_type.equals("1"))
                     FileStatisticsActivity.receivedPhotoFilesCount = FileStatisticsActivity.receivedPhotoFilesCount + 1.0f;
-                else if (temp.f_type.equals("2"))
+                else if (temp.r_f_type.equals("2"))
                     FileStatisticsActivity.receivedVideoFilesCount = FileStatisticsActivity.receivedVideoFilesCount + 1.0f;
-                else if (temp.f_type.equals("3"))
+                else if (temp.r_f_type.equals("3"))
                     FileStatisticsActivity.receivedAPKFilesCount = FileStatisticsActivity.receivedAPKFilesCount + 1.0f;
                 else
                     FileStatisticsActivity.receivedOtherFilesCount = FileStatisticsActivity.receivedOtherFilesCount + 1.0f;

@@ -14,7 +14,6 @@ import java.util.List;
  */
 @Dao
 public interface ReceivedFilesDao {
-
     // LiveData is a data holder class that can be observed within a given lifecycle.
     // Always holds/caches latest version of data. Notifies its active observers when the
     // data has changed. Since we are getting all the contents of the database,
@@ -22,7 +21,7 @@ public interface ReceivedFilesDao {
     @Query("SELECT id, name, type, status, dateTime FROM received")
     LiveData<List<ReceivedFilesEntity>> getAllReceivedFiles();
 
-    // We do not need a conflict strategy, because the id is our primary key, and you cannot
+    // We do not need a conflict strategy, because the s_f_id is our primary key, and you cannot
     // add two items with the same primary key to the database.
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(ReceivedFilesEntity file);

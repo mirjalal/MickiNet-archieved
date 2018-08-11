@@ -15,7 +15,7 @@ import android.support.v4.app.NotificationCompat;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.background.FileReceiverAsyncTask;
 import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
@@ -83,22 +83,22 @@ public class FileTransferService extends IntentService {
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
 
             sfe = new SentFilesEntity();
-            sfe.f_name = fileName;
+            sfe.s_f_name = fileName;
 
             // get mimetype to determine that in which folder'll be used
             assert fileName != null;
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
             assert mimeType != null;
             if (mimeType.startsWith("image"))
-                sfe.f_type = "1";
+                sfe.s_f_type = "1";
             else if (mimeType.startsWith("video"))
-                sfe.f_type = "2";
+                sfe.s_f_type = "2";
 //            else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
-//                sfe.f_type = "4"; // for now, music types are accepted as others
+//                sfe.s_f_type = "4"; // for now, music types are accepted as others
             else if (mimeType.equals("application/vnd.android.package-archive"))
-                sfe.f_type = "3";
+                sfe.s_f_type = "3";
             else
-                sfe.f_type = "4";
+                sfe.s_f_type = "4";
 
             Socket socket = new Socket();
             try {
@@ -159,11 +159,11 @@ public class FileTransferService extends IntentService {
      */
     private void copyFile(InputStream inputStream, OutputStream out, @NotNull Application app) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
-        sfe.f_time = sdf.format(new Date());
+        sfe.s_f_time = sdf.format(new Date());
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(app, null);
         NotificationManager mNotifyManager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
-        // generate unique id every time to show new notification each time
+        // generate unique s_f_id every time to show new notification each time
         int id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
 
         // Q) Why 8192 ?
@@ -225,8 +225,8 @@ public class FileTransferService extends IntentService {
             }
             mNotifyManager.notify(id, mBuilder.build());
 
-            sfe.f_operation_status = "1";
-            HomeActivity.getSentFilesViewModel().insert(sfe);
+            sfe.s_f_operation_status = "1";
+            DeviceDetailFragment.getSentFilesViewModel().insert(sfe);
         } catch (Exception e) {
             CrashReport.report(getApplicationContext(), FileTransferService.class.getName(), e);
 
@@ -239,8 +239,8 @@ public class FileTransferService extends IntentService {
             assert mNotifyManager != null;
             mNotifyManager.notify(id, mBuilder.build());
 
-            sfe.f_operation_status = "0";
-            HomeActivity.getSentFilesViewModel().insert(sfe);
+            sfe.s_f_operation_status = "0";
+            DeviceDetailFragment.getSentFilesViewModel().insert(sfe);
         }
     }
 }

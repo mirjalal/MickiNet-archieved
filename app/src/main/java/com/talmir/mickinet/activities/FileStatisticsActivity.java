@@ -84,7 +84,7 @@ public class FileStatisticsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-//        if (item.getItemId() == R.id.action_reset_statistics) {
+//        if (item.getItemId() == R.s_f_id.action_reset_statistics) {
             // TODO: resetting statistical data (deleting ALL data from both databases)
 //            return true;
 //        }
@@ -117,7 +117,7 @@ public class FileStatisticsActivity extends AppCompatActivity {
             if (Objects.requireNonNull(getArguments()).getInt(ARG_SECTION_NUMBER) == 0) {
                 View rootView = inflater.inflate(R.layout.fragment_sent, container, false);
 
-//                final PieChart pie = rootView.findViewById(R.id.sent_pie);
+//                final PieChart pie = rootView.findViewById(R.s_f_id.sent_pie);
 //                // configure pie chart
 //                final Description d = new Description();
 //                d.setEnabled(true);
@@ -130,8 +130,8 @@ public class FileStatisticsActivity extends AppCompatActivity {
 //                pie.setRotationAngle(0);
 //                pie.setRotationEnabled(true);
 
-                final RecyclerView recyclerView = rootView.findViewById(R.id.recycler_view);
-                final TextView emptyView = rootView.findViewById(R.id.empty_view);
+                final RecyclerView recyclerView = rootView.findViewById(R.id.sent_recycler_view);
+                final TextView emptyView = rootView.findViewById(R.id.sent_empty_view);
 
                 recyclerView.setAdapter(HomeActivity.getSentFilesListAdapter());
                 recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -193,7 +193,7 @@ public class FileStatisticsActivity extends AppCompatActivity {
             } else {
                 View rootView = inflater.inflate(R.layout.fragment_received, container, false);
 
-//                final PieChart pie = rootView.findViewById(R.id.received_pie);
+//                final PieChart pie = rootView.findViewById(R.s_f_id.received_pie);
 //                // configure pie chart
 //                final Description d = new Description();
 //                d.setEnabled(true);
@@ -206,8 +206,8 @@ public class FileStatisticsActivity extends AppCompatActivity {
 //                pie.setRotationAngle(0);
 //                pie.setRotationEnabled(true);
 
-                final RecyclerView recyclerView = rootView.findViewById(R.id.recycler_view);
-                final TextView emptyView = rootView.findViewById(R.id.empty_view);
+                final RecyclerView recyclerView = rootView.findViewById(R.id.received_recycler_view);
+                final TextView emptyView = rootView.findViewById(R.id.received_empty_view);
 
                 recyclerView.setAdapter(HomeActivity.getReceivedFilesListAdapter());
                 recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
