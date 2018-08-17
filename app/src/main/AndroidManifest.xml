@@ -58,27 +58,23 @@
             android:label="@string/app_name"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true">
-        <service
-                android:name=".helpers.background.services.FileTransferService"
-                android:enabled="true"
-                android:exported="false"/>
-        <service
-                android:name=".helpers.background.services.CountDownService"
-                android:enabled="true"
-                android:exported="false"/>
+        <!--<service-->
+                <!--android:name=".helpers.background.services.CountDownService"-->
+                <!--android:enabled="true"-->
+                <!--android:exported="false"/>-->
 
-        <receiver
-                android:name=".helpers.background.broadcastreceivers.BatteryPowerConnectionReceiver"
-                android:enabled="true"
-                android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BATTERY_CHANGED"/>
-                <action android:name="android.intent.action.BATTERY_LOW"/>
-                <action android:name="android.intent.action.BATTERY_OKAY"/>
-                <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
-                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
-            </intent-filter>
-        </receiver>
+        <!--<receiver-->
+                <!--android:name=".helpers.background.broadcastreceivers.BatteryPowerConnectionReceiver"-->
+                <!--android:enabled="true"-->
+                <!--android:exported="false">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.BATTERY_CHANGED"/>-->
+                <!--<action android:name="android.intent.action.BATTERY_LOW"/>-->
+                <!--<action android:name="android.intent.action.BATTERY_OKAY"/>-->
+                <!--<action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>-->
+                <!--<action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
 
         <activity android:name=".activities.SplashScreenActivity" android:theme="@style/AppTheme1">
 

@@ -14,7 +14,7 @@ import java.util.List;
  * @since 7/29/2018
  */
 public class SentFilesRepository {
-    private SentFilesDao mSentFilesDao;
+    private static SentFilesDao mSentFilesDao;
     private LiveData<List<SentFilesEntity>> mAllSentFiles;
 
     SentFilesRepository(Application application) {
@@ -26,7 +26,8 @@ public class SentFilesRepository {
     LiveData<List<SentFilesEntity>> getAllSentFiles() { return mAllSentFiles; }
 
     public void insert(SentFilesEntity sentFilesEntity) {
-        new SentFilesRepository.insertAsyncTask(mSentFilesDao).execute(sentFilesEntity);
+        // AsyncTask.THREAD_POOL_EXECUTOR is important!
+        new SentFilesRepository.insertAsyncTask(mSentFilesDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, sentFilesEntity);
     }
 
     private static class insertAsyncTask extends AsyncTask<SentFilesEntity, Void, Void> {
@@ -39,8 +40,13 @@ public class SentFilesRepository {
         @Override
         protected Void doInBackground(final SentFilesEntity... params) {
             mAsyncTaskDao.insert(params[0]);
-            Log.e("doInBackground: ", "reached here!");
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Log.e("doInBackground: ", "reached here!");
         }
     }
 }

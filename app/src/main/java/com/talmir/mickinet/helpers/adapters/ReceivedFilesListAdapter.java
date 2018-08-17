@@ -25,9 +25,9 @@ public class ReceivedFilesListAdapter extends RecyclerView.Adapter<ReceivedFiles
 
         private ReceivedFilesViewHolder(View itemView) {
             super(itemView);
-            file_name = itemView.findViewById(R.id.file_name);
-            operation_status = itemView.findViewById(R.id.operation_status);
-            date_time = itemView.findViewById(R.id.date_time);
+            file_name = itemView.findViewById(R.id.r_file_name);
+            operation_status = itemView.findViewById(R.id.r_operation_status);
+            date_time = itemView.findViewById(R.id.r_date_time);
         }
     }
 

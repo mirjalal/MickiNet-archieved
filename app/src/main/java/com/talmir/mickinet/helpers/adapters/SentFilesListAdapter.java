@@ -26,9 +26,9 @@ public class SentFilesListAdapter extends RecyclerView.Adapter<SentFilesListAdap
 
         SentFilesViewHolder(View itemView) {
             super(itemView);
-            file_name = itemView.findViewById(R.id.file_name);
-            operation_status = itemView.findViewById(R.id.operation_status);
-            date_time = itemView.findViewById(R.id.date_time);
+            file_name = itemView.findViewById(R.id.s_file_name);
+            operation_status = itemView.findViewById(R.id.s_operation_status);
+            date_time = itemView.findViewById(R.id.s_date_time);
         }
     }
 
@@ -76,7 +76,7 @@ public class SentFilesListAdapter extends RecyclerView.Adapter<SentFilesListAdap
                 else
                     FileStatisticsActivity.sentOtherFilesCount = FileStatisticsActivity.sentOtherFilesCount + 1.0f;
             }
-//            Log.e("saylar", "photo: " + FileStatisticsActivity.sentPhotoFilesCount + "\nvideo: " + FileStatisticsActivity.sentVideoFilesCount + "\napk: " + FileStatisticsActivity.sentAPKFilesCount + "\nother: " + FileStatisticsActivity.sentOtherFilesCount);
+            Log.e("saylar", "photo: " + FileStatisticsActivity.sentPhotoFilesCount + "\nvideo: " + FileStatisticsActivity.sentVideoFilesCount + "\napk: " + FileStatisticsActivity.sentAPKFilesCount + "\nother: " + FileStatisticsActivity.sentOtherFilesCount);
         }
 
         getPhotoFilesCount();

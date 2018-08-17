@@ -1,5 +1,7 @@
 package com.talmir.mickinet.activities;
 
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
@@ -18,21 +20,30 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.helpers.adapters.ReceivedFilesListAdapter;
-import com.talmir.mickinet.helpers.adapters.SentFilesListAdapter;
+import com.talmir.mickinet.helpers.ui.DividerItemDecoration;
+import com.talmir.mickinet.helpers.ui.IRecyclerItemClickListener;
+import com.talmir.mickinet.helpers.ui.RecyclerItemTouchListener;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class FileStatisticsActivity extends AppCompatActivity {
 
-    private static SentFilesListAdapter mSentFilesListAdapter;
     public static float sentPhotoFilesCount;
     public static float sentVideoFilesCount;
     public static float sentAPKFilesCount;
     public static float sentOtherFilesCount;
 
-    private static ReceivedFilesListAdapter mReceivedFilesListAdapter;
     public static float receivedPhotoFilesCount;
     public static float receivedVideoFilesCount;
     public static float receivedAPKFilesCount;
@@ -43,20 +54,15 @@ public class FileStatisticsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_statistics);
 
-        mSentFilesListAdapter = HomeActivity.getSentFilesListAdapter();
         sentPhotoFilesCount = 0.0f;
         sentVideoFilesCount = 0.0f;
         sentAPKFilesCount   = 0.0f;
         sentOtherFilesCount = 0.0f;
 
-        mReceivedFilesListAdapter = HomeActivity.getReceivedFilesListAdapter();
         receivedPhotoFilesCount = 0.0f;
         receivedVideoFilesCount = 0.0f;
         receivedAPKFilesCount   = 0.0f;
         receivedOtherFilesCount = 0.0f;
-
-//        mSentFilesListAdapter.getSentFilesCountByTypes();
-//        mReceivedFilesListAdapter.getReceivedFilesCountByTypes();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -117,74 +123,75 @@ public class FileStatisticsActivity extends AppCompatActivity {
             if (Objects.requireNonNull(getArguments()).getInt(ARG_SECTION_NUMBER) == 0) {
                 View rootView = inflater.inflate(R.layout.fragment_sent, container, false);
 
-//                final PieChart pie = rootView.findViewById(R.s_f_id.sent_pie);
-//                // configure pie chart
-//                final Description d = new Description();
-//                d.setEnabled(true);
-//                d.setTypeface(Typeface.DEFAULT_BOLD);
-//                d.setText("Comparison among received file types");
-//                pie.setDescription(d);
-//                pie.setUsePercentValues(true);
-//
-//                // enable rotation of the pie by gesture
-//                pie.setRotationAngle(0);
-//                pie.setRotationEnabled(true);
+                final PieChart pie = rootView.findViewById(R.id.sent_pie);
+                // configure pie chart
+                final Description d = new Description();
+                d.setEnabled(true);
+                d.setTypeface(Typeface.DEFAULT_BOLD);
+                d.setText("Comparison among received file types");
+                pie.setDescription(d);
+                pie.setUsePercentValues(true);
+
+                // enable rotation of the pie by gesture
+                pie.setRotationAngle(0);
+                pie.setRotationEnabled(true);
 
                 final RecyclerView recyclerView = rootView.findViewById(R.id.sent_recycler_view);
                 final TextView emptyView = rootView.findViewById(R.id.sent_empty_view);
 
                 recyclerView.setAdapter(HomeActivity.getSentFilesListAdapter());
                 recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                recyclerView.addItemDecoration(new DividerItemDecoration(Objects.requireNonNull(getActivity()), LinearLayoutManager.VERTICAL));
 
                 // set data
-//                List<PieEntry> entries = new ArrayList<>();
-//                entries.add(new PieEntry(sentPhotoFilesCount, "Photos"));
-//                entries.add(new PieEntry(sentVideoFilesCount, "Videos"));
-//                entries.add(new PieEntry(sentAPKFilesCount, "APKs"));
-//                entries.add(new PieEntry(sentOtherFilesCount, "Others"));
-//
-//                // create pie dataset
-//                PieDataSet pieDataSet = new PieDataSet(entries, "File types");
-//                pieDataSet.setSliceSpace(3);
-//                pieDataSet.setSelectionShift(10);
-//
-//                // add colors
-//                ArrayList<Integer> colors = new ArrayList<>();
-//
-//                for (int color : ColorTemplate.LIBERTY_COLORS)
-//                    colors.add(color);
-//                colors.add(ColorTemplate.getHoloBlue());
-//                pieDataSet.setColors(colors);
-//
-//                // instantiate pie data object
-//                PieData pieData = new PieData(pieDataSet);
-//                pieData.setValueFormatter(new PercentFormatter());
-//                pieData.setValueTextSize(12f);
-//                pieData.setValueTextColor(Color.GRAY);
-//                pie.setData(pieData);
-//
-//                // undo all highlights
-//                pie.highlightValue(null);
-//
-//                // update pie
-//                pie.invalidate();
-//
-//                // customize legends
-//                Legend legend = pie.getLegend();
-//                legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
-//                legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
-//                legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
-//                legend.setDrawInside(false);
-//                legend.setXEntrySpace(7);
-//                legend.setYEntrySpace(5);
+                List<PieEntry> entries = new ArrayList<>();
+                entries.add(new PieEntry(sentPhotoFilesCount, "Photos"));
+                entries.add(new PieEntry(sentVideoFilesCount, "Videos"));
+                entries.add(new PieEntry(sentAPKFilesCount, "APKs"));
+                entries.add(new PieEntry(sentOtherFilesCount, "Others"));
+
+                // create pie dataset
+                PieDataSet pieDataSet = new PieDataSet(entries, "File types");
+                pieDataSet.setSliceSpace(3);
+                pieDataSet.setSelectionShift(10);
+
+                // add colors
+                ArrayList<Integer> colors = new ArrayList<>();
+
+                for (int color : ColorTemplate.LIBERTY_COLORS)
+                    colors.add(color);
+                colors.add(ColorTemplate.getHoloBlue());
+                pieDataSet.setColors(colors);
+
+                // instantiate pie data object
+                PieData pieData = new PieData(pieDataSet);
+                pieData.setValueFormatter(new PercentFormatter());
+                pieData.setValueTextSize(12f);
+                pieData.setValueTextColor(Color.GRAY);
+                pie.setData(pieData);
+
+                // undo all highlights
+                pie.highlightValue(null);
+
+                // update pie
+                pie.invalidate();
+
+                // customize legends
+                Legend legend = pie.getLegend();
+                legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+                legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+                legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+                legend.setDrawInside(false);
+                legend.setXEntrySpace(7);
+                legend.setYEntrySpace(5);
 //                legend.setPosition(Legend.LegendPosition.BELOW_CHART_CENTER);
 
                 if (HomeActivity.getSentFilesListAdapter().getItemCount() > 0) {
-//                    pie.setVisibility(View.VISIBLE);
+                    pie.setVisibility(View.VISIBLE);
                     recyclerView.setVisibility(View.VISIBLE);
                     emptyView.setVisibility(View.GONE);
                 } else {
-//                    pie.setVisibility(View.GONE);
+                    pie.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.GONE);
                     emptyView.setVisibility(View.VISIBLE);
                 }
@@ -193,74 +200,82 @@ public class FileStatisticsActivity extends AppCompatActivity {
             } else {
                 View rootView = inflater.inflate(R.layout.fragment_received, container, false);
 
-//                final PieChart pie = rootView.findViewById(R.s_f_id.received_pie);
-//                // configure pie chart
-//                final Description d = new Description();
-//                d.setEnabled(true);
-//                d.setTypeface(Typeface.DEFAULT_BOLD);
-//                d.setText("Comparison among received file types");
-//                pie.setDescription(d);
-//                pie.setUsePercentValues(true);
-//
-//                // enable rotation of the pie by gesture
-//                pie.setRotationAngle(0);
-//                pie.setRotationEnabled(true);
+                final PieChart pie = rootView.findViewById(R.id.received_pie);
+                // configure pie chart
+                final Description d = new Description();
+                d.setEnabled(true);
+                d.setTypeface(Typeface.DEFAULT);
+                d.setText("Comparison among received file types");
+                pie.setDescription(d);
+                pie.setUsePercentValues(true);
+
+                // enable rotation of the pie by gesture
+                pie.setRotationAngle(0);
+                pie.setRotationEnabled(true);
 
                 final RecyclerView recyclerView = rootView.findViewById(R.id.received_recycler_view);
                 final TextView emptyView = rootView.findViewById(R.id.received_empty_view);
 
                 recyclerView.setAdapter(HomeActivity.getReceivedFilesListAdapter());
                 recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                recyclerView.addItemDecoration(new DividerItemDecoration(Objects.requireNonNull(getActivity()), LinearLayoutManager.VERTICAL));
+                recyclerView.addOnItemTouchListener(new RecyclerItemTouchListener(getActivity(), recyclerView, new IRecyclerItemClickListener() {
+                    @Override
+                    public void onClick(View view, int position) {  }
+
+                    @Override
+                    public void onLongClick(View view, int position) {  }
+                }));
 
                 // set data
-//                List<PieEntry> entries = new ArrayList<>();
-//                entries.add(new PieEntry(receivedPhotoFilesCount, "Photos"));
-//                entries.add(new PieEntry(receivedVideoFilesCount, "Videos"));
-//                entries.add(new PieEntry(receivedAPKFilesCount, "APKs"));
-//                entries.add(new PieEntry(receivedOtherFilesCount, "Others"));
+                List<PieEntry> entries = new ArrayList<>();
+                entries.add(new PieEntry(receivedPhotoFilesCount, "Photos"));
+                entries.add(new PieEntry(receivedVideoFilesCount, "Videos"));
+                entries.add(new PieEntry(receivedAPKFilesCount, "APKs"));
+                entries.add(new PieEntry(receivedOtherFilesCount, "Others"));
 
                 // create pie dataset
-//                PieDataSet pieDataSet = new PieDataSet(entries, "File types");
-//                pieDataSet.setSliceSpace(3);
-//                pieDataSet.setSelectionShift(10);
-//
-//                // add colors
-//                ArrayList<Integer> colors = new ArrayList<>();
-//
-//                for (int color : ColorTemplate.LIBERTY_COLORS)
-//                    colors.add(color);
-//                colors.add(ColorTemplate.getHoloBlue());
-//                pieDataSet.setColors(colors);
-//
-//                // instantiate pie data object
-//                PieData pieData = new PieData(pieDataSet);
-//                pieData.setValueFormatter(new PercentFormatter());
-//                pieData.setValueTextSize(12f);
-//                pieData.setValueTextColor(Color.GRAY);
-//                pie.setData(pieData);
-//
-//                // undo all highlights
-//                pie.highlightValue(null);
-//
-//                // update pie
-//                pie.invalidate();
+                PieDataSet pieDataSet = new PieDataSet(entries, "File types");
+                pieDataSet.setSliceSpace(3);
+                pieDataSet.setSelectionShift(10);
+
+                // add colors
+                ArrayList<Integer> colors = new ArrayList<>();
+
+                for (int color : ColorTemplate.LIBERTY_COLORS)
+                    colors.add(color);
+                colors.add(ColorTemplate.getHoloBlue());
+                pieDataSet.setColors(colors);
+
+                // instantiate pie data object
+                PieData pieData = new PieData(pieDataSet);
+                pieData.setValueFormatter(new PercentFormatter());
+                pieData.setValueTextSize(12f);
+                pieData.setValueTextColor(Color.GRAY);
+                pie.setData(pieData);
+
+                // undo all highlights
+                pie.highlightValue(null);
+
+                // update pie
+                pie.invalidate();
 
                 // customize legends
-//                Legend legend = pie.getLegend();
-//                legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
-//                legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
-//                legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
-//                legend.setDrawInside(false);
-//                legend.setXEntrySpace(7);
-//                legend.setYEntrySpace(5);
+                Legend legend = pie.getLegend();
+                legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+                legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+                legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+                legend.setDrawInside(false);
+                legend.setXEntrySpace(7);
+                legend.setYEntrySpace(5);
 //                legend.setPosition(Legend.LegendPosition.BELOW_CHART_CENTER);
 
                 if (HomeActivity.getReceivedFilesListAdapter().getItemCount() > 0) {
-//                    pie.setVisibility(View.VISIBLE);
+                    pie.setVisibility(View.VISIBLE);
                     recyclerView.setVisibility(View.VISIBLE);
                     emptyView.setVisibility(View.GONE);
                 } else {
-//                    pie.setVisibility(View.GONE);
+                    pie.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.GONE);
                     emptyView.setVisibility(View.VISIBLE);
                 }

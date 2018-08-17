@@ -1,15 +1,19 @@
 package com.talmir.mickinet.activities;
 
 import android.app.AlertDialog;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
@@ -26,6 +30,8 @@ import com.talmir.mickinet.helpers.adapters.SentFilesListAdapter;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 import com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver;
 import com.talmir.mickinet.helpers.background.services.CountDownService;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
+import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
 import org.jetbrains.annotations.Contract;
 
@@ -171,7 +177,20 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private FloatingActionButton start_discovery;
 
     private static SentFilesListAdapter mSentFilesListAdapter;
+    public static SentFilesViewModel mSentFilesViewModel;
+
+    public static ReceivedFilesViewModel mReceivedFilesViewModel;
     private static ReceivedFilesListAdapter mReceivedFilesListAdapter;
+
+    @Contract(pure = true)
+    public static SentFilesViewModel getSentFilesViewModel() {
+        return mSentFilesViewModel;
+    }
+
+    @Contract(pure = true)
+    public static ReceivedFilesViewModel getReceivedFilesViewModel() {
+        return mReceivedFilesViewModel;
+    }
 
     @Contract(pure = true)
     public static SentFilesListAdapter getSentFilesListAdapter() {
@@ -245,12 +264,21 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             });
         });
 
+        SharedPreferences setting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (setting.getBoolean("auto_enable_wifi", false)) {
+            WifiManager manageWifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (!Objects.requireNonNull(manageWifi).isWifiEnabled())
+                manageWifi.setWifiEnabled(true);
+        }
+
+        mSentFilesViewModel = ViewModelProviders.of(HomeActivity.this).get(SentFilesViewModel.class);
         mSentFilesListAdapter = new SentFilesListAdapter(this);
-        DeviceDetailFragment.getSentFilesViewModel().getAllSentFiles().observe(this, mSentFilesListAdapter::setSentFiles);
+        mSentFilesViewModel.getAllSentFiles().observe(HomeActivity.this, mSentFilesListAdapter::setSentFiles);
         mSentFilesListAdapter.getSentFilesCountByTypes();
 
         mReceivedFilesListAdapter = new ReceivedFilesListAdapter(this);
-        DeviceDetailFragment.getReceivedFilesViewModel().getAllReceivedFiles().observe(this, mReceivedFilesListAdapter::setReceivedFiles);
+        mReceivedFilesViewModel = ViewModelProviders.of(HomeActivity.this).get(ReceivedFilesViewModel.class);
+        mReceivedFilesViewModel.getAllReceivedFiles().observe(HomeActivity.this, mReceivedFilesListAdapter::setReceivedFiles);
         mReceivedFilesListAdapter.getReceivedFilesCountByTypes();
     }
 

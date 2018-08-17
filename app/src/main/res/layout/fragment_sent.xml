@@ -24,8 +24,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toTopOf="@+id/sent_recycler_view"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                android:visibility="gone"/>
+                app:layout_constraintStart_toStartOf="parent"/>
 
         <android.support.v7.widget.RecyclerView
                 android:id="@+id/sent_recycler_view"

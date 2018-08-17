@@ -12,15 +12,14 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.view.GestureDetector;
 import android.view.Menu;
-import android.view.MotionEvent;
 import android.view.View;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.adapters.ApkListAdapter;
 import com.talmir.mickinet.helpers.ui.DividerItemDecoration;
 import com.talmir.mickinet.helpers.ui.IRecyclerItemClickListener;
+import com.talmir.mickinet.helpers.ui.RecyclerItemTouchListener;
 import com.talmir.mickinet.helpers.ui.RecyclerViewFastScroller;
 
 import java.util.ArrayList;
@@ -42,14 +41,13 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
         setContentView(R.layout.activity_apk_share);
 
         pm = getPackageManager();
-
         packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
         // http://www.android--tutorials.com/2016/03/android-get-installed-apps-list.html
         final ApkListAdapter apkListAdapter = new ApkListAdapter(pm, packages);
         apkListAdapter.notifyDataSetChanged();
 
-        recyclerView = findViewById(R.id.sent_recycler_view);
+        recyclerView = findViewById(R.id.apk_list_recycler_view);
         recyclerView.setAdapter(apkListAdapter);
         final RecyclerViewFastScroller fastScroller = this.findViewById(R.id.fastscroller);
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false) {
@@ -136,47 +134,5 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
         mimeTypeAdapter.notifyDataSetChanged();
 
         return true;
-    }
-
-    private static class RecyclerItemTouchListener implements RecyclerView.OnItemTouchListener {
-        private GestureDetector gestureDetector;
-        private IRecyclerItemClickListener clickListener;
-
-        RecyclerItemTouchListener(Context context, final RecyclerView recyclerView, final IRecyclerItemClickListener clickListener) {
-            this.clickListener = clickListener;
-            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-                @Override
-                public boolean onSingleTapUp(MotionEvent e) {
-                    return true;
-                }
-
-                @Override
-                public void onLongPress(MotionEvent e) {
-                    View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
-                    if (child != null && clickListener != null) {
-                        clickListener.onLongClick(child, recyclerView.getChildAdapterPosition(child));
-                    }
-                }
-            });
-        }
-
-        @Override
-        public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-
-            View child = rv.findChildViewUnder(e.getX(), e.getY());
-            if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
-                clickListener.onClick(child, rv.getChildAdapterPosition(child));
-            }
-            return false;
-        }
-
-        @Override
-        public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-        }
-
-        @Override
-        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
-        }
     }
 }

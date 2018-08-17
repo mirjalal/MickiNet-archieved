@@ -2,6 +2,7 @@ package com.talmir.mickinet.helpers.background;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,15 +12,16 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
+import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +30,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -41,30 +44,18 @@ import java.util.Locale;
  */
 public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
-    private static String clientIpAddress = "";
-    private Context mContext;
-    private View mView;
+    private WeakReference<Context> contextRef;
+    private WeakReference<View> viewRef;
 
     private int id;
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
 
-//    private ReceivedFilesViewModel mReceivedFilesViewModel;
     private ReceivedFilesEntity rfe;
 
-    public FileReceiverAsyncTask(Context context, View view/*, ReceivedFilesViewModel mReceivedFilesViewModel*/) {
-        mContext = context;
-        mView = view;
-//        this.mReceivedFilesViewModel = mReceivedFilesViewModel;
-    }
-
-    @Contract(pure = true)
-    public static String getClientIpAddress() {
-        return clientIpAddress;
-    }
-
-    public static void setClientIpAddress(@NonNull String ipAddress) {
-        clientIpAddress = ipAddress;
+    public FileReceiverAsyncTask(Context context, View view) {
+        contextRef = new WeakReference<>(context);
+        viewRef = new WeakReference<>(view);
     }
 
     /**
@@ -175,13 +166,13 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             // generate unique s_f_id to show a new notification each time a file received
             id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
-            mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-            mBuilder = new NotificationCompat.Builder(mContext, null);
+            mNotifyManager = (NotificationManager) contextRef.get().getSystemService(Context.NOTIFICATION_SERVICE);
+            mBuilder = new NotificationCompat.Builder(contextRef.get(), null);
 
             // Issues the notification
-            mBuilder.setTicker(mContext.getString(R.string.receiving_file))
-                    .setContentTitle(mContext.getString(R.string.file_receive))
-                    .setContentText(mContext.getString(R.string.receiving_file))
+            mBuilder.setTicker(contextRef.get().getString(R.string.receiving_file))
+                    .setContentTitle(contextRef.get().getString(R.string.file_receive))
+                    .setContentText(contextRef.get().getString(R.string.receiving_file))
                     .setSmallIcon(android.R.drawable.stat_sys_download)
                     .setOngoing(true)
                     .setProgress(0, 0, true);
@@ -196,7 +187,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             return result;
         } catch (Exception e) {
-            CrashReport.report(mContext, FileReceiverAsyncTask.class.getName(), e);
+            CrashReport.report(contextRef.get(), FileReceiverAsyncTask.class.getName(), e);
             return null;
         }
     }
@@ -207,44 +198,44 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             // intent to open received file from notification click
             final Intent openReceivedFile = new Intent(Intent.ACTION_VIEW);
             openReceivedFile.setDataAndType(
-                    Uri.parse("file://" + result),
-                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(result.substring(result.lastIndexOf('.') + 1))
+                Uri.parse("file://" + result),
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(result.substring(result.lastIndexOf('.') + 1))
             );
 
-            PendingIntent notificationPendingIntent = PendingIntent.getActivity(mContext, 0, openReceivedFile, PendingIntent.FLAG_ONE_SHOT);
+            PendingIntent notificationPendingIntent = PendingIntent.getActivity(contextRef.get(), 0, openReceivedFile, PendingIntent.FLAG_ONE_SHOT);
 
-            mBuilder.setTicker(mContext.getString(R.string.file_received))
-                    .setContentTitle(mContext.getString(R.string.file_received))
+            mBuilder.setTicker(contextRef.get().getString(R.string.file_received))
+                    .setContentTitle(contextRef.get().getString(R.string.file_received))
                     .setContentText(result.substring(result.lastIndexOf('/') + 1))
                     .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_done : android.R.drawable.stat_sys_download_done)
                     .setProgress(0, 0, false)
                     .setOngoing(false)
                     .setContentIntent(notificationPendingIntent);
 
-            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mContext);
-
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(contextRef.get());
             // get notification settings & apply them to notification
             if (settings.getBoolean("notifications_new_file_receive", false)) {
                 mBuilder.setSound(
-                        Uri.parse(
-                                PreferenceManager.getDefaultSharedPreferences(mContext).getString(
-                                        "notifications_new_file_receive_ringtone",
-                                        "android.resource://" + mContext.getPackageName() + "/" + R.raw.file_receive)
+                    Uri.parse(
+                        PreferenceManager.getDefaultSharedPreferences(contextRef.get()).getString(
+                            "notifications_new_file_receive_ringtone",
+                            "android.resource://" + contextRef.get().getPackageName() + "/" + R.raw.file_receive
                         )
+                    )
                 );
 
                 if (settings.getBoolean("notifications_new_file_receive_vibrate", true))
                     mBuilder.setVibrate(new long[]{500});
 
                 mBuilder.setLights(
-                        Color.parseColor("#" + settings.getString("notifications_new_file_receive_led_light", mContext.getString(R.string.cyan_color))),
-                        700,
-                        500
+                    Color.parseColor("#" + settings.getString("notifications_new_file_receive_led_light", contextRef.get().getString(R.string.cyan_color))),
+                    700,
+                    500
                 );
             } else {
-                mBuilder.setSound(Uri.parse("android.resource://" + mContext.getPackageName() + "/" + R.raw.file_receive));
+                mBuilder.setSound(Uri.parse("android.resource://" + contextRef.get().getPackageName() + "/" + R.raw.file_receive));
                 mBuilder.setLights(
-                        Color.parseColor("#" + mContext.getString(R.string.cyan_color)), 700, 500
+                        Color.parseColor("#" + contextRef.get().getString(R.string.cyan_color)), 700, 500
                 );
             }
 
@@ -252,18 +243,17 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             // if preference checked open file, show snackbar otherwise
             if (settings.getBoolean("pref_auto_open_received_file", false)) {
-                mContext.startActivity(openReceivedFile);
+                contextRef.get().startActivity(openReceivedFile);
             } else {
-//                Snackbar.make(mView, mContext.getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
-//                        .setAction(mContext.getString(R.string.open_file), v -> mContext.startActivity(openReceivedFile))
-//                        .show();
+                Snackbar.make(viewRef.get(), contextRef.get().getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
+                        .setAction(contextRef.get().getString(R.string.open_file), v -> contextRef.get().startActivity(openReceivedFile))
+                        .show();
             }
 
             rfe.r_f_operation_status = "1";
-            DeviceDetailFragment.getReceivedFilesViewModel().insert(rfe);
         } else {
-            mBuilder.setContentText(mContext.getString(R.string.file_receive_fail))
-                    .setTicker(mContext.getString(R.string.file_is_not_received))
+            mBuilder.setContentText(contextRef.get().getString(R.string.file_receive_fail))
+                    .setTicker(contextRef.get().getString(R.string.file_is_not_received))
                     .setSmallIcon(android.R.drawable.stat_notify_error)
                     .setProgress(0, 0, false)
                     .setOngoing(false);
@@ -271,8 +261,9 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             mNotifyManager.notify(id, mBuilder.build());
 
             rfe.r_f_operation_status = "0";
-            DeviceDetailFragment.getReceivedFilesViewModel().insert(rfe);
         }
+        ReceivedFilesViewModel rfvm = ViewModelProviders.of((FragmentActivity) contextRef.get()).get(ReceivedFilesViewModel.class);
+        rfvm.insert(rfe);
     }
 
     private void createNestedFolders() {

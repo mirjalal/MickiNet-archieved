@@ -6,7 +6,7 @@
                 tools:context="com.talmir.mickinet.activities.ApkShareActivity">
 
     <android.support.v7.widget.RecyclerView
-            android:id="@+id/sent_recycler_view"
+            android:id="@+id/apk_list_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
@@ -14,9 +14,9 @@
             android:id="@+id/fastscroller"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_alignBottom="@id/sent_recycler_view"
+            android:layout_alignBottom="@id/apk_list_recycler_view"
             android:layout_alignParentEnd="true"
-            android:layout_alignTop="@id/sent_recycler_view"
+            android:layout_alignTop="@id/apk_list_recycler_view"
             android:layout_alignParentRight="true"/>
 
 </RelativeLayout>

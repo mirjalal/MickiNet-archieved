@@ -13,7 +13,7 @@ import java.util.List;
  * @since 7/26/2018
  */
 public class ReceivedFilesRepository {
-    private ReceivedFilesDao mReceivedFilesDao;
+    private static ReceivedFilesDao mReceivedFilesDao;
     private LiveData<List<ReceivedFilesEntity>> mAllReceivedFiles;
 
     ReceivedFilesRepository(Application application) {
@@ -25,7 +25,7 @@ public class ReceivedFilesRepository {
     LiveData<List<ReceivedFilesEntity>> getAllReceivedFiles() { return mAllReceivedFiles; }
 
     public void insert(ReceivedFilesEntity entity) {
-        new insertAsyncTask(mReceivedFilesDao).execute(entity);
+        new insertAsyncTask(mReceivedFilesDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, entity);
     }
 
     private static class insertAsyncTask extends AsyncTask<ReceivedFilesEntity, Void, Void> {
