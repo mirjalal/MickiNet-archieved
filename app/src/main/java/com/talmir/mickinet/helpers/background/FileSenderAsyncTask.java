@@ -1,21 +1,21 @@
 package com.talmir.mickinet.helpers.background;
 
 import android.app.NotificationManager;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
 import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
@@ -30,9 +30,7 @@ import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -93,16 +91,15 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
         else if (mimeType.startsWith("video"))
             sfe.s_f_type = "2";
         else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
-            sfe.s_f_type = "4"; // for now, music types are accepted as others
-        else if (mimeType.equals("application/vnd.android.package-archive"))
             sfe.s_f_type = "3";
-        else
+        else if (mimeType.equals("application/vnd.android.package-archive"))
             sfe.s_f_type = "4";
+        else
+            sfe.s_f_type = "5";
+
+        sfe.s_f_time = new Date();
 
         // put all data to stream
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
-        sfe.s_f_time = sdf.format(new Date());
-
         Socket socket = new Socket();
         try {
             socket.bind(null);
@@ -155,7 +152,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
             mBuilder.setTicker(contextRef.get().getString(R.string.successful))
 //                    .setContentTitle(app.getString(R.string.file_sent))
                     .setContentText(contextRef.get().getString(R.string.file_sent))
-                    .setSmallIcon(android.R.drawable.stat_sys_upload_done)
+                    .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_send_done : android.R.drawable.stat_sys_upload_done)
                     .setOngoing(false)
                     .setProgress(0, 0, false);
 
@@ -200,7 +197,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
             sfe.s_f_operation_status = "0";
         }
-        SentFilesViewModel sfvm = ViewModelProviders.of((FragmentActivity) contextRef.get()).get(SentFilesViewModel.class);
+        SentFilesViewModel sfvm = HomeActivity.getSentFilesViewModel();//ViewModelProviders.of((FragmentActivity) contextRef.get()).get(SentFilesViewModel.class);
         sfvm.insert(sfe);
     }
 
@@ -224,7 +221,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
     private void sendFile(InputStream inputStream, OutputStream out, @NotNull Context context) {
         // Q) Why 8192 ?
         // A) http://stackoverflow.com/a/19561265/4057688
-        byte buffer[] = new byte[8192];
+        byte buffer[] = new byte[2048];
         int len;
         try {
             while ((len = inputStream.read(buffer)) != -1)

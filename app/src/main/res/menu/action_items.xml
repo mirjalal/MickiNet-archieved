@@ -1,12 +1,11 @@
-<menu
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-            android:id="@+id/action_file_statistics"
-            android:title="@string/pref_header_statistics"
-            app:showAsAction="collapseActionView"/>
-    <item
-            android:id="@+id/action_reset_statistics"
-            android:title="@string/settings"
-            app:showAsAction="collapseActionView"/>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/action_file_statistics"
+          android:title="@string/pref_header_statistics"
+          app:showAsAction="withText"/>
+
+    <item android:id="@+id/action_reset_statistics"
+          android:title="@string/settings"
+          app:showAsAction="collapseActionView"/>
 </menu>

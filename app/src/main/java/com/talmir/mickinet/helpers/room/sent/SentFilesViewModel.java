@@ -23,4 +23,6 @@ public class SentFilesViewModel extends AndroidViewModel {
     public LiveData<List<SentFilesEntity>> getAllSentFiles() { return mAllSentFiles; }
 
     public void insert(SentFilesEntity sentFile) { mRepository.insert(sentFile); }
+
+    public boolean deleteAllRecords() { return mRepository.deleteAllRecords(); }
 }

@@ -11,21 +11,20 @@
         android:layout_gravity="end"
         android:background="@drawable/recycler_view_fast_scroller__bubble"
         android:gravity="center"
-        android:textColor="#FFffffff"
+        android:textColor="#ffffffff"
         android:textSize="48sp"
         android:visibility="visible"
         tools:text="A"/>
 
     <ImageView
-            android:id="@+id/fast_scroller_handle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:paddingLeft="8dp"
-            android:paddingStart="8dp"
-            android:src="@drawable/recycler_view_fast_scroller__handle"
-            tools:ignore="RtlSymmetry"
-            android:contentDescription="@string/image_of_fast_scroller"/>
-
+        android:id="@+id/fast_scroller_handle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:paddingLeft="8dp"
+        android:paddingStart="8dp"
+        android:src="@drawable/recycler_view_fast_scroller__handle"
+        tools:ignore="RtlSymmetry"
+        android:contentDescription="@string/image_of_fast_scroller"/>
 </merge>

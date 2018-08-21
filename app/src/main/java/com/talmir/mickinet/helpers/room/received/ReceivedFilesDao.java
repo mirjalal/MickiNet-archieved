@@ -18,7 +18,7 @@ public interface ReceivedFilesDao {
     // Always holds/caches latest version of data. Notifies its active observers when the
     // data has changed. Since we are getting all the contents of the database,
     // we are notified whenever any of the database contents have changed.
-    @Query("SELECT id, name, type, status, dateTime FROM received")
+    @Query("SELECT id, name, type, status, dateTime FROM received ORDER BY dateTime ASC;")
     LiveData<List<ReceivedFilesEntity>> getAllReceivedFiles();
 
     // We do not need a conflict strategy, because the s_f_id is our primary key, and you cannot
@@ -26,6 +26,6 @@ public interface ReceivedFilesDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(ReceivedFilesEntity file);
 
-    @Query("DELETE FROM received")
+    @Query("DELETE FROM received;")
     void deleteAllRecords();
 }

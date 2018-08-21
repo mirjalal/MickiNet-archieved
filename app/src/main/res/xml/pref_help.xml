@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:title="@string/contact_us">
     <Preference android:title="@string/contact_us" android:key="contact_us" android:summary="@string/contact_us_summary">
         <intent android:action="android.intent.action.MAIN"
                 android:targetPackage="com.talmir.mickinet"

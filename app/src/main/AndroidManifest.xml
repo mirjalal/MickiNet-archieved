@@ -15,7 +15,6 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-permission android:name="android.permission.BATTERY_STATS"/>
 
     <supports-screens
             android:largeScreens="true"
@@ -76,22 +75,16 @@
             <!--</intent-filter>-->
         <!--</receiver>-->
 
-        <activity android:name=".activities.SplashScreenActivity" android:theme="@style/AppTheme1">
-
-        </activity>
-        <activity
-                android:name=".activities.IntroActivity"
-                android:theme="@style/AppTheme1">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
+        <activity android:name=".activities.IntroActivity" android:theme="@style/AppTheme1"/>
         <activity
                 android:name=".activities.HomeActivity"
                 android:configChanges="orientation|keyboardHidden"
                 android:screenOrientation="portrait"
                 android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
             <!-- <intent-filter> -->
             <!-- <action android:name="android.intent.action.GET_CONTENT"/> -->
             <!-- <action android:name="android.intent.action.SEND"/> -->

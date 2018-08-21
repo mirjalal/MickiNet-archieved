@@ -3,11 +3,11 @@ package com.talmir.mickinet.helpers.room.sent;
 import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.os.AsyncTask;
-import android.util.Log;
 
-import com.talmir.mickinet.helpers.room.db.AppDatabase;
+import com.talmir.mickinet.helpers.room.utils.AppDatabase;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author miri
@@ -27,7 +27,7 @@ public class SentFilesRepository {
 
     public void insert(SentFilesEntity sentFilesEntity) {
         // AsyncTask.THREAD_POOL_EXECUTOR is important!
-        new SentFilesRepository.insertAsyncTask(mSentFilesDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, sentFilesEntity);
+        new insertAsyncTask(mSentFilesDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, sentFilesEntity);
     }
 
     private static class insertAsyncTask extends AsyncTask<SentFilesEntity, Void, Void> {
@@ -42,11 +42,36 @@ public class SentFilesRepository {
             mAsyncTaskDao.insert(params[0]);
             return null;
         }
+    }
+
+    public boolean deleteAllRecords() {
+        AsyncTask<Void, Void, Boolean> deleteTask = new deleteAllRecordsAsyncTask(mSentFilesDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        try {
+            return deleteTask.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private static class deleteAllRecordsAsyncTask extends AsyncTask<Void, Void, Boolean> {
+        private SentFilesDao dao;
+
+        deleteAllRecordsAsyncTask(SentFilesDao dao) {
+            this.dao = dao;
+        }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            Log.e("doInBackground: ", "reached here!");
+        protected Boolean doInBackground(Void... voids) {
+            try {
+                dao.deleteAllRecords();
+                return true;
+            } catch (Exception ignored) {
+                return false;
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.talmir.mickinet.fragments;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,8 +30,7 @@ public class SentFragment extends Fragment {
      */
     // TODO: Rename and change types and number of parameters
     public static SentFragment newInstance(String param1, String param2) {
-        SentFragment fragment = new SentFragment();
-        return fragment;
+        return new SentFragment();
     }
 
     @Override
@@ -39,9 +39,7 @@ public class SentFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_sent, container, false);
     }
 

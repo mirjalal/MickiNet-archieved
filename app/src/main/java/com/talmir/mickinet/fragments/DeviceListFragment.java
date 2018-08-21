@@ -41,6 +41,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static android.os.Looper.getMainLooper;
 
@@ -72,10 +73,6 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                 return getString(R.string.unknown);
         }
     }
-//
-//    static {
-//        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-//    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -251,7 +248,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             if (convertView == null) {
                 LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                convertView = vi.inflate(R.layout.row_devices, null);
+                convertView = Objects.requireNonNull(vi).inflate(R.layout.row_devices, null);
             }
             WifiP2pDevice device = items.get(position);
             if (device != null) {
@@ -272,9 +269,8 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
      * @return true if device name successfully changed, false otherwise.
      */
     private void changeDeviceName() {
-
-        final android.app.AlertDialog alert = new android.app.AlertDialog.Builder(getActivity()).create();
-        alert.setTitle("Change device name");
+        final AlertDialog alert = new AlertDialog.Builder(getActivity()).create();
+        alert.setTitle(getString(R.string.change_device_name));
 
         final View view = getActivity().getLayoutInflater().inflate(R.layout.change_device_name_alertdialog_layout, null);
 
@@ -301,30 +297,22 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
             }
 
             @Override
-            public void onDestroyActionMode(ActionMode mode) {
-
-            }
+            public void onDestroyActionMode(ActionMode mode) {  }
         });
         mNewDeviceName.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {  }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                mNewDeviceNameParent.setError(s.toString().length() < 3 ? "Enter 3 characters at least" : null);
+                mNewDeviceNameParent.setError(s.toString().length() < 1 ? getString(R.string.enter_dev_name_error) : null);
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-
-            }
+            public void afterTextChanged(Editable s) {  }
         });
-
         mSubmit.setOnClickListener(v -> {
             if (mNewDeviceName.getText().toString().trim().length() > 0 && mNewDeviceNameParent.getError() == null) {
-
                 final WifiP2pManager[] mManager = new WifiP2pManager[1];
                 WifiP2pManager.Channel channel;
                 try {
@@ -348,16 +336,15 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                         @Override
                         public void onSuccess() {
                             alert.dismiss();
-                            Toast.makeText(getActivity(), "Device name changed!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), R.string.dev_name_changed, Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
                         public void onFailure(int reason) {
-                            Toast.makeText(getActivity(), "Device name not changed!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), R.string.dev_name_not_changed, Toast.LENGTH_SHORT).show();
                         }
                     };
                     setDeviceName.invoke(mManager[0], arglist);
-
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
@@ -369,9 +356,8 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                 }
             }
             else
-                mNewDeviceNameParent.setError("Enter valid device name.");
+                mNewDeviceNameParent.setError(getString(R.string.valid_dev_name_error));
         });
-
         mCancel.setOnClickListener(v -> alert.dismiss());
 
         alert.setView(view);

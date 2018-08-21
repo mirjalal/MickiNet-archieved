@@ -2,7 +2,6 @@ package com.talmir.mickinet.helpers.background;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,12 +13,12 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
 
@@ -34,9 +33,7 @@ import java.lang.ref.WeakReference;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 /**
  * A custom class that receives stream and saves it
@@ -85,7 +82,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     private String saveFile(InputStream inputStream) {
         // recommended max buffer size is 8192.
         // read more: http://stackoverflow.com/a/19561265/4057688
-        byte buf[] = new byte[8192];
+        byte buf[] = new byte[2048];
 
         int len;
         try {
@@ -110,8 +107,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             rfe = new ReceivedFilesEntity();
             rfe.r_f_name = fileName;
 
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
-            rfe.r_f_time = sdf.format(/*Calendar.getInstance().getTime()*/new Date());
+//            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
+            rfe.r_f_time = new Date();//sdf.format(/*Calendar.getInstance().getTime()*/new Date());
 
             // check for mimetypes
             final File receivedFile;
@@ -124,16 +121,16 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                 rfe.r_f_type = "2";
             }
             else if (mimeType.startsWith("music") || mimeType.startsWith("audio")) {
-                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Musics/Received/" + fileName);
-                rfe.r_f_type = "4"; // for now, music types are accepted as others
+                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Media/Received/" + fileName);
+                rfe.r_f_type = "3"; // for now, music types are accepted as others
             }
             else if (mimeType.equals("application/vnd.android.package-archive")) {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/APKs/Received/" + fileName);
-                rfe.r_f_type = "3";
+                rfe.r_f_type = "4";
             }
             else {
                 receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Others/Received/" + fileName);
-                rfe.r_f_type = "4";
+                rfe.r_f_type = "5";
             }
 
             File dirs = new File(receivedFile.getParent());
@@ -207,7 +204,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             mBuilder.setTicker(contextRef.get().getString(R.string.file_received))
                     .setContentTitle(contextRef.get().getString(R.string.file_received))
                     .setContentText(result.substring(result.lastIndexOf('/') + 1))
-                    .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_done : android.R.drawable.stat_sys_download_done)
+                    .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_receive_done : android.R.drawable.stat_sys_download_done)
                     .setProgress(0, 0, false)
                     .setOngoing(false)
                     .setContentIntent(notificationPendingIntent);
@@ -262,7 +259,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             rfe.r_f_operation_status = "0";
         }
-        ReceivedFilesViewModel rfvm = ViewModelProviders.of((FragmentActivity) contextRef.get()).get(ReceivedFilesViewModel.class);
+        ReceivedFilesViewModel rfvm = HomeActivity.getReceivedFilesViewModel();//ViewModelProviders.of((FragmentActivity) contextRef.get()).get(ReceivedFilesViewModel.class);
         rfvm.insert(rfe);
     }
 
@@ -280,19 +277,19 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
         new File(v, "/Sent/").mkdirs();
         new File(v, "/Received/").mkdirs();
 
-        File m = new File(rootDir, "/Musics/");
+        File m = new File(rootDir, "/Media/");
         m.mkdirs();
         new File(m, "/Sent/").mkdirs();
         new File(m, "/Received/").mkdirs();
-
-        File f = new File(rootDir, "/Others/");
-        f.mkdirs();
-        new File(f, "/Sent/").mkdirs();
-        new File(f, "/Received/").mkdirs();
 
         File a = new File(rootDir, "/APKs/");
         a.mkdirs();
         new File(a, "/Sent/").mkdirs();
         new File(a, "/Received/").mkdirs();
+
+        File f = new File(rootDir, "/Others/");
+        f.mkdirs();
+        new File(f, "/Sent/").mkdirs();
+        new File(f, "/Received/").mkdirs();
     }
 }

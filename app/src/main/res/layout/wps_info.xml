@@ -7,12 +7,10 @@
               android:paddingBottom="24dp"
               android:paddingStart="24dp"
               android:paddingEnd="24dp">
-
     <TextView
             android:id="@+id/contentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/define_wps_modes"
             android:textAlignment="center"/>
-
 </LinearLayout>

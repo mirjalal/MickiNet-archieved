@@ -22,7 +22,8 @@
                 android:hint="@string/describe_problem"
                 android:minLines="2"
                 android:maxLines="15"
-                android:selectAllOnFocus="true"/>
+                android:selectAllOnFocus="true"
+                android:inputType="textMultiLine"/>
 
         <CheckBox
                 android:id="@+id/system_logs"

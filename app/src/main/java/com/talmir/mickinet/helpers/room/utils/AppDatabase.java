@@ -1,4 +1,4 @@
-package com.talmir.mickinet.helpers.room.db;
+package com.talmir.mickinet.helpers.room.utils;
 
 import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
@@ -16,7 +16,7 @@ import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
  * This is the backend. The database. This used to be done by the OpenHelper.
  * The fact that this has very few comments emphasizes its coolness.
  */
-@Database(entities = {SentFilesEntity.class, ReceivedFilesEntity.class}, version = 1)
+@Database(entities = {SentFilesEntity.class, ReceivedFilesEntity.class}, version = 1, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract ReceivedFilesDao mReceivedFilesDao();
@@ -30,21 +30,12 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (DATABASE_INSTANCE == null) {
                     DATABASE_INSTANCE = Room
                             .databaseBuilder(context.getApplicationContext(), AppDatabase.class, "statistics")
-                            .addCallback(sRoomDatabaseCallback)
                             .build();
                 }
             }
         }
         return DATABASE_INSTANCE;
     }
-
-    // Override the onOpen method to populate the database.
-    private static RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
-        @Override
-        public void onOpen(@NonNull SupportSQLiteDatabase db) {
-            super.onOpen(db);
-        }
-    };
 
     public static void destroyInstance() {
         DATABASE_INSTANCE = null;

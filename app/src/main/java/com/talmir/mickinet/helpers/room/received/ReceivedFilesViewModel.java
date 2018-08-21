@@ -23,4 +23,6 @@ public class ReceivedFilesViewModel extends AndroidViewModel {
     public LiveData<List<ReceivedFilesEntity>> getAllReceivedFiles() { return mAllReceivedFiles; }
 
     public void insert(ReceivedFilesEntity receivedFile) { mRepository.insert(receivedFile); }
+
+    public boolean deleteAllRecords() { return mRepository.deleteAllRecords(); }
 }

@@ -9,6 +9,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
+ * Gets and sets client IP address. When connection established,
+ * proper methods will be execute.
+ *
  * @author miri
  * @since 8/15/2018
  */

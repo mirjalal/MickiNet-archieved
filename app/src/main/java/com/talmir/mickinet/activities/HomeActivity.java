@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -209,7 +208,11 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected synchronized void onCreate(Bundle savedInstanceState) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        if (prefs.getBoolean("firstTimeRun?", Boolean.TRUE))
+            startActivity(new Intent(HomeActivity.this, IntroActivity.class));
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
@@ -264,22 +267,13 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             });
         });
 
-        SharedPreferences setting = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if (setting.getBoolean("auto_enable_wifi", false)) {
-            WifiManager manageWifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            if (!Objects.requireNonNull(manageWifi).isWifiEnabled())
-                manageWifi.setWifiEnabled(true);
-        }
-
         mSentFilesViewModel = ViewModelProviders.of(HomeActivity.this).get(SentFilesViewModel.class);
         mSentFilesListAdapter = new SentFilesListAdapter(this);
         mSentFilesViewModel.getAllSentFiles().observe(HomeActivity.this, mSentFilesListAdapter::setSentFiles);
-        mSentFilesListAdapter.getSentFilesCountByTypes();
 
-        mReceivedFilesListAdapter = new ReceivedFilesListAdapter(this);
         mReceivedFilesViewModel = ViewModelProviders.of(HomeActivity.this).get(ReceivedFilesViewModel.class);
+        mReceivedFilesListAdapter = new ReceivedFilesListAdapter(this);
         mReceivedFilesViewModel.getAllReceivedFiles().observe(HomeActivity.this, mReceivedFilesListAdapter::setReceivedFiles);
-        mReceivedFilesListAdapter.getReceivedFilesCountByTypes();
     }
 
     @Override
@@ -295,8 +289,9 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
                 return true;
             case R.id.action_file_statistics:
-
                 startActivity(new Intent(getApplicationContext(), FileStatisticsActivity.class));
+                mSentFilesListAdapter.getSentFilesCountByTypes();
+                mReceivedFilesListAdapter.getReceivedFilesCountByTypes();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -345,9 +340,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
             return;
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_NOTIFICATIONS);
-        // Make sure the directory exists
-        // noinspection ResultOfMethodCallIgnored
-        path.mkdirs();
+        path.mkdirs(); // make sure the directory exists
         File outFile = new File(path, "MickiNet default.mp3");
         InputStream inputStream = null;
         FileOutputStream outputStream = null;
@@ -359,7 +352,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             while ((bytesRead = inputStream.read(buffer)) > 0)
                 outputStream.write(buffer, 0, bytesRead);
         } catch (Exception ignored) {
-
         } finally {
             try {
                 if (inputStream != null)

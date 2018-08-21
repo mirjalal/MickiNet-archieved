@@ -2,6 +2,7 @@ package com.talmir.mickinet.helpers.adapters;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -90,8 +91,9 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
         return Character.toString(applicationInfoSortedList.get(pos).loadLabel(packageManager).charAt(0));
     }
 
+    @NonNull
     @Override
-    public ApkViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ApkViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         /* Big hack: http://stackoverflow.com/a/2605838 */
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View itemView = inflater.inflate(R.layout.list_item_apk_adapter, parent, false);
@@ -99,7 +101,7 @@ public class ApkListAdapter extends RecyclerView.Adapter<ApkListAdapter.ApkViewH
     }
 
     @Override
-    public void onBindViewHolder(final ApkViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final ApkViewHolder holder, final int position) {
         final ApplicationInfo applicationInfo = applicationInfoSortedList.get(position);
         holder.icon.setImageDrawable(applicationInfo.loadIcon(packageManager));
         holder.app_name.setText(applicationInfo.loadLabel(packageManager).toString());

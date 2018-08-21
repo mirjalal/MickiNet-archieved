@@ -9,10 +9,17 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.activities.FileStatisticsActivity;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
+
+import static com.talmir.mickinet.activities.FileStatisticsActivity.PlaceholderFragment.receivedAPKFilesCount;
+import static com.talmir.mickinet.activities.FileStatisticsActivity.PlaceholderFragment.receivedMediaFilesCount;
+import static com.talmir.mickinet.activities.FileStatisticsActivity.PlaceholderFragment.receivedOtherFilesCount;
+import static com.talmir.mickinet.activities.FileStatisticsActivity.PlaceholderFragment.receivedPhotoFilesCount;
+import static com.talmir.mickinet.activities.FileStatisticsActivity.PlaceholderFragment.receivedVideoFilesCount;
 
 /**
  * @author miri
@@ -32,9 +39,14 @@ public class ReceivedFilesListAdapter extends RecyclerView.Adapter<ReceivedFiles
     }
 
     private final LayoutInflater mInflater;
-    private static List<ReceivedFilesEntity> mListOfFiles; // Cached copy of received files
+    private List<ReceivedFilesEntity> mListOfFiles; // Cached copy of received files
+    private int size = 0;
+    private final SimpleDateFormat dateFormatter;
 
-    public ReceivedFilesListAdapter(Context context) { mInflater = LayoutInflater.from(context); }
+    public ReceivedFilesListAdapter(Context context) {
+        mInflater = LayoutInflater.from(context);
+        dateFormatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
+    }
 
     @NonNull
     @Override
@@ -47,76 +59,89 @@ public class ReceivedFilesListAdapter extends RecyclerView.Adapter<ReceivedFiles
     public void onBindViewHolder(@NonNull ReceivedFilesViewHolder holder, int position) {
         ReceivedFilesEntity rfe = mListOfFiles.get(position);
         holder.file_name.setText(rfe.r_f_name);
-        holder.operation_status.setText(rfe.r_f_operation_status.equals("1") ? "Operation status: Succeeded" : "Operation status: Failed");
-        holder.date_time.setText(rfe.r_f_time);
+        holder.operation_status.setText(rfe.r_f_operation_status.equals("1") ?  mInflater.getContext().getString(R.string.operation_succeeded) : mInflater.getContext().getString(R.string.operation_failed));
+        holder.date_time.setText(dateFormatter.format(rfe.r_f_time));
     }
 
     // getItemCount() is called many times, and when it is first called,
     // mListOfFiles has not been updated (means initially, it's null, and we can't return null).
     @Override
     public int getItemCount() {
-        return (mListOfFiles != null) ? mListOfFiles.size() : 0;
+        return size;
     }
 
-    public void setReceivedFiles(List<ReceivedFilesEntity> receivedFiles){
+    public void setReceivedFiles(List<ReceivedFilesEntity> receivedFiles) {
+        size = receivedFiles.size();
         mListOfFiles = receivedFiles;
         notifyDataSetChanged();
     }
 
     public void getReceivedFilesCountByTypes() {
-        if (mListOfFiles != null) {
+        if (size > 0) {
             for (ReceivedFilesEntity temp : mListOfFiles) {
-                if (temp.r_f_type.equals("1"))
-                    FileStatisticsActivity.receivedPhotoFilesCount = FileStatisticsActivity.receivedPhotoFilesCount + 1.0f;
-                else if (temp.r_f_type.equals("2"))
-                    FileStatisticsActivity.receivedVideoFilesCount = FileStatisticsActivity.receivedVideoFilesCount + 1.0f;
-                else if (temp.r_f_type.equals("3"))
-                    FileStatisticsActivity.receivedAPKFilesCount = FileStatisticsActivity.receivedAPKFilesCount + 1.0f;
-                else
-                    FileStatisticsActivity.receivedOtherFilesCount = FileStatisticsActivity.receivedOtherFilesCount + 1.0f;
+                switch (temp.r_f_type) {
+                    case "1":
+                        receivedPhotoFilesCount++;
+                        break;
+                    case "2":
+                        receivedVideoFilesCount++;
+                        break;
+                    case "3":
+                        receivedAPKFilesCount++;
+                        break;
+                    case "4":
+                        receivedMediaFilesCount++;
+                        break;
+                    default:
+                        receivedOtherFilesCount++;
+                        break;
+                }
             }
-//            Log.e("saylar", "photo: " + receivedPhotoFilesCount + "\nvideo: " + receivedVideoFilesCount + "\napk: " + receivedAPKFilesCount + "\nother: " + receivedOtherFilesCount);
         }
-
         getPhotoFilesCount();
         getVideoFilesCount();
+        getMusicFilesCount();
         getAPKFilesCount();
         getOtherFilesCount();
     }
 
     private void getPhotoFilesCount() {
         try {
-            FileStatisticsActivity.receivedPhotoFilesCount = FileStatisticsActivity.receivedPhotoFilesCount * 100 / getItemCount();
-//            Log.e("tag", "receivedPhotoFilesCount:" + FileStatisticsActivity.receivedPhotoFilesCount);
+            receivedPhotoFilesCount = receivedPhotoFilesCount * 100 / size;
         } catch (IllegalArgumentException | ArithmeticException ignored) {
-            FileStatisticsActivity.receivedPhotoFilesCount = 0.0f;
+            receivedPhotoFilesCount = 0;
         }
     }
 
     private void getVideoFilesCount() {
         try {
-            FileStatisticsActivity.receivedVideoFilesCount = FileStatisticsActivity.receivedVideoFilesCount * 100 / getItemCount();
-//            Log.e("tag", "receivedVideoFilesCount :" + FileStatisticsActivity.receivedVideoFilesCount );
+            receivedVideoFilesCount = receivedVideoFilesCount * 100 / size;
         } catch (IllegalArgumentException | ArithmeticException ignored) {
-            FileStatisticsActivity.receivedVideoFilesCount = 0.0f;
+            receivedVideoFilesCount = 0;
+        }
+    }
+
+    private void getMusicFilesCount() {
+        try {
+            receivedMediaFilesCount = receivedMediaFilesCount * 100 / size;
+        } catch (IllegalArgumentException | ArithmeticException ignored) {
+            receivedMediaFilesCount = 0;
         }
     }
 
     private void getAPKFilesCount() {
         try {
-            FileStatisticsActivity.receivedAPKFilesCount = FileStatisticsActivity.receivedAPKFilesCount * 100 / getItemCount();
-//            Log.e("tag", "receivedAPKFilesCount :" + FileStatisticsActivity.receivedAPKFilesCount );
+            receivedAPKFilesCount = receivedAPKFilesCount * 100 / size;
         } catch (IllegalArgumentException | ArithmeticException ignored) {
-            FileStatisticsActivity.receivedAPKFilesCount = 0.0f;
+            receivedAPKFilesCount = 0;
         }
     }
 
     private void getOtherFilesCount() {
         try {
-            FileStatisticsActivity.receivedOtherFilesCount = FileStatisticsActivity.receivedOtherFilesCount * 100 / getItemCount();
-//            Log.e("tag", "receivedOtherFilesCount :" + FileStatisticsActivity.receivedOtherFilesCount );
+            receivedOtherFilesCount = receivedOtherFilesCount * 100 / size;
         } catch (IllegalArgumentException | ArithmeticException ignored) {
-            FileStatisticsActivity.receivedOtherFilesCount = 0.0f;
+            receivedOtherFilesCount = 0;
         }
     }
 }

@@ -6,7 +6,9 @@
     <!--<color name="colorAccent_alpha26">#42FFD713</color>-->
 
     <color name="colorPrimaryDark">#FF3F4F6D</color>
+    <color name="colorPrimaryDarkRipple">#423F4F6D</color>
     <color name="colorPrimary">#FF465879</color>
+    <color name="colorPrimaryRipple">#42465879</color>
     <color name="colorAccent">#FF00DAD6</color>
     <color name="colorAccentRipple">#4200DAD6</color>
     <color name="colorAccentDark">#FF009599</color>

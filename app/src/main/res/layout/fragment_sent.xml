@@ -21,6 +21,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
                 android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toTopOf="@+id/sent_recycler_view"
                 app:layout_constraintTop_toTopOf="parent"
@@ -30,10 +31,8 @@
                 android:id="@+id/sent_recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="vertical"
                 app:layout_constraintTop_toBottomOf="@+id/sent_pie"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toTopOf="@+id/sent_empty_view"
                 app:layout_constraintStart_toStartOf="parent"/>
 
         <TextView
@@ -42,10 +41,11 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/no_data_available"
-                app:layout_constraintTop_toBottomOf="@+id/sent_recycler_view"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="8dp"/>
 
     </android.support.constraint.ConstraintLayout>
 </android.support.v4.widget.NestedScrollView>

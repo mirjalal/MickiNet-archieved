@@ -8,7 +8,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="client_text">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
-    <string name="empty_message">No devices found. Turn on Wi-Fi and perform discovery from the again.</string>
+    <string name="empty_message">No devices found. Try searching again.</string>
     <string name="wifi_off_warning">Enable Wi-Fi from system settings</string>
     <string name="label_me">Device information</string>
     <string name="turn_on_wifi">Turn on Wi-Fi</string>
@@ -48,7 +48,7 @@
     <string name="sending_file">Sending the file</string>
     <string name="sending">Sending…</string>
     <string name="file_sent">File sent.</string>
-    <string name="successful">Successful.</string>
+    <string name="successful">Successful</string>
     <string name="click_to_open">Click to open the file</string>
     <string name="receiving_file">Receiving the file</string>
     <string name="file_receive">File receive</string>
@@ -56,9 +56,6 @@
     <string name="file_is_not_received">File is not received.</string>
     <string name="file_sent_fail">An error occurred. File send failed.</string>
     <string name="file_is_not_sent">File is not sent.</string>
-    <string name="string_first_slide">Welcome!</string>
-    <string name="string_second_slide">To begin with, we need some permissions</string>
-    <string name="string_third_slide">We are done!</string>
     <string name="search_hint">Search for an application</string>
     <string name="pick_an_app">Select an application</string>
     <string name="pick_a_file">Pick a file</string>
@@ -190,7 +187,7 @@
     <string name="include_logs">Include logs</string>
     <string name="auto_turn_on_wifi">Turn on Wi-Fi when app starts</string>
     <string name="auto_turn_on_wifi_summary">Automatically turns on Wi-Fi when app started.</string>
-    <string name="title_activity_file_statistics">File Statistics</string>
+    <string name="title_activity_file_statistics">File statistics</string>
     <string name="tab_text_1">Sent</string>
     <string name="tab_text_2">Received</string>
     <string name="action_reset_statistics">Reset statistics</string>
@@ -198,5 +195,39 @@
     <string name="enter_new_device_name">Enter new device name</string>
     <string name="change">Change</string>
     <string name="splash_logo">splash_logo</string>
+    <string name="pick_media">Pick a media file</string>
+    <string name="change_device_name">Change device name</string>
+    <string name="file_not_exists">File not exists!</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="reset_all_stats">This will reset all statistics.</string>
+    <string name="reset">reset</string>
+    <string name="done">Done!</string>
+    <string name="file_types">File types</string>
+    <string name="photos">Photos</string>
+    <string name="videos">Videos</string>
+    <string name="media">Media</string>
+    <string name="apks">APKs</string>
+    <string name="others">Others</string>
+    <string name="no_email_client">There are no email clients installed.</string>
+    <string name="send_mail">Send email</string>
+    <string name="slide1_title">Share your files with us</string>
+    <string name="slide1_description">Would you try?</string>
+    <string name="slide1_snack_message">We provide a solution to make you love MickiNet</string>
+    <string name="slide1_button_text">Share with love</string>
+    <string name="slide2_title">Want more?</string>
+    <string name="slide2_description">Go on</string>
+    <string name="slide3_title">Let us access device storage</string>
+    <string name="slide3_description">we need it</string>
+    <string name="slide4_title">Do you take tons of selfies?</string>
+    <string name="slide4_description">oops, forgotten permission</string>
+    <string name="slide5_title">That\'s it</string>
+    <string name="slide5_description">Would you join us?</string>
+    <string name="sorry_for_conection">Sorry! You\'ll be able to send files after a successful connection.</string>
+    <string name="enter_dev_name_error">Enter a character at least</string>
+    <string name="dev_name_changed">Device name changed!</string>
+    <string name="dev_name_not_changed">Device name not changed!</string>
+    <string name="valid_dev_name_error">Enter valid device name.</string>
+    <string name="operation_succeeded">Operation status: Succeeded</string>
+    <string name="operation_failed">Operation status: Failed</string>
 
 </resources>

@@ -86,7 +86,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 return;
 
             DeviceListFragment listFragment = (DeviceListFragment) activity.getFragmentManager().findFragmentById(R.id.frag_list);
-            LinearLayout ll = (LinearLayout)listFragment.getView();
+            LinearLayout ll = (LinearLayout) listFragment.getView();
             int c = ll.getChildCount();
 
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);

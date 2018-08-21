@@ -36,7 +36,7 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
     private RecyclerView recyclerView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected synchronized void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_apk_share);
 

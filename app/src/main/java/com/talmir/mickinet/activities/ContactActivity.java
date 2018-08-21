@@ -22,6 +22,7 @@ import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.background.CrashReport;
 
 import java.io.File;
+import java.text.DecimalFormat;
 
 public class ContactActivity extends AppCompatActivity {
 
@@ -40,16 +41,16 @@ public class ContactActivity extends AppCompatActivity {
                 i.putExtra(Intent.EXTRA_EMAIL, new String[]{"mirjalal.talishinski@gmail.com"});
                 i.putExtra(Intent.EXTRA_SUBJECT, "Help/Feedback/Question about MickiNet");
                 i.putExtra(
-                        Intent.EXTRA_TEXT,
-                        messageBody.getText().toString() + (((CheckBox) findViewById(R.id.system_logs)).isChecked() ? getInfoAboutDevice() : "")
+                    Intent.EXTRA_TEXT,
+                    messageBody.getText().toString() + (((CheckBox) findViewById(R.id.system_logs)).isChecked() ? getInfoAboutDevice() : "")
                 );
                 try {
-                    startActivity(Intent.createChooser(i, "Send email"));
+                    startActivity(Intent.createChooser(i, getString(R.string.send_mail)));
                 } catch (android.content.ActivityNotFoundException ignored) {
-                    Toast.makeText(getApplicationContext(), "There are no email clients installed.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.no_email_client, Toast.LENGTH_SHORT).show();
                 }
             } else
-                Toast.makeText(getApplicationContext(), "Please describe your problem.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.describe_problem, Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -133,46 +134,20 @@ public class ContactActivity extends AppCompatActivity {
         } catch (/*PackageManager.NameNotFound*/Exception e) {
             CrashReport.report(getApplicationContext(), ContactActivity.class.getName());
         }
-
-        //Properties p = System.getProperties();
-        //Enumeration keys = p.keys();
-        //String key = "";
-        //while (keys.hasMoreElements()) {
-            //key = (String) keys.nextElement();
-            //s += "\n > " + key + " = " + p.get(key);
-        //}
-
-//        s += "\n Keyboard available: "
-//                + (getResources().getConfiguration().keyboard != Configuration.KEYBOARD_NOKEYS);
-//        s += "\n Trackball available: "
-//                + (getResources().getConfiguration().navigation == Configuration.NAVIGATION_TRACKBALL);
-//        s += "\n SD Card state: " + Environment.getExternalStorageState();
-
         return log.toString();
     }
 
+    /**
+     * Converts file/memory size/length from long to huuuumaan readable string.
+     *
+     * @param size size in bytes
+     * @return human readable file size
+     */
     @NonNull
     private String formatSize(long size) {
-        String suffix = null;
-        if (size >= 1024) {
-            suffix = "KB";
-            size /= 1024;
-            if (size >= 1024) {
-                suffix = "MB";
-                size /= 1024;
-                if (size >= 1024) {
-                    suffix = "GB";
-                    size /= 1024;
-                }
-            }
-        }
-        StringBuilder resultBuffer = new StringBuilder(Long.toString(size));
-        int commaOffset = resultBuffer.length() - 3;
-        while (commaOffset > 0) {
-            resultBuffer.insert(commaOffset, ',');
-            commaOffset -= 3;
-        }
-        if (suffix != null) resultBuffer.append(suffix);
-        return resultBuffer.toString();
+        if(size <= 0) return "0";
+        final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new DecimalFormat("#,##0.##").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 }
