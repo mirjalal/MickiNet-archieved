@@ -128,9 +128,8 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
             } else {
                 if (IP.getClientIpAddress().equals(""))
                     Toast.makeText(getActivity(), R.string.sorry_for_conection, Toast.LENGTH_LONG).show();
-                else {
+                else
                     startActivityForResult(new Intent(getActivity(), ApkShareActivity.class), ACTION_CHOOSE_APP_RESULT_CODE);
-                }
             }
         });
 

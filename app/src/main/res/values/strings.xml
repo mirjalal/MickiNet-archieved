@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MickiNet</string>
+    <string name="app_name" translatable="false">MickiNet</string>
 
     <string name="discover_peers_button">Discover</string>
     <string name="disconnect_peer_button">Disconnect</string>
@@ -41,34 +41,31 @@
     <string name="status">Status:\u00A0</string>
     <string name="mac_address">MAC Address:\u00A0</string>
     <string name="is_group_owner">Is group owner?\u00A0</string>
-    <string name="choose_action">Choose action</string>
     <string name="file_received">File received</string>
     <string name="open_file">Open</string>
     <string name="file_send">File is on the way</string>
     <string name="sending_file">Sending the file</string>
     <string name="sending">Sending…</string>
-    <string name="file_sent">File sent.</string>
+    <string name="file_sent">File sent</string>
     <string name="successful">Successful</string>
     <string name="click_to_open">Click to open the file</string>
     <string name="receiving_file">Receiving the file</string>
     <string name="file_receive">File receive</string>
     <string name="file_receive_fail">An error occurred. File receive failed.</string>
-    <string name="file_is_not_received">File is not received.</string>
+    <string name="file_is_not_received">File is not received</string>
     <string name="file_sent_fail">An error occurred. File send failed.</string>
-    <string name="file_is_not_sent">File is not sent.</string>
+    <string name="file_is_not_sent">File is not sent</string>
     <string name="search_hint">Search for an application</string>
     <string name="pick_an_app">Select an application</string>
     <string name="pick_a_file">Pick a file</string>
     <string name="photo_camera">Take a photo</string>
-    <string name="file_folder">Pick a file</string>
     <string name="pick_apk">Choose an app</string>
     <string name="video_camera">Take a video</string>
     <string name="clear_history">Clear search history</string>
     <string name="save">Save</string>
-    <string name="ok">OK</string>
+    <string name="ok" translatable="false">OK</string>
 
     <string name="settings">Settings</string>
-    <string name="title_activity_settings">Settings</string>
     <string name="pref_header_general">General</string>
     <string-array name="multi_select_list_preference_default_value"/>
     <string name="pref_header_notifications">Notifications</string>
@@ -125,7 +122,7 @@
 
     <string name="settings_notification_light_summary">Choose a color to blink the notification light when a new file is received.</string>
     <string name="settings_notification_ringtone_summary">Select a ringtone for incoming files.</string>
-    <string name="settings_notification_vibrate_summary">Vibrate device when an incoming MickiNet file arrives.</string>
+    <string name="settings_notification_vibrate_summary">Vibrate device when an incoming file arrives.</string>
 
     <string name="incoming_notifications">File send notifications</string>
     <string name="outgoing_notifications">File receive notifications</string>
@@ -136,13 +133,13 @@
     <string name="conn_conf">Connection configuration</string>
     <string name="wps_modes">WPS mode</string>
     <string name="pbc" translatable="false">PBC</string>
-    <string name="pbc_help">Push button configuration</string>
+    <string name="pbc_help" translatable="false">Push button configuration</string>
     <string name="display" translatable="false">Display</string>
-    <string name="display_help">Display pin method configuration - pin is generated and displayed on device</string>
+    <string name="display_help" translatable="false">Display pin method configuration - pin is generated and displayed on device</string>
     <string name="keypad" translatable="false">Keypad</string>
-    <string name="keypad_help">Keypad pin method configuration - pin is entered on device</string>
+    <string name="keypad_help" translatable="false">Keypad pin method configuration - pin is entered on device</string>
     <string name="label" translatable="false">Label</string>
-    <string name="label_help">Label pin method configuration - pin is labelled on device</string>
+    <string name="label_help" translatable="false">Label pin method configuration - pin is labelled on device</string>
     <string-array name="pref_wps_setup_type_titles">
         <item>@string/pbc</item>
         <item>@string/display</item>
@@ -177,7 +174,6 @@
     <string name="choose_wps_mode">Choose WPS mode.</string>
     <string name="pref_header_help">Help</string>
     <string name="pref_header_statistics">File statistics</string>
-    <string name="contact_activity">Contact us</string>
     <string name="describe_problem">Please describe your problem in a detail</string>
     <string name="contact_us_summary">Questions? Need help? Find a bug?</string>
     <string name="contact_us">Contact us</string>
@@ -187,14 +183,12 @@
     <string name="include_logs">Include logs</string>
     <string name="auto_turn_on_wifi">Turn on Wi-Fi when app starts</string>
     <string name="auto_turn_on_wifi_summary">Automatically turns on Wi-Fi when app started.</string>
-    <string name="title_activity_file_statistics">File statistics</string>
     <string name="tab_text_1">Sent</string>
     <string name="tab_text_2">Received</string>
     <string name="action_reset_statistics">Reset statistics</string>
     <string name="no_data_available">No data available.</string>
     <string name="enter_new_device_name">Enter new device name</string>
     <string name="change">Change</string>
-    <string name="splash_logo">splash_logo</string>
     <string name="pick_media">Pick a media file</string>
     <string name="change_device_name">Change device name</string>
     <string name="file_not_exists">File not exists!</string>
@@ -208,7 +202,7 @@
     <string name="media">Media</string>
     <string name="apks">APKs</string>
     <string name="others">Others</string>
-    <string name="no_email_client">There are no email clients installed.</string>
+    <string name="no_email_client" translatable="false">There are no email clients installed.</string>
     <string name="send_mail">Send email</string>
     <string name="slide1_title">Share your files with us</string>
     <string name="slide1_description">Would you try?</string>

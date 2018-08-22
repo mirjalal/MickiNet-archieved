@@ -95,7 +95,7 @@
         </activity>
         <activity
                 android:name=".activities.SettingsActivity"
-                android:label="@string/title_activity_settings"
+                android:label="@string/settings"
                 android:parentActivityName=".activities.HomeActivity"
                 android:theme="@style/AppTheme">
             <meta-data
@@ -123,12 +123,12 @@
         <activity
                 android:name=".activities.ContactActivity"
                 android:configChanges="orientation|keyboardHidden"
-                android:label="@string/contact_activity"
+                android:label="@string/contact_us"
                 android:screenOrientation="portrait"
                 android:theme="@style/AppTheme"/>
         <activity
                 android:name=".activities.FileStatisticsActivity"
-                android:label="@string/title_activity_file_statistics"
+                android:label="@string/pref_header_statistics"
                 android:parentActivityName=".activities.HomeActivity"
                 android:theme="@style/AppTheme.NoActionBar">
             <meta-data

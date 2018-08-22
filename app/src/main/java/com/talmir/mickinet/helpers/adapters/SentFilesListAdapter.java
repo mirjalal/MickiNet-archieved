@@ -87,10 +87,10 @@ public class SentFilesListAdapter extends RecyclerView.Adapter<SentFilesListAdap
                         sentVideoFilesCount++;
                         break;
                     case "3":
-                        sentAPKFilesCount++;
+                        sentMediaFilesCount++;
                         break;
                     case "4":
-                        sentMediaFilesCount++;
+                        sentAPKFilesCount++;
                         break;
                     default:
                         sentOtherFilesCount++;

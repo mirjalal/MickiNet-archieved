@@ -87,10 +87,10 @@ public class ReceivedFilesListAdapter extends RecyclerView.Adapter<ReceivedFiles
                         receivedVideoFilesCount++;
                         break;
                     case "3":
-                        receivedAPKFilesCount++;
+                        receivedMediaFilesCount++;
                         break;
                     case "4":
-                        receivedMediaFilesCount++;
+                        receivedAPKFilesCount++;
                         break;
                     default:
                         receivedOtherFilesCount++;
