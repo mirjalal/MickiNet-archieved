@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -152,7 +151,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
             mBuilder.setTicker(contextRef.get().getString(R.string.successful))
 //                    .setContentTitle(app.getString(R.string.file_sent))
                     .setContentText(contextRef.get().getString(R.string.file_sent))
-                    .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_send_done : android.R.drawable.stat_sys_upload_done)
+                    .setSmallIcon(android.R.drawable.stat_sys_upload_done)
                     .setOngoing(false)
                     .setProgress(0, 0, false);
 

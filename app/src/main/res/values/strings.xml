@@ -223,5 +223,9 @@
     <string name="valid_dev_name_error">Enter valid device name.</string>
     <string name="operation_succeeded">Operation status: Succeeded</string>
     <string name="operation_failed">Operation status: Failed</string>
-
+    <string name="open_source_licenses">Open source licenses</string>
+    <string name="got_it">Got it</string>
+    <string name="showcase1_content">This card has some information about your device. Try to click on it!</string>
+    <string name="okay_got_it">Okay, I got it</string>
+    <string name="showcase2_content">To start search for nearby devices just click on it.</string>
 </resources>

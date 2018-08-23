@@ -1,5 +1,7 @@
 package com.talmir.mickinet.activities;
 
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
@@ -261,6 +263,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             setHasOptionsMenu(true);
             addPreferencesFromResource(R.xml.pref_help);
+
+            findPreference("contact_us").setOnPreferenceClickListener(preference -> {
+                startActivity(new Intent(getActivity(), ContactActivity.class));
+                return true;
+            });
+
+            findPreference("open_source_licenses").setOnPreferenceClickListener(preference -> {
+                startActivity(new Intent(getActivity(), OssLicensesMenuActivity.class));
+                return true;
+            });
         }
 
         @Override

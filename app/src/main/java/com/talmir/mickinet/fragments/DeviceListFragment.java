@@ -37,6 +37,7 @@ import android.widget.Toast;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     private List<WifiP2pDevice> peers = new ArrayList<>();
     private WifiP2pDevice device; // this device
     public static WifiP2pDevice connectedDevice = null; // connected device (used in WiFiDirectBroadcastReceiver class)
+    public static WeakReference<CardView> deviceDetailCardViewRef;
 
     @NonNull
     private String getDeviceStatus(int deviceStatus) {
@@ -84,8 +86,9 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(R.layout.fragment_device_list, null);
 
-        CardView c = mContentView.findViewById(R.id.this_device);
-        c.setOnClickListener(v -> {
+        CardView deviceDetailCardView = mContentView.findViewById(R.id.this_device);
+        deviceDetailCardViewRef = new WeakReference<>(deviceDetailCardView);
+        deviceDetailCardView.setOnClickListener(v -> {
             changeDeviceName();
         });
 

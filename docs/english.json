@@ -147,5 +147,10 @@
 	"Device name not changed!": "",
 	"Enter valid device name.": "",
 	"Operation status: Succeeded": "",
-	"Operation status: Failed": ""
+	"Operation status: Failed": "",
+	"Open source licenses": "",
+	"Got it": "",
+	"This card has some information about your device. Try to click on it!": "",
+	"Okay, I got it": "",
+	"To start search for nearby devices just click on it.": ""
 }

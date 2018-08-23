@@ -34,6 +34,9 @@ import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
 import org.jetbrains.annotations.Contract;
 
+import uk.co.deanwild.materialshowcaseview.IShowcaseListener;
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -209,12 +212,43 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     protected synchronized void onCreate(Bundle savedInstanceState) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        if (prefs.getBoolean("firstTimeRun?", Boolean.TRUE))
-            startActivity(new Intent(HomeActivity.this, IntroActivity.class));
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        if (prefs.getBoolean("firstTimeRun?", Boolean.TRUE)) {
+            new MaterialShowcaseView.Builder(this)
+                    .setTarget(DeviceListFragment.deviceDetailCardViewRef.get())
+                    .setDismissOnTargetTouch(true)
+                    .setMaskColour(R.color.colorAccent)
+                    .setShapePadding(32)
+                    .setDismissText(getString(R.string.got_it))
+                    .setContentText(getString(R.string.showcase1_content))
+                    .setDelay(500) // optional but starting animations immediately in onCreate can make them choppy
+                    .withRectangleShape()
+                    .singleUse("cardViewShow") // provide a unique ID used to ensure it is only shown once
+                    .show().addShowcaseListener(new IShowcaseListener() {
+                @Override
+                public void onShowcaseDisplayed(MaterialShowcaseView materialShowcaseView) {
+                }
+
+                @Override
+                public void onShowcaseDismissed(MaterialShowcaseView materialShowcaseView) {
+                    new MaterialShowcaseView.Builder(HomeActivity.this)
+                            .setTarget(start_discovery)
+                            .setDismissOnTargetTouch(true)
+                            .setMaskColour(R.color.colorAccent)
+                            .setShapePadding(32)
+                            .setDismissText(getString(R.string.okay_got_it))
+                            .setContentText(getString(R.string.showcase2_content))
+                            .setDelay(500) // optional but starting animations immediately in onCreate can make them choppy
+                            .withCircleShape()
+                            .singleUse("fabShow") // provide a unique ID used to ensure it is only shown once
+                            .show();
+                }
+            });
+            startActivity(new Intent(HomeActivity.this, IntroActivity.class));
+        }
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
 //            if (canAccessCamera() || canAccessExternalStorage() || canAccessContacts())
@@ -235,6 +269,36 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         channel = manager.initialize(getApplicationContext(), getMainLooper(), null);
 
         start_discovery = findViewById(R.id.start_discover);
+        new MaterialShowcaseView.Builder(this)
+                .setTarget(DeviceListFragment.deviceDetailCardViewRef.get())
+                .setDismissOnTargetTouch(true)
+                .setMaskColour(R.color.colorAccent)
+                .setShapePadding(32)
+                .setDismissText("Got it")
+                .setContentText("This card has some information about your device. Try to click on it!")
+                .setDelay(500) // optional but starting animations immediately in onCreate can make them choppy
+                .withRectangleShape()
+                .singleUse("cardViewShow") // provide a unique ID used to ensure it is only shown once
+                .show()/*.addShowcaseListener(new IShowcaseListener() {
+            @Override
+            public void onShowcaseDisplayed(MaterialShowcaseView materialShowcaseView) {  }
+
+            @Override
+            public void onShowcaseDismissed(MaterialShowcaseView materialShowcaseView) {
+                new MaterialShowcaseView.Builder(HomeActivity.this)
+                        .setTarget(start_discovery)
+                        .setDismissOnTargetTouch(true)
+                        .setMaskColour(R.color.colorAccent)
+                        .setShapePadding(32)
+                        .setDismissText("Okay, I got it")
+                        .setContentText("To start search for nearby devices just click on it.")
+                        .setDelay(500) // optional but starting animations immediately in onCreate can make them choppy
+                        .withCircleShape()
+                        .singleUse("fabShow") // provide a unique ID used to ensure it is only shown once
+                        .show();
+            }
+        })*/;
+
         start_discovery.setOnClickListener(v -> {
             if (!isWifiP2pEnabled) {
                 AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(this).create();

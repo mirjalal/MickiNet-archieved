@@ -1,7 +1,6 @@
 package com.talmir.mickinet.activities;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -73,7 +72,6 @@ public class IntroActivity extends MaterialIntroActivity {
 
     @Override
     public void onFinish() {
-        startActivity(new Intent(getApplicationContext(), HomeActivity.class));
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean("firstTimeRun?", Boolean.FALSE);
