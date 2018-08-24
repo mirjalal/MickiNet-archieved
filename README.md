@@ -15,4 +15,4 @@ Share your files using MickiNet!
 ## Enjoy!
 
 [contributing]: <CONTRIBUTING.md>
-[Let's try MickiNet!]: <https://github.com/mirjalal/MickiNet/releases/download/0.2.0/MickiNet.apk>
+[Let's try MickiNet!]: <https://github.com/mirjalal/MickiNet/releases/download/0.2.1/MickiNet.apk>
