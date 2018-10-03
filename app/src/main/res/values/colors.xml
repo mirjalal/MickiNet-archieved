@@ -5,24 +5,21 @@
     <!--<color name="colorAccent">#FF1976D2</color>-->
     <!--<color name="colorAccent_alpha26">#42FFD713</color>-->
 
-    <color name="colorPrimaryDark">#FF3F4F6D</color>
-    <color name="colorPrimaryDarkRipple">#423F4F6D</color>
-    <color name="colorPrimary">#FF465879</color>
-    <color name="colorPrimaryRipple">#42465879</color>
-    <color name="colorAccent">#FF00DAD6</color>
-    <color name="colorAccentRipple">#4200DAD6</color>
-    <color name="colorAccentDark">#FF009599</color>
-    <color name="colorAccentDarkRipple">#42009599</color>
-    <color name="colorSlide1">#9575CD</color>
-    <color name="colorSlide2">#7986CB</color>
-    <color name="colorSlide3">#64B5F6</color>
-    <color name="colorSlide4">#4FC3F7</color>
-    <color name="colorSlide5">#4DD0E1</color>
-    <color name="status_bar_color">#FF000000</color>
-    <color name="layout_border_color">#FF111111</color>
+    <color name="colorPrimaryDark">#FF272E3E</color>
+    <color name="colorPrimary">#FF2c3445</color>
+    <color name="colorPrimaryRipple">#422c3445</color>
+    <color name="colorAccentDarkRipple">#422c3445</color>
+    <color name="colorAccent">#FF2c3445</color>
+    <color name="colorAccentRipple">#422c3445</color> <!-- two accents: cf9075 & b4745b  -->
+
+    <!--<color name="colorPrimaryDark">#FF193441</color>-->
+    <!--<color name="colorPrimary">#FF204353</color>-->
+    <!--<color name="colorPrimaryRipple">#42465879</color>-->
+    <!--<color name="colorAccentDarkRipple">#4200DAD6</color>-->
+    <!--<color name="colorAccent">#FF3e606f</color>-->
+    <!--<color name="colorAccentRipple">#4291aa9d</color>-->
+
     <color name="snow">#FFFCFCFC</color>
-    <color name="black_russian">#FF1B1B1C</color>
-    <color name="shade_of_gray">#FF999999</color>
-    <color name="mime_type_name">#FF222222</color>
+    <color name="card_back_color">#f4f1f1</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

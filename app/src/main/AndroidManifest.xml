@@ -19,44 +19,15 @@
     <supports-screens
             android:largeScreens="true"
             android:normalScreens="true"
-            android:smallScreens="false"/>
+            android:smallScreens="true"/>
 
-    <!-- <compatible-screens> -->
-    <!-- all small size screens -->
-    <!-- <screen android:screenSize="small" android:screenDensity="ldpi" /> -->
-    <!-- <screen android:screenSize="small" android:screenDensity="mdpi" /> -->
-    <!-- <screen android:screenSize="small" android:screenDensity="hdpi" /> -->
-    <!-- <screen android:screenSize="small" android:screenDensity="xhdpi" /> -->
-    <!-- all normal size screens -->
-    <!-- <screen -->
-    <!-- android:screenDensity="ldpi" -->
-    <!-- android:screenSize="normal"/> -->
-    <!-- <screen -->
-    <!-- android:screenDensity="mdpi" -->
-    <!-- android:screenSize="normal"/> -->
-    <!-- <screen -->
-    <!-- android:screenDensity="hdpi" -->
-    <!-- android:screenSize="normal"/> -->
-    <!-- <screen -->
-    <!-- android:screenDensity="xhdpi" -->
-    <!-- android:screenSize="normal"/> -->
-    <!-- <screen -->
-    <!-- android:screenDensity="xxhdpi" -->
-    <!-- android:screenSize="normal"/> -->
-    <!-- <screen -->
-    <!-- android:screenDensity="xxxhdpi" -->
-    <!-- android:screenSize="normal"/> -->
-    <!-- </compatible-screens> -->
-    <!-- Add this line to application tag if you want to change font -->
-    <!-- android:name=".FontsOverrideApplication" -->
     <application
-            android:allowBackup="true"
-            android:fullBackupContent="true"
+            android:allowBackup="false"
+            android:fullBackupContent="false"
             android:hardwareAccelerated="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
-            android:resizeableActivity="true"
-            android:supportsPictureInPicture="true">
+            android:theme="@style/AppTheme">
         <!--<service-->
                 <!--android:name=".helpers.background.services.CountDownService"-->
                 <!--android:enabled="true"-->
@@ -75,24 +46,44 @@
             <!--</intent-filter>-->
         <!--</receiver>-->
 
+        <provider
+                android:name="android.support.v4.content.FileProvider"
+                android:authorities="${applicationId}.provider"
+                android:exported="false"
+                android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
+
+        <service android:name=".helpers.background.tasks.ZipperAsyncTask$NotificationActionService"/>
+
         <activity android:name=".activities.IntroActivity" android:theme="@style/AppTheme1"/>
+
         <activity
                 android:name=".activities.HomeActivity"
                 android:configChanges="orientation|keyboardHidden"
                 android:screenOrientation="portrait"
-                android:theme="@style/AppTheme">
+                android:theme="@style/AppTheme.Launcher"
+                android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.GET_CONTENT"/> -->
-            <!-- <action android:name="android.intent.action.SEND"/> -->
-            <!-- <action android:name="android.intent.action.SEND_MULTIPLE"/> -->
-            <!-- <category android:name="android.intent.category.DEFAULT"/> -->
-            <!-- <data android:mimeType="*/*"/> -->
-            <!-- </intent-filter> -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.GET_CONTENT" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.OPENABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
         </activity>
+
         <activity
                 android:name=".activities.SettingsActivity"
                 android:label="@string/settings"
@@ -102,6 +93,7 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="com.talmir.mickinet.activities.HomeActivity"/>
         </activity>
+
         <activity
                 android:name=".activities.ApkShareActivity"
                 android:label="@string/pick_apk"
@@ -120,12 +112,14 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="com.talmir.mickinet.activities.HomeActivity"/>
         </activity>
+
         <activity
                 android:name=".activities.ContactActivity"
                 android:configChanges="orientation|keyboardHidden"
                 android:label="@string/contact_us"
                 android:screenOrientation="portrait"
                 android:theme="@style/AppTheme"/>
+
         <activity
                 android:name=".activities.FileStatisticsActivity"
                 android:label="@string/pref_header_statistics"

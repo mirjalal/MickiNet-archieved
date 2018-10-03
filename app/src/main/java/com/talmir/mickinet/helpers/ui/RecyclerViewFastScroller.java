@@ -34,7 +34,7 @@ public class RecyclerViewFastScroller extends LinearLayout {
 
     private final RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener() {
         @Override
-        public void onScrolled(final RecyclerView recyclerView, final int dx, final int dy) {
+        public void onScrolled(@NonNull final RecyclerView recyclerView, final int dx, final int dy) {
             updateBubbleAndHandlePosition();
         }
     };
@@ -65,7 +65,7 @@ public class RecyclerViewFastScroller extends LinearLayout {
     public void setViewsToUse(@LayoutRes int layoutResId, @IdRes int bubbleResId, @IdRes int handleResId) {
         final LayoutInflater inflater = LayoutInflater.from(getContext());
         inflater.inflate(layoutResId, this, true);
-        bubble = (TextView) findViewById(bubbleResId);
+        bubble = findViewById(bubbleResId);
         if (bubble != null)
             bubble.setVisibility(INVISIBLE);
         handle = findViewById(handleResId);

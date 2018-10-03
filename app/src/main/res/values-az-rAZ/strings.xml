@@ -31,10 +31,10 @@
     <string name="connect_to_device">Cihaza qoşulsun?</string>
     <string name="cancel">İmtina et</string>
     <string name="label_peers">Yaxınlıqdakı cihazlar</string>
-    <string name="name">Ad:\\u00A0</string>
-    <string name="status">Vəziyyət:\\u00A0</string>
-    <string name="mac_address">Fiziki ünvan:\\u00A0</string>
-    <string name="is_group_owner">Qrup yaradıcısıdır?:\\u00A0</string>
+    <string name="name">Ad:\u00A0</string>
+    <string name="status">Vəziyyət:\u00A0</string>
+    <string name="mac_address">Fiziki ünvan:\u00A0</string>
+    <string name="is_group_owner">Qrup yaradıcısıdır?:\u00A0</string>
     <string name="file_received">Fayl qəbul olundu</string>
     <string name="open_file">Aç</string>
     <string name="file_send">Fayl artıq yoldadır</string>
@@ -145,4 +145,8 @@
     <string name="valid_dev_name_error">Cihaz adını daxil edin</string>
     <string name="operation_succeeded">Əməliyyat vəziyyəti: Uğurlu</string>
     <string name="operation_failed">Əməliyyat vəziyyəti: Uğursuz</string>
+    <string name="advanced_conf_warning_msg">Əgər bu sazlamanın nə işə yaradığını bilmirsinizsə, dəyişdirməyin.</string>
+    <string name="no_email_client">Quraşdırılmış heç bir email proqramı tapılmadı.</string>
+    <string name="open_source_licenses">Açıq kodlu mənbələr</string>
+    <string name="enter_process_name">Ad daxil edin</string>
 </resources>

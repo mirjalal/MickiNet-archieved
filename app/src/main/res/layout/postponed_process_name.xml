@@ -2,30 +2,36 @@
 <android.support.constraint.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingTop="15dp">
 
     <android.support.design.widget.TextInputLayout
-            android:id="@+id/newDeviceNameParent"
+            android:id="@+id/processNameParent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            android:layout_marginTop="16dp"
             android:layout_marginLeft="20dp"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:layout_marginRight="20dp"
-            android:layout_marginTop="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:hintAnimationEnabled="true"
+            app:hintEnabled="true"
+            android:hint="@string/enter_process_name">
 
         <EditText
-                android:id="@+id/newDeviceName"
+                android:id="@+id/processName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:hint="@string/enter_new_device_name"
+                android:hint="@string/enter_process_name"
                 android:imeOptions="actionDone"
                 android:layout_alignParentLeft="true"
                 android:inputType="text"/>
     </android.support.design.widget.TextInputLayout>
+
 </android.support.constraint.ConstraintLayout>

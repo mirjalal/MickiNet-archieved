@@ -7,7 +7,7 @@
     <string name="empty" translatable="false"> </string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="client_text">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
+    <string name="client_text" translatable="false">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
     <string name="empty_message">No devices found. Try searching again.</string>
     <string name="wifi_off_warning">Enable Wi-Fi from system settings</string>
     <string name="label_me">Device information</string>
@@ -163,7 +163,7 @@
     <string name="warning">Warning!</string>
     <string name="advanced_conf_warning_msg">These configurations are for advanced users. If you don\'t know what are you doing, please </string>
     <string name="what_is_wps">WPS modes</string>
-    <string name="define_wps_modes"><b>PBC</b> - Push-button configuration.\n\n<b>Display</b> - Display pin method configuration - pin is generated and displayed on device.\n\n<b>Keypad</b> - Keypad pin method configuration - pin is entered on device.\n\n<b>Label</b> - Label pin method configuration - pin is labelled on device.\n\nFor more information read <a href="http://www.wi-fi.org/knowledge-center/faq/how-does-wi-fi-protected-setup-work">official documentation</a> or <a href="https://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup">wiki</a>.</string>
+    <string name="define_wps_modes" translatable="false"><b>PBC</b> - Push-button configuration.\n\n<b>Display</b> - Display pin method configuration - pin is generated and displayed on device.\n\n<b>Keypad</b> - Keypad pin method configuration - pin is entered on device.\n\n<b>Label</b> - Label pin method configuration - pin is labelled on device.\n\nFor more information read <a href="http://www.wi-fi.org/knowledge-center/faq/how-does-wi-fi-protected-setup-work">official documentation</a> or <a href="https://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup">wiki</a>.</string>
     <string name="auto_open_file">Open file when received</string>
     <string name="auto_open_summary">Check this setting to automatically open the received file.</string>
     <string name="send_crash_reports">Send crash reports</string>
@@ -202,7 +202,7 @@
     <string name="media">Media</string>
     <string name="apks">APKs</string>
     <string name="others">Others</string>
-    <string name="no_email_client" translatable="false">There are no email clients installed.</string>
+    <string name="no_email_client">There are no email clients installed.</string>
     <string name="send_mail">Send email</string>
     <string name="slide1_title">Share your files with us</string>
     <string name="slide1_description">Would you try?</string>
@@ -224,8 +224,9 @@
     <string name="operation_succeeded">Operation status: Succeeded</string>
     <string name="operation_failed">Operation status: Failed</string>
     <string name="open_source_licenses">Open source licenses</string>
-    <string name="got_it">Got it</string>
-    <string name="showcase1_content">This card has some information about your device. Try to click on it!</string>
-    <string name="okay_got_it">Okay, I got it</string>
-    <string name="showcase2_content">To start search for nearby devices just click on it.</string>
+    <string name="got_it" translatable="false">Got it</string>
+    <string name="showcase1_content" translatable="false">This card has some information about your device. Try to click on it!</string>
+    <string name="okay_got_it" translatable="false">Okay, I got it</string>
+    <string name="showcase2_content" translatable="false">To start search for nearby devices just click on it.</string>
+    <string name="enter_process_name">Enter a name</string>
 </resources>

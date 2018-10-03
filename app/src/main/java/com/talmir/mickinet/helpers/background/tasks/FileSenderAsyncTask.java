@@ -1,4 +1,4 @@
-package com.talmir.mickinet.helpers.background;
+package com.talmir.mickinet.helpers.background.tasks;
 
 import android.app.NotificationManager;
 import android.content.ContentResolver;
@@ -15,12 +15,15 @@ import android.webkit.MimeTypeMap;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.helpers.MixedUtils;
+import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
 import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,8 +32,8 @@ import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * @author miri
@@ -42,6 +45,17 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
     private static final int id = 871;
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
+    private static boolean isTaskRunning;
+
+    /**
+     * see {@link com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver}
+     * for usages
+     */
+    public static boolean getIsTaskRunning() { return isTaskRunning; }
+
+    private boolean _isArchFile;
+    private ArrayList<String> fileDirList;
+    private ArrayList<String> fileNameList;
 
     private boolean _res = false;
     private SentFilesEntity sfe;
@@ -65,8 +79,28 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
         sfe = new SentFilesEntity();
     }
 
+    FileSenderAsyncTask(Context context, @NotNull String[] fileList, @NotNull String... params) {
+        _isArchFile = true;
+
+        contextRef = new WeakReference<>(context);
+
+        fileDirList = new ArrayList<>(fileList.length);
+        fileNameList = new ArrayList<>(fileList.length);
+        for (String file : fileList) {
+            fileDirList.add(file);
+            fileNameList.add(file.substring(file.lastIndexOf('/') + 1));
+        }
+        PARAM_GROUP_OWNER_ADDRESS = params[0];
+        PARAM_FILE_NAME = params[2];
+        PARAM_FILE_PATH = "file:///data/data/com.talmir.mickinet/files/backup/tempZipBackup.mickinet_arch";
+        mBuilder = new NotificationCompat.Builder(contextRef.get(), null);
+        mNotifyManager = (NotificationManager) contextRef.get().getSystemService(Context.NOTIFICATION_SERVICE);
+    }
+
     @Override
     protected void onPreExecute() {
+        isTaskRunning = true;
+
         // Issues the notification
         mBuilder.setTicker(contextRef.get().getString(R.string.file_send))
                 .setContentTitle(contextRef.get().getString(R.string.sending_file))
@@ -76,27 +110,30 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
                 .setProgress(0, 0, true);
 
         mNotifyManager.notify(id, mBuilder.build());
-        super.onPreExecute();
     }
 
     @Override
     protected Boolean doInBackground(Void... voids) {
-        sfe.s_f_name = PARAM_FILE_NAME;
+        if (!_isArchFile) {
+            sfe.s_f_name = PARAM_FILE_NAME;
+            sfe.s_f_time = new Date();
 
-        // get mimetype to determine that in which folder will be used
-        String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(PARAM_FILE_NAME.substring(PARAM_FILE_NAME.lastIndexOf('.') + 1));
-        if (Objects.requireNonNull(mimeType).startsWith("image"))
-            sfe.s_f_type = "1";
-        else if (mimeType.startsWith("video"))
-            sfe.s_f_type = "2";
-        else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
-            sfe.s_f_type = "3";
-        else if (mimeType.equals("application/vnd.android.package-archive"))
-            sfe.s_f_type = "4";
-        else
-            sfe.s_f_type = "5";
-
-        sfe.s_f_time = new Date();
+            // get mimetype to determine that in which folder will be used
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(PARAM_FILE_NAME.substring(PARAM_FILE_NAME.lastIndexOf('.') + 1));
+            if (mimeType != null) {
+                if (mimeType.startsWith("image"))
+                    sfe.s_f_type = "1";
+                else if (mimeType.startsWith("video"))
+                    sfe.s_f_type = "2";
+                else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                    sfe.s_f_type = "3";
+                else if (mimeType.equals("application/vnd.android.package-archive"))
+                    sfe.s_f_type = "4";
+                else
+                    sfe.s_f_type = "5";
+            } else
+                sfe.s_f_type = "5";
+        }
 
         // put all data to stream
         Socket socket = new Socket();
@@ -121,13 +158,13 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
             try {
                 inputStream = cr.openInputStream(Uri.parse(PARAM_FILE_PATH));
             } catch (FileNotFoundException e) {
-                CrashReport.report(contextRef.get(), this.getClass().getName(), e);
+                CrashReport.report(contextRef.get(), e.getMessage());
             }
 
             sendFile(inputStream, outputStream, contextRef.get());
             _res = true;
         } catch (Exception e) {
-            CrashReport.report(contextRef.get(), this.getClass().getName(), e);
+            CrashReport.report(contextRef.get(), e.getMessage());
         } finally {
             if (socket.isConnected()) {
                 try {
@@ -144,12 +181,11 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
-        super.onPostExecute(result);
-
+        SentFilesViewModel sfvm = HomeActivity.getSentFilesViewModel();//ViewModelProviders.of((FragmentActivity) contextRef.get()).get(SentFilesViewModel.class);
+        final Date d = new Date();
         if (_res) { // _res = true cond.
             // When the loop is finished, updates the notification
             mBuilder.setTicker(contextRef.get().getString(R.string.successful))
-//                    .setContentTitle(app.getString(R.string.file_sent))
                     .setContentText(contextRef.get().getString(R.string.file_sent))
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done)
                     .setOngoing(false)
@@ -184,7 +220,54 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
             }
             mNotifyManager.notify(id, mBuilder.build());
 
-            sfe.s_f_operation_status = "1";
+            if (_isArchFile) {
+                for (int i = 0; i < fileNameList.size(); i++) {
+                    String fileName = fileNameList.get(i);
+                    sfe = new SentFilesEntity();
+                    sfe.s_f_name = fileName;
+
+                    String destDir;
+                    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
+                    if (mimeType != null) {
+                        if (mimeType.startsWith("image")) {
+                            sfe.s_f_type = "1";
+                            destDir = "/storage/emulated/0/MickiNet/Photos/Sent/" + fileName;
+                        } else if (mimeType.startsWith("video")) {
+                            sfe.s_f_type = "2";
+                            destDir = "/storage/emulated/0/MickiNet/Videos/Sent/" + fileName;
+                        } else if (mimeType.startsWith("music") || mimeType.startsWith("audio")) {
+                            sfe.s_f_type = "3";
+                            destDir = "/storage/emulated/0/MickiNet/Media/Sent/" + fileName;
+                        } else if (mimeType.equals("application/vnd.android.package-archive")) {
+                            sfe.s_f_type = "4";
+                            destDir = "/storage/emulated/0/MickiNet/APKs/Sent/" + fileName;
+                        } else {
+                            sfe.s_f_type = "5";
+                            destDir = "/storage/emulated/0/MickiNet/Others/Sent/" + fileName;
+                        }
+                    } else {
+                        sfe.s_f_type = "5";
+                        destDir = "/storage/emulated/0/MickiNet/Others/Sent/" + fileName;
+                    }
+                    sfe.s_f_operation_status = "1";
+                    sfe.s_f_time = d;
+                    sfvm.insert(sfe);
+
+                    // after inserting file information to db, copy that file to proper dir
+                    try {
+                        MixedUtils.copyFileToDir(
+                            contextRef.get(),
+                            Uri.parse(fileDirList.get(i)),
+                            new File(destDir)
+                        );
+                        // TODO: test the line below
+                        // TODO: user her hansisa bir anda butun qovluqlari silse, fışdırdı...
+                    } catch (IOException ignored) {  }
+                }
+            } else {
+                sfe.s_f_operation_status = "1";
+                sfvm.insert(sfe);
+            }
         } else {
             mBuilder.setContentText(contextRef.get().getString(R.string.file_sent_fail))
                     .setTicker(contextRef.get().getString(R.string.file_is_not_sent))
@@ -194,10 +277,37 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
             mNotifyManager.notify(id, mBuilder.build());
 
-            sfe.s_f_operation_status = "0";
+            if (_isArchFile) {
+                for (String fileName : fileNameList) {
+                    sfe = new SentFilesEntity();
+                    sfe.s_f_name = fileName;
+
+                    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
+                    if (mimeType != null) {
+                        if (mimeType.startsWith("image"))
+                            sfe.s_f_type = "1";
+                        else if (mimeType.startsWith("video"))
+                            sfe.s_f_type = "2";
+                        else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                            sfe.s_f_type = "3";
+                        else if (mimeType.equals("application/vnd.android.package-archive"))
+                            sfe.s_f_type = "4";
+                        else
+                            sfe.s_f_type = "5";
+                    } else
+                        sfe.s_f_type = "5";
+
+                    sfe.s_f_operation_status = "0";
+                    sfe.s_f_time = d;
+                    sfvm.insert(sfe);
+                }
+            } else {
+                sfe.s_f_operation_status = "0";
+                sfvm.insert(sfe);
+            }
         }
-        SentFilesViewModel sfvm = HomeActivity.getSentFilesViewModel();//ViewModelProviders.of((FragmentActivity) contextRef.get()).get(SentFilesViewModel.class);
-        sfvm.insert(sfe);
+
+        isTaskRunning = false;
     }
 
     /**
@@ -231,8 +341,9 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
             inputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e( "sendFile: ", "problem burdadi nese");
-            CrashReport.report(context, this.getClass().getName(), e);
+            Log.e("send file", e.getMessage());
+            //Log.e( "sendFile: ", "problem burdadi nese");
+            //CrashReport.report(context, this.getClass().getName(), e);
             mBuilder.setContentText(context.getString(R.string.file_sent_fail))
                     .setTicker(context.getString(R.string.file_is_not_sent))
                     .setSmallIcon(android.R.drawable.stat_notify_error)

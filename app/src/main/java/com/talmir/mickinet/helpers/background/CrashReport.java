@@ -16,17 +16,17 @@ import com.crashlytics.android.Crashlytics;
  * @since 7/21/2017
  */
 public final class CrashReport {
-    public static void report(@NonNull Context context, @Nullable String className) {
-        report(context, className, null);
+    public static void report(@NonNull Context context, @Nullable String message) {
+        report(context, message, null);
     }
 
     public static void report(@NonNull Context context, @Nullable Exception e) {
         report(context,null, e);
     }
 
-    public static void report(@NonNull Context context, @Nullable String className, @Nullable Exception e) {
+    public static void report(@NonNull Context context, @Nullable String message, @Nullable Exception e) {
         SharedPreferences sendReportSetting = PreferenceManager.getDefaultSharedPreferences(context);
         if (sendReportSetting.getBoolean("auto_submit_crashes", true))
-            Crashlytics.log(className);
+            Crashlytics.log(message);
     }
 }

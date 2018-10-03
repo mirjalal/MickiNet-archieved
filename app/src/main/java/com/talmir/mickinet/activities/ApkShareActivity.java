@@ -17,13 +17,14 @@ import android.view.View;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.helpers.adapters.ApkListAdapter;
-import com.talmir.mickinet.helpers.ui.DividerItemDecoration;
+import com.talmir.mickinet.helpers.ui.CustomDividerItemDecoration;
 import com.talmir.mickinet.helpers.ui.IRecyclerItemClickListener;
 import com.talmir.mickinet.helpers.ui.RecyclerItemTouchListener;
 import com.talmir.mickinet.helpers.ui.RecyclerViewFastScroller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author miri
@@ -71,7 +72,7 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
             }
         });
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.addItemDecoration(new DividerItemDecoration(getApplicationContext(), LinearLayoutManager.VERTICAL));
+        recyclerView.addItemDecoration(new CustomDividerItemDecoration(getApplicationContext(), LinearLayoutManager.VERTICAL));
         recyclerView.addOnItemTouchListener(new RecyclerItemTouchListener(getApplicationContext(), recyclerView, new IRecyclerItemClickListener() {
             @Override
             public void onClick(View view, int position) {
@@ -119,12 +120,12 @@ public class ApkShareActivity extends AppCompatActivity implements SearchView.On
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        final String lowerCaseQuery = newText.toLowerCase();
+        final String lowerCaseQuery = newText.toLowerCase(Locale.ROOT);
 
         final List<ApplicationInfo> filteredModelList = new ArrayList<>();
         for (ApplicationInfo model : packages) {
-            final String package_name_text = model.packageName.toLowerCase();
-            final String app_name_text = model.loadLabel(pm).toString().toLowerCase();
+            final String package_name_text = model.packageName.toLowerCase(Locale.ROOT);
+            final String app_name_text = model.loadLabel(pm).toString().toLowerCase(Locale.ROOT);
             if (package_name_text.contains(lowerCaseQuery) || app_name_text.contains(lowerCaseQuery))
                 filteredModelList.add(model);
         }

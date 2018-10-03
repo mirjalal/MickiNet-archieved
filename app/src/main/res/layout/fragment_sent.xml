@@ -16,16 +16,27 @@
             android:layout_marginRight="6dp"
             android:layout_marginEnd="6dp">
 
-        <com.github.mikephil.charting.charts.PieChart
-                android:id="@+id/sent_pie"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_marginBottom="10dp"
-                android:layout_marginTop="10dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toTopOf="@+id/sent_recycler_view"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"/>
+        <com.razerdp.widget.animatedpieview.AnimatedPieView
+            android:id="@+id/sent_pie"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/sent_recycler_view"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <!--<com.github.mikephil.charting.charts.PieChart-->
+                <!--android:id="@+id/sent_pie"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="250dp"-->
+                <!--android:layout_marginBottom="10dp"-->
+                <!--android:layout_marginTop="10dp"-->
+                <!--app:layout_constraintEnd_toEndOf="parent"-->
+                <!--app:layout_constraintBottom_toTopOf="@+id/sent_recycler_view"-->
+                <!--app:layout_constraintTop_toTopOf="parent"-->
+                <!--app:layout_constraintStart_toStartOf="parent"/>-->
 
         <android.support.v7.widget.RecyclerView
                 android:id="@+id/sent_recycler_view"

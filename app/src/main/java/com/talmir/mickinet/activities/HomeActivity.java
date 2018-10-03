@@ -1,38 +1,56 @@
 package com.talmir.mickinet.activities;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import android.app.AlertDialog;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.MimeTypeMap;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
+import com.talmir.mickinet.helpers.MixedUtils;
 import com.talmir.mickinet.helpers.adapters.ReceivedFilesListAdapter;
 import com.talmir.mickinet.helpers.adapters.SentFilesListAdapter;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 import com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver;
 import com.talmir.mickinet.helpers.background.services.CountDownService;
+import com.talmir.mickinet.helpers.background.tasks.FileSenderAsyncTask;
+import com.talmir.mickinet.helpers.background.tasks.ZipperAsyncTask;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
 import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import uk.co.deanwild.materialshowcaseview.IShowcaseListener;
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
@@ -41,6 +59,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
@@ -51,7 +70,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
     private static WifiP2pManager.Channel channel;
-    private BroadcastReceiver wifiDirectBroadcastReceiver = null;
+    private WiFiDirectBroadcastReceiver wifiDirectBroadcastReceiver = null;
 
     /**
      * @param isWifiP2pEnabled the isWifiP2pEnabled to set
@@ -77,7 +96,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 //        if (CountDownService.isRunning())
 //            stopService(new Intent(getApplicationContext(), CountDownService.class));
 
-        start_discovery.setVisibility(View.VISIBLE);
+        start_discovery.show();
     }
 
     @Override
@@ -212,13 +231,19 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     protected synchronized void onCreate(Bundle savedInstanceState) {
+        // “The (Complete) Android Splash Screen Guide” by @elvisnchidera
+        // https://android.jlelse.eu/the-complete-android-splash-screen-guide-c7db82bce565
+        setTheme(R.style.AppTheme);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        FirebaseAnalytics.getInstance(this);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         if (prefs.getBoolean("firstTimeRun?", Boolean.TRUE)) {
             new MaterialShowcaseView.Builder(this)
-                    .setTarget(DeviceListFragment.deviceDetailCardViewRef.get())
+                    .setTarget(DeviceListFragment.deviceDetailConstratintLayoutRef.get())
                     .setDismissOnTargetTouch(true)
                     .setMaskColour(R.color.colorAccent)
                     .setShapePadding(32)
@@ -254,8 +279,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 //            if (canAccessCamera() || canAccessExternalStorage() || canAccessContacts())
 //                requestPermissions(INITIAL_PERMISSIONS, INITIAL_REQUEST);
 
-        File rootDir = new File(Environment.getExternalStorageDirectory() + "/MickiNet/");
-        rootDir.mkdirs();
+        MixedUtils.createNestedFolders();
 
         copyRawFile(R.raw.file_receive);
 
@@ -269,36 +293,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         channel = manager.initialize(getApplicationContext(), getMainLooper(), null);
 
         start_discovery = findViewById(R.id.start_discover);
-        new MaterialShowcaseView.Builder(this)
-                .setTarget(DeviceListFragment.deviceDetailCardViewRef.get())
-                .setDismissOnTargetTouch(true)
-                .setMaskColour(R.color.colorAccent)
-                .setShapePadding(32)
-                .setDismissText("Got it")
-                .setContentText("This card has some information about your device. Try to click on it!")
-                .setDelay(500) // optional but starting animations immediately in onCreate can make them choppy
-                .withRectangleShape()
-                .singleUse("cardViewShow") // provide a unique ID used to ensure it is only shown once
-                .show()/*.addShowcaseListener(new IShowcaseListener() {
-            @Override
-            public void onShowcaseDisplayed(MaterialShowcaseView materialShowcaseView) {  }
-
-            @Override
-            public void onShowcaseDismissed(MaterialShowcaseView materialShowcaseView) {
-                new MaterialShowcaseView.Builder(HomeActivity.this)
-                        .setTarget(start_discovery)
-                        .setDismissOnTargetTouch(true)
-                        .setMaskColour(R.color.colorAccent)
-                        .setShapePadding(32)
-                        .setDismissText("Okay, I got it")
-                        .setContentText("To start search for nearby devices just click on it.")
-                        .setDelay(500) // optional but starting animations immediately in onCreate can make them choppy
-                        .withCircleShape()
-                        .singleUse("fabShow") // provide a unique ID used to ensure it is only shown once
-                        .show();
-            }
-        })*/;
-
         start_discovery.setOnClickListener(v -> {
             if (!isWifiP2pEnabled) {
                 AlertDialog wifiOnOffAlertDialog = new AlertDialog.Builder(this).create();
@@ -338,12 +332,80 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         mReceivedFilesViewModel = ViewModelProviders.of(HomeActivity.this).get(ReceivedFilesViewModel.class);
         mReceivedFilesListAdapter = new ReceivedFilesListAdapter(this);
         mReceivedFilesViewModel.getAllReceivedFiles().observe(HomeActivity.this, mReceivedFilesListAdapter::setReceivedFiles);
+
+        if (getIntent() != null &&
+            (Intent.ACTION_SEND.equals(getIntent().getAction()) || Intent.ACTION_SEND_MULTIPLE.equals(getIntent().getAction()))
+        )
+            onNewIntent(getIntent());
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.action_items, menu);
         return true;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (wifiDirectBroadcastReceiver != null && wifiDirectBroadcastReceiver.getConnectionStatus()) {
+            // handle data receive from other applications when device is connected
+            handleData(intent, "tempZipBackup", false);
+        } else {
+            if (Intent.ACTION_SEND.equals(getIntent().getAction()) || Intent.ACTION_SEND_MULTIPLE.equals(getIntent().getAction()) && intent.getData() != null) {
+                final String[] procName = new String[1];
+                final AlertDialog alert = new AlertDialog.Builder(this).create();
+                final View postponedProcessLayout = LayoutInflater.from(this).inflate(R.layout.postponed_process_name, null);
+                final TextInputLayout til = postponedProcessLayout.findViewById(R.id.processNameParent);
+                final EditText editText = postponedProcessLayout.findViewById(R.id.processName);
+
+                Toast.makeText(this, "action" + intent.getAction(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "type" + intent.getType(), Toast.LENGTH_SHORT).show();
+
+                editText.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        final String s1 = s.toString();
+                        if (s1.length() < 1) {
+                            // use R.string.enter_dev_name_error - don't give attention to its name :|
+                            til.setError(getString(R.string.enter_dev_name_error));
+                            alert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                        } else {
+                            final File _f = new File(getFilesDir().toString() + "/backup/" + s1 + ".zip");
+                            if (_f.exists()) {
+                                til.setError("Try another name");
+                                alert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                            } else {
+                                procName[0] = s1;
+                                til.setError(null);
+                                alert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                    }
+                });
+
+                // ask user to create the job schedule
+                alert.setTitle("Postpone sending?");
+                alert.setMessage("Your device doesn't have a connection. We'll will ask you to send your files when you connected. To begin processing please give a name.");
+                alert.setView(postponedProcessLayout);
+                alert.setButton(DialogInterface.BUTTON_POSITIVE, "create", (dialog, which) -> {
+                    // handle data and work offline
+                    handleData(intent, procName[0], true);
+                });
+                alert.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.cancel), (dialog, which) -> alert.dismiss());
+                alert.show();
+                // initially disable POSITIVE_BUTTON
+                alert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+            }
+        }
+        super.onNewIntent(intent);
     }
 
     @Override
@@ -375,10 +437,10 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
     @Override
-    public void onPause() {
+    public void onStop() {
         unregisterReceiver(wifiDirectBroadcastReceiver);
 //        unregisterReceiver(batteryInfoBroadcastReceiver);
-        super.onPause();
+        super.onStop();
     }
 
     @Override
@@ -392,6 +454,86 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 //            batteryInfoBroadcastReceiver = null;
         } catch (IllegalArgumentException ignored) {}
         super.onDestroy();
+    }
+
+    private void handleData(@NotNull Intent intent, String procName, boolean handleOffline) {
+        final String action = intent.getAction();
+        final String type = intent.getType();
+
+        Uri uri;
+        String[] params = new String[3];
+        params[0] = DeviceDetailFragment.getIpAddressByDeviceType();
+        final String path = "/storage/emulated/0/MickiNet/";
+
+        if (Intent.ACTION_SEND.equals(action) && type != null && intent.getData() != null) {
+            Log.e("send type is", "single");
+            uri = intent.getData();
+            params[1] = uri.toString();
+            params[2] = MixedUtils.getFileName(this, uri);
+
+            new FileSenderAsyncTask(this, params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            try {
+                String inner;
+                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(params[2].substring(params[2].lastIndexOf('.') + 1));
+                if (mimeType != null) {
+                    if (mimeType.startsWith("image"))
+                        inner = "Photos/";
+                    else if (mimeType.startsWith("video"))
+                        inner = "Videos/";
+                    else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                        inner = "Media/";
+                    else if (mimeType.equals("application/vnd.android.package-archive"))
+                        inner = "APKs/";
+                    else
+                        inner = "Others/";
+                } else
+                    inner = "Others/";
+
+                MixedUtils.copyFileToDir(
+                    this,
+                    uri,
+                    new File(path + inner + "Sent/" + params[2])
+                );
+            } catch (IOException ignored) {
+            }
+        }
+
+        // multiple files selected from other application
+        if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null && intent.getClipData() != null) {
+            int clipSize = intent.getClipData().getItemCount();
+
+            String backupPath = getFilesDir().toString() + "/backup";
+            final File backupDBFolder = new File(backupPath);
+            backupDBFolder.mkdirs();
+
+            String[] filePaths = new String[clipSize];
+            File _f;
+            long filesTotalLength = 0;
+            for (int i = 0; i < clipSize; i++) {
+                uri = intent.getClipData().getItemAt(i).getUri();
+                _f = new File(uri.toString().startsWith("file:///") ? uri.toString().replace("file:///", "") : getRealPathFromUri(uri));
+                filesTotalLength += _f.length();
+                filePaths[i] = _f.getAbsolutePath();
+            }
+
+            new ZipperAsyncTask(
+                    new WeakReference<>(getApplicationContext()),
+                    filePaths,
+                    backupPath + "/" + procName + ".mickinet_arch",
+                    filesTotalLength,
+                    handleOffline
+            ).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+    }
+
+    public String getRealPathFromUri(Uri contentUri) {
+        String[] proj = { MediaStore.Files.FileColumns.DATA };
+        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+        cursor.moveToFirst();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA);
+        String _s = cursor.getString(column_index);
+        cursor.close();
+        return _s;
     }
 
     /**

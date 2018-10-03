@@ -6,14 +6,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,27 +23,23 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.webkit.MimeTypeMap;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.PercentFormatter;
-import com.github.mikephil.charting.utils.ColorTemplate;
+import com.razerdp.widget.animatedpieview.AnimatedPieView;
+import com.razerdp.widget.animatedpieview.AnimatedPieViewConfig;
+import com.razerdp.widget.animatedpieview.data.SimplePieInfo;
+import com.talmir.mickinet.BuildConfig;
 import com.talmir.mickinet.R;
-import com.talmir.mickinet.helpers.ui.DividerItemDecoration;
+import com.talmir.mickinet.helpers.ui.CustomDividerItemDecoration;
 import com.talmir.mickinet.helpers.ui.IRecyclerItemClickListener;
 import com.talmir.mickinet.helpers.ui.RecyclerItemTouchListener;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class FileStatisticsActivity extends AppCompatActivity {
@@ -101,16 +96,16 @@ public class FileStatisticsActivity extends AppCompatActivity {
     public static class PlaceholderFragment extends Fragment {
         private static final String ARG_SECTION_NUMBER = "section_number";
 
-        public static int sentPhotoFilesCount = 0;
-        public static int sentVideoFilesCount = 0;
-        public static int sentAPKFilesCount   = 0;
-        public static int sentMediaFilesCount = 0;
-        public static int sentOtherFilesCount = 0;
-        public static int receivedPhotoFilesCount = 0;
-        public static int receivedVideoFilesCount = 0;
-        public static int receivedAPKFilesCount   = 0;
-        public static int receivedMediaFilesCount = 0;
-        public static int receivedOtherFilesCount = 0;
+        public static double sentPhotoFilesCount = 0.0f;
+        public static double sentVideoFilesCount = 0.0f;
+        public static double sentAPKFilesCount   = 0.0f;
+        public static double sentMediaFilesCount = 0.0f;
+        public static double sentOtherFilesCount = 0.0f;
+        public static double receivedPhotoFilesCount = 0.0f;
+        public static double receivedVideoFilesCount = 0.0f;
+        public static double receivedAPKFilesCount   = 0.0f;
+        public static double receivedMediaFilesCount = 0.0f;
+        public static double receivedOtherFilesCount = 0.0f;
 
         public PlaceholderFragment() {  }
 
@@ -128,20 +123,23 @@ public class FileStatisticsActivity extends AppCompatActivity {
 
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            // get section number at once, use multiple times
             int section = Objects.requireNonNull(getArguments()).getInt(ARG_SECTION_NUMBER);
 
+            // init variables
             final Context context = inflater.getContext();
             int fragment = R.layout.fragment_sent;
             int pie = R.id.sent_pie;
             int recycler = R.id.sent_recycler_view;
             int adapterListItemCount = HomeActivity.getSentFilesListAdapter().getItemCount();
             int emptyView = R.id.sent_empty_view;
-            int photoFilesCount = sentPhotoFilesCount;
-            int videoFilesCount = sentVideoFilesCount;
-            int mediaFilesCount = sentMediaFilesCount;
-            int APKFilesCount   = sentAPKFilesCount;
-            int otherFilesCount = sentOtherFilesCount;
+            double photoFilesCount = sentPhotoFilesCount;
+            double videoFilesCount = sentVideoFilesCount;
+            double mediaFilesCount = sentMediaFilesCount;
+            double APKFilesCount   = sentAPKFilesCount;
+            double otherFilesCount = sentOtherFilesCount;
 
+            // change values of pre-defined variables depending on tab selection (tab number)
             if (section == 1) {
                 fragment = R.layout.fragment_received;
                 pie = R.id.received_pie;
@@ -157,31 +155,56 @@ public class FileStatisticsActivity extends AppCompatActivity {
 
             View rootView = inflater.inflate(fragment, container, false);
 
-            final PieChart pieChart = rootView.findViewById(pie);
+            AnimatedPieView mAnimatedPieView = rootView.findViewById(pie);
+            AnimatedPieViewConfig conf = new AnimatedPieViewConfig();
+            conf.startAngle(0.9f)
+                .addData(new SimplePieInfo(photoFilesCount, Color.rgb(207, 248, 246), getString(R.string.photos)))
+                .addData(new SimplePieInfo(videoFilesCount, Color.rgb(148, 212, 212), getString(R.string.videos)))
+                .addData(new SimplePieInfo(mediaFilesCount, Color.rgb(136, 180, 187), getString(R.string.media)))
+                .addData(new SimplePieInfo(APKFilesCount  , Color.rgb(118, 174, 175), getString(R.string.apks)))
+                .addData(new SimplePieInfo(otherFilesCount, Color.rgb(42, 109, 130),  getString(R.string.others)))
+                .duration(1200)
+                .textSize(12)
+                .autoSize(true)
+                .focusAlphaType(AnimatedPieViewConfig.FOCUS_WITH_ALPHA)
+                .textGravity(AnimatedPieViewConfig.BELOW)
+                .interpolator(new DecelerateInterpolator())
+                .canTouch(true);
+            mAnimatedPieView.applyConfig(conf);
+            mAnimatedPieView.start();
+
+            /*final PieChart pieChart = rootView.findViewById(pie);
             pieChart.setUsePercentValues(true);
 
             // enable rotation of the pie by gesture
             pieChart.setRotationAngle(0);
             pieChart.setRotationEnabled(true);
+            */
 
             final RecyclerView recyclerView = rootView.findViewById(recycler);
             final TextView emptyTextView = rootView.findViewById(emptyView);
 
             recyclerView.setAdapter(section == 0 ? HomeActivity.getSentFilesListAdapter() : HomeActivity.getReceivedFilesListAdapter());
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.addItemDecoration(new DividerItemDecoration(context, LinearLayoutManager.VERTICAL));
+            recyclerView.addItemDecoration(new CustomDividerItemDecoration(context, LinearLayoutManager.VERTICAL));
             recyclerView.addOnItemTouchListener(new RecyclerItemTouchListener(context, recyclerView, new IRecyclerItemClickListener() {
                 @Override
                 public void onClick(View view, int position) {
                     final TextView _name = (TextView) ((ViewGroup) view).getChildAt(0);
                     final String fileName = _name.getText().toString();
                     String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
-                    if (new File(getFileDirectory(section, fileName)).exists()) {
+                    final File clickedFile = new File(getFileDirectory(section, fileName, mimeType));
+                    if (clickedFile.exists()) {
                         final Intent openReceivedFile = new Intent(Intent.ACTION_VIEW);
                         openReceivedFile.setDataAndType(
-                                Uri.fromFile(new File(getFileDirectory(section, fileName))),
-                                mimeType
+                            FileProvider.getUriForFile(
+                                context,
+                                BuildConfig.APPLICATION_ID + ".provider",
+                                clickedFile
+                            ),
+                            mimeType
                         );
+                        openReceivedFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         PendingIntent openFilePendingIntent = PendingIntent.getActivity(context, 0, openReceivedFile, PendingIntent.FLAG_ONE_SHOT);
                         try {
                             openFilePendingIntent.send();
@@ -195,7 +218,7 @@ public class FileStatisticsActivity extends AppCompatActivity {
                     Toast.makeText(context, R.string.click_to_open, Toast.LENGTH_SHORT).show();
                 }
             }));
-
+            /*
             // set data
             List<PieEntry> entries = new ArrayList<>();
             entries.add(new PieEntry(photoFilesCount, context.getString(R.string.photos)));
@@ -238,13 +261,13 @@ public class FileStatisticsActivity extends AppCompatActivity {
             legend.setXEntrySpace(7);
             legend.setYEntrySpace(5);
             // legend.setPosition(Legend.LegendPosition.BELOW_CHART_CENTER);
-
+*/
             if (adapterListItemCount > 0) {
-                pieChart.setVisibility(View.VISIBLE);
+                mAnimatedPieView.setVisibility(View.VISIBLE);
                 recyclerView.setVisibility(View.VISIBLE);
                 emptyTextView.setVisibility(View.GONE);
             } else {
-                pieChart.setVisibility(View.GONE);
+                mAnimatedPieView.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.GONE);
                 emptyTextView.setVisibility(View.VISIBLE);
             }
@@ -282,22 +305,22 @@ public class FileStatisticsActivity extends AppCompatActivity {
      * @return full dir path to the selected fileName
      */
     @NotNull
-    private static String getFileDirectory(int section, @NonNull @NotNull String fileName) {
-        final String path = Environment.getExternalStorageDirectory() + "/MickiNet/";
+    private static String getFileDirectory(int section, @NonNull @NotNull String fileName, String mimeType) {
+        final String path = "/storage/emulated/0/MickiNet/";
         // inner folder depends on section number
         String inner;
-        String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
-        assert mimeType != null;
-        if (mimeType.startsWith("image"))
-            inner = "Photos/";
-        else if (mimeType.startsWith("videos"))
-            inner = "Videos/";
-        else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
-            inner = "Media/";
-        else if (mimeType.equals("application/vnd.android.package-archive"))
-            inner = "APKs/";
-        else
-            inner = "Others/";
+        if (mimeType != null) {
+            if (mimeType.startsWith("image"))
+                inner = "Photos/";
+            else if (mimeType.startsWith("video"))
+                inner = "Videos/";
+            else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                inner = "Media/";
+            else if (mimeType.equals("application/vnd.android.package-archive"))
+                inner = "APKs/";
+            else
+                inner = "Others/";
+        } else inner = "Others/";
 
         inner += (section == 0) ? "Sent/" : "Received/";
 

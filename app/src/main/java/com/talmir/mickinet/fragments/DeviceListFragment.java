@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ListFragment;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -16,19 +17,15 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputLayout;
-import android.support.v7.widget.CardView;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
-import android.view.ActionMode;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -56,7 +53,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     private List<WifiP2pDevice> peers = new ArrayList<>();
     private WifiP2pDevice device; // this device
     public static WifiP2pDevice connectedDevice = null; // connected device (used in WiFiDirectBroadcastReceiver class)
-    public static WeakReference<CardView> deviceDetailCardViewRef;
+    public static WeakReference<ConstraintLayout> deviceDetailConstratintLayoutRef;
 
     @NonNull
     private String getDeviceStatus(int deviceStatus) {
@@ -85,13 +82,9 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(R.layout.fragment_device_list, null);
-
-        CardView deviceDetailCardView = mContentView.findViewById(R.id.this_device);
-        deviceDetailCardViewRef = new WeakReference<>(deviceDetailCardView);
-        deviceDetailCardView.setOnClickListener(v -> {
-            changeDeviceName();
-        });
-
+        ConstraintLayout deviceDetailConstraintLayout = mContentView.findViewById(R.id.this_device);
+        deviceDetailConstratintLayoutRef = new WeakReference<>(deviceDetailConstraintLayout);
+        deviceDetailConstraintLayout.setOnClickListener(v -> changeDeviceName());
         return mContentView;
     }
 
@@ -213,7 +206,7 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     }
 
     /**
-     *
+     * Starts nearby device discovery
      */
     public void onInitiateDiscovery() {
         if (progressDialog != null && progressDialog.isShowing())
@@ -236,11 +229,6 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     private class WiFiPeerListAdapter extends ArrayAdapter<WifiP2pDevice> {
         private List<WifiP2pDevice> items;
 
-        /**
-         * @param context
-         * @param textViewResourceId
-         * @param objects
-         */
         WiFiPeerListAdapter(Context context, int textViewResourceId, List<WifiP2pDevice> objects) {
             super(context, textViewResourceId, objects);
             items = objects;
@@ -273,98 +261,77 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
      */
     private void changeDeviceName() {
         final AlertDialog alert = new AlertDialog.Builder(getActivity()).create();
-        alert.setTitle(getString(R.string.change_device_name));
 
         final View view = getActivity().getLayoutInflater().inflate(R.layout.change_device_name_alertdialog_layout, null);
-
         final TextInputLayout mNewDeviceNameParent = view.findViewById(R.id.newDeviceNameParent);
         final EditText mNewDeviceName = view.findViewById(R.id.newDeviceName);
-
-        final Button mSubmit = view.findViewById(R.id.submit);
-        final Button mCancel = view.findViewById(R.id.cancel);
-
-        mNewDeviceName.setCustomSelectionActionModeCallback(new ActionMode.Callback() {
-            @Override
-            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                return false;
-            }
-
-            @Override
-            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                return false;
-            }
-
-            @Override
-            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                return false;
-            }
-
-            @Override
-            public void onDestroyActionMode(ActionMode mode) {  }
-        });
         mNewDeviceName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {  }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                mNewDeviceNameParent.setError(s.toString().length() < 1 ? getString(R.string.enter_dev_name_error) : null);
+                if (s.toString().length() < 1) {
+                    mNewDeviceNameParent.setError(getString(R.string.enter_dev_name_error));
+                    alert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                } else {
+                    mNewDeviceNameParent.setError(null);
+                    alert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {  }
         });
-        mSubmit.setOnClickListener(v -> {
-            if (mNewDeviceName.getText().toString().trim().length() > 0 && mNewDeviceNameParent.getError() == null) {
-                final WifiP2pManager[] mManager = new WifiP2pManager[1];
-                WifiP2pManager.Channel channel;
-                try {
-                    mManager[0] = (WifiP2pManager) getActivity().getSystemService(Context.WIFI_P2P_SERVICE);
-                    channel = mManager[0].initialize(
-                            getActivity(),
-                            getMainLooper(),
-                            () -> mManager[0] = (WifiP2pManager) getActivity().getSystemService(Context.WIFI_P2P_SERVICE)
-                    );
-                    Class[] paramTypes = new Class[3];
-                    paramTypes[0] = WifiP2pManager.Channel.class;
-                    paramTypes[1] = String.class;
-                    paramTypes[2] = WifiP2pManager.ActionListener.class;
-                    Method setDeviceName = mManager[0].getClass().getMethod("setDeviceName", paramTypes);
-                    setDeviceName.setAccessible(true);
 
-                    Object arglist[] = new Object[3];
-                    arglist[0] = channel;
-                    arglist[1] = mNewDeviceName.getText().toString().trim();
-                    arglist[2] = new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
-                            alert.dismiss();
-                            Toast.makeText(getActivity(), R.string.dev_name_changed, Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onFailure(int reason) {
-                            Toast.makeText(getActivity(), R.string.dev_name_not_changed, Toast.LENGTH_SHORT).show();
-                        }
-                    };
-                    setDeviceName.invoke(mManager[0], arglist);
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            }
-            else
-                mNewDeviceNameParent.setError(getString(R.string.valid_dev_name_error));
-        });
-        mCancel.setOnClickListener(v -> alert.dismiss());
-
+        alert.setTitle(getString(R.string.change_device_name));
         alert.setView(view);
-        alert.setCancelable(true);
+        alert.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.change), (dialog, which) -> {
+            final WifiP2pManager[] mManager = new WifiP2pManager[1];
+            WifiP2pManager.Channel channel;
+            try {
+                mManager[0] = (WifiP2pManager) getActivity().getSystemService(Context.WIFI_P2P_SERVICE);
+                channel = mManager[0].initialize(
+                        getActivity(),
+                        getMainLooper(),
+                        () -> mManager[0] = (WifiP2pManager) getActivity().getSystemService(Context.WIFI_P2P_SERVICE)
+                );
+                Class[] paramTypes = new Class[3];
+                paramTypes[0] = WifiP2pManager.Channel.class;
+                paramTypes[1] = String.class;
+                paramTypes[2] = WifiP2pManager.ActionListener.class;
+                Method setDeviceName = mManager[0].getClass().getMethod("setDeviceName", paramTypes);
+                setDeviceName.setAccessible(true);
+
+                Object arglist[] = new Object[3];
+                arglist[0] = channel;
+                arglist[1] = mNewDeviceName.getText().toString().trim();
+                arglist[2] = new WifiP2pManager.ActionListener() {
+                    @Override
+                    public void onSuccess() {
+                        alert.dismiss();
+                        Toast.makeText(getActivity(), R.string.dev_name_changed, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(int reason) {
+                        Toast.makeText(getActivity(), R.string.dev_name_not_changed, Toast.LENGTH_SHORT).show();
+                    }
+                };
+                setDeviceName.invoke(mManager[0], arglist);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+        alert.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.cancel), (dialog, which) -> alert.dismiss());
         alert.show();
+        // initially disable POSITIVE_BUTTON
+        alert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
     }
 }

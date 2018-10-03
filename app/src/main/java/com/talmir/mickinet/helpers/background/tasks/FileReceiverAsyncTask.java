@@ -1,4 +1,4 @@
-package com.talmir.mickinet.helpers.background;
+package com.talmir.mickinet.helpers.background.tasks;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -9,16 +9,19 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.FileProvider;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
+import com.talmir.mickinet.BuildConfig;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
+import com.talmir.mickinet.helpers.MixedUtils;
+import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
 
@@ -47,6 +50,15 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     private int id;
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
+    private static boolean isTaskRunning;
+
+    /**
+     * see {@link com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver}
+     * for usages
+     */
+    public static boolean getIsTaskRunning() { return isTaskRunning; }
+
+    private boolean isArchive;
 
     private ReceivedFilesEntity rfe;
 
@@ -80,6 +92,8 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
      */
     @Nullable
     private String saveFile(InputStream inputStream) {
+        isTaskRunning = true;
+
         // recommended max buffer size is 8192.
         // read more: http://stackoverflow.com/a/19561265/4057688
         byte buf[] = new byte[2048];
@@ -99,7 +113,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             final String fileName = new String(buffer_fileName, Charset.forName("UTF-8"));
 
             // by calling this func make sure that folder structure is OK
-            createNestedFolders();
+            MixedUtils.createNestedFolders();
 
             // get mimetype to determine that in which folder'll be used
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substring(fileName.lastIndexOf('.') + 1));
@@ -107,35 +121,41 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             rfe = new ReceivedFilesEntity();
             rfe.r_f_name = fileName;
 
-//            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", new Locale(Locale.getDefault().getLanguage(), Locale.getDefault().getCountry()/*, Locale.getDefault().getDisplayVariant()*/));
-            rfe.r_f_time = new Date();//sdf.format(/*Calendar.getInstance().getTime()*/new Date());
+            rfe.r_f_time = new Date();
 
             // check for mimetypes
             final File receivedFile;
-            if (mimeType.startsWith("image")) {
-                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Photos/Received/" + fileName);
-                rfe.r_f_type = "1";
-            }
-            else if (mimeType.startsWith("video")) {
-                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Videos/Received/" + fileName);
-                rfe.r_f_type = "2";
-            }
-            else if (mimeType.startsWith("music") || mimeType.startsWith("audio")) {
-                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Media/Received/" + fileName);
-                rfe.r_f_type = "3"; // for now, music types are accepted as others
-            }
-            else if (mimeType.equals("application/vnd.android.package-archive")) {
-                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/APKs/Received/" + fileName);
-                rfe.r_f_type = "4";
-            }
-            else {
-                receivedFile = new File(Environment.getExternalStorageDirectory() + "/MickiNet/Others/Received/" + fileName);
-                rfe.r_f_type = "5";
+            if (!fileName.substring(fileName.lastIndexOf('.') + 1).equals("mickinet_arch")) {
+                if (mimeType != null) {
+                    if (mimeType.startsWith("image")) {
+                        receivedFile = new File("/storage/emulated/0/MickiNet/Photos/Received/" + fileName);
+                        rfe.r_f_type = "1";
+                    } else if (mimeType.startsWith("video")) {
+                        receivedFile = new File("/storage/emulated/0/MickiNet/Videos/Received/" + fileName);
+                        rfe.r_f_type = "2";
+                    } else if (mimeType.startsWith("music") || mimeType.startsWith("audio")) {
+                        receivedFile = new File("/storage/emulated/0/MickiNet/Media/Received/" + fileName);
+                        rfe.r_f_type = "3"; // for now, music types are accepted as others
+                    } else if (mimeType.equals("application/vnd.android.package-archive")) {
+                        receivedFile = new File("/storage/emulated/0/MickiNet/APKs/Received/" + fileName);
+                        rfe.r_f_type = "4";
+                    } else {
+                        receivedFile = new File("/storage/emulated/0/MickiNet/Others/Received/" + fileName);
+                        rfe.r_f_type = "5";
+                    }
+                } else {
+                    receivedFile = new File("/storage/emulated/0/MickiNet/Others/Received/" + fileName);
+                    rfe.r_f_type = "5";
+                }
+            } else {
+                isArchive = true;
+                receivedFile = new File("/storage/emulated/0/MickiNet/.temp/tempBackupZip.mickinet_arch");
             }
 
-            File dirs = new File(receivedFile.getParent());
-            if (!dirs.exists())
-                dirs.mkdirs();
+//            File dirs = new File(receivedFile.getParent());
+//            if (!dirs.exists())
+//                dirs.mkdirs();
+
             // save data as a file
             receivedFile.createNewFile();
 
@@ -161,7 +181,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             ServerSocket serverSocket = new ServerSocket(4126);
             Socket client = serverSocket.accept();
 
-            // generate unique s_f_id to show a new notification each time a file received
+            // generate unique id to show a new notification each time a file received
             id = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
             mNotifyManager = (NotificationManager) contextRef.get().getSystemService(Context.NOTIFICATION_SERVICE);
             mBuilder = new NotificationCompat.Builder(contextRef.get(), null);
@@ -184,7 +204,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             return result;
         } catch (Exception e) {
-            CrashReport.report(contextRef.get(), FileReceiverAsyncTask.class.getName(), e);
+            CrashReport.report(contextRef.get(), e.getMessage());
             return null;
         }
     }
@@ -192,22 +212,38 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         if (result != null) {
-            // intent to open received file from notification click
             final Intent openReceivedFile = new Intent(Intent.ACTION_VIEW);
-            openReceivedFile.setDataAndType(
-                Uri.parse("file://" + result),
-                MimeTypeMap.getSingleton().getMimeTypeFromExtension(result.substring(result.lastIndexOf('.') + 1))
-            );
 
-            PendingIntent notificationPendingIntent = PendingIntent.getActivity(contextRef.get(), 0, openReceivedFile, PendingIntent.FLAG_ONE_SHOT);
+            // if received file isn't an archive file, then set pending intent for click-to-open
+            if (!isArchive) {
+                // intent to open received file from notification click
+                openReceivedFile.setDataAndType(
+                    FileProvider.getUriForFile(
+                        contextRef.get(),
+                        BuildConfig.APPLICATION_ID + ".provider",
+                        new File(result)
+                    ),
+                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(result.substring(result.lastIndexOf('.') + 1))
+                );
+                openReceivedFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-            mBuilder.setTicker(contextRef.get().getString(R.string.file_received))
-                    .setContentTitle(contextRef.get().getString(R.string.file_received))
-                    .setContentText(result.substring(result.lastIndexOf('/') + 1))
-                    .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_receive_done : android.R.drawable.stat_sys_download_done)
-                    .setProgress(0, 0, false)
-                    .setOngoing(false)
-                    .setContentIntent(notificationPendingIntent);
+                PendingIntent notificationPendingIntent = PendingIntent.getActivity(contextRef.get(), 0, openReceivedFile, PendingIntent.FLAG_ONE_SHOT);
+                mBuilder.setTicker(contextRef.get().getString(R.string.file_received))
+                        .setContentTitle(contextRef.get().getString(R.string.file_received))
+                        .setContentText(result.substring(result.lastIndexOf('/') + 1))
+                        .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_receive_done : android.R.drawable.stat_sys_download_done)
+                        .setProgress(0, 0, false)
+                        .setOngoing(false)
+                        .setContentIntent(notificationPendingIntent);
+            }
+            else {
+                mBuilder.setTicker("Files received")
+                        .setContentTitle("All files received")
+                        .setContentText("")
+                        .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_receive_done : android.R.drawable.stat_sys_download_done)
+                        .setProgress(0, 0, false)
+                        .setOngoing(false);
+            }
 
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(contextRef.get());
             // get notification settings & apply them to notification
@@ -232,22 +268,29 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
             } else {
                 mBuilder.setSound(Uri.parse("android.resource://" + contextRef.get().getPackageName() + "/" + R.raw.file_receive));
                 mBuilder.setLights(
-                        Color.parseColor("#" + contextRef.get().getString(R.string.cyan_color)), 700, 500
+                    Color.parseColor("#" + contextRef.get().getString(R.string.cyan_color)), 700, 500
                 );
             }
 
             mNotifyManager.notify(id, mBuilder.build());
 
-            // if preference checked open file, show snackbar otherwise
-            if (settings.getBoolean("pref_auto_open_received_file", false)) {
-                contextRef.get().startActivity(openReceivedFile);
-            } else {
-                Snackbar.make(viewRef.get(), contextRef.get().getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
-                        .setAction(contextRef.get().getString(R.string.open_file), v -> contextRef.get().startActivity(openReceivedFile))
-                        .show();
-            }
+            if (!isArchive) {
+                // if file is not an archive file & auto-open property is checked open received file
+                // automatically, show snackbar otherwise
+                if (settings.getBoolean("pref_auto_open_received_file", false)) {
+                    contextRef.get().startActivity(openReceivedFile);
+                } else {
+                    Snackbar.make(viewRef.get(), contextRef.get().getString(R.string.click_to_open), Snackbar.LENGTH_LONG)
+                            .setActionTextColor(contextRef.get().getResources().getColor(R.color.white))
+                            .setAction(contextRef.get().getString(R.string.open_file), v -> contextRef.get().startActivity(openReceivedFile))
+                            .show();
+                }
 
-            rfe.r_f_operation_status = "1";
+                rfe.r_f_operation_status = "1";
+            } else {
+                // received file is archive file; unzip it to the /.temp/ folder
+                new UnzipperAsyncTask(contextRef, "/storage/emulated/0/MickiNet/.temp/tempBackupZip.mickinet_arch").executeOnExecutor(THREAD_POOL_EXECUTOR);
+            }
         } else {
             mBuilder.setContentText(contextRef.get().getString(R.string.file_receive_fail))
                     .setTicker(contextRef.get().getString(R.string.file_is_not_received))
@@ -257,39 +300,13 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
             mNotifyManager.notify(id, mBuilder.build());
 
-            rfe.r_f_operation_status = "0";
+            if (!isArchive) rfe.r_f_operation_status = "0";
         }
-        ReceivedFilesViewModel rfvm = HomeActivity.getReceivedFilesViewModel();//ViewModelProviders.of((FragmentActivity) contextRef.get()).get(ReceivedFilesViewModel.class);
-        rfvm.insert(rfe);
-    }
+        if (!isArchive) {
+            ReceivedFilesViewModel rfvm = HomeActivity.getReceivedFilesViewModel();//ViewModelProviders.of((FragmentActivity) contextRef.get()).get(ReceivedFilesViewModel.class);
+            rfvm.insert(rfe);
+        }
 
-    private void createNestedFolders() {
-        File rootDir = new File(Environment.getExternalStorageDirectory() + "/MickiNet/");
-        rootDir.mkdirs();
-
-        File p = new File(rootDir, "/Photos/");
-        p.mkdirs();
-        new File(p, "/Sent/").mkdirs();
-        new File(p, "/Received/").mkdirs();
-
-        File v = new File(rootDir, "/Videos/");
-        v.mkdirs();
-        new File(v, "/Sent/").mkdirs();
-        new File(v, "/Received/").mkdirs();
-
-        File m = new File(rootDir, "/Media/");
-        m.mkdirs();
-        new File(m, "/Sent/").mkdirs();
-        new File(m, "/Received/").mkdirs();
-
-        File a = new File(rootDir, "/APKs/");
-        a.mkdirs();
-        new File(a, "/Sent/").mkdirs();
-        new File(a, "/Received/").mkdirs();
-
-        File f = new File(rootDir, "/Others/");
-        f.mkdirs();
-        new File(f, "/Sent/").mkdirs();
-        new File(f, "/Received/").mkdirs();
+        isTaskRunning = false;
     }
 }

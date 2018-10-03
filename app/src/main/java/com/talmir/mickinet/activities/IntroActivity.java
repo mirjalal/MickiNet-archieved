@@ -26,6 +26,7 @@ public class IntroActivity extends MaterialIntroActivity {
     @Override
     protected synchronized void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        setTheme(R.style.AppTheme1); // fixs bugs in first time run
         enableLastSlideAlphaExitTransition(true);
         getBackButtonTranslationWrapper().setEnterTranslation(View::setAlpha);
 

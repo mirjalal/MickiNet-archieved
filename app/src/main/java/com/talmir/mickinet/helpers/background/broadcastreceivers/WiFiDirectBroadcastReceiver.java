@@ -19,29 +19,33 @@ package com.talmir.mickinet.helpers.background.broadcastreceivers;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
-import android.preference.PreferenceManager;
-import android.support.v7.widget.CardView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
+import android.support.constraint.ConstraintLayout;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
-import com.talmir.mickinet.helpers.background.services.CountDownService;
+
+import java.util.Objects;
 
 /**
  * A BroadcastReceiver that notifies of important wifi p2p events.
+ *
+ * The class is modified for custom usage.
  */
 public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager manager;
     private Channel channel;
     private HomeActivity activity;
+    private boolean mIsConnected;
+
+    public boolean getConnectionStatus() {
+        return mIsConnected;
+    }
 
     /**
      * @param manager WifiP2pManager system service
@@ -85,11 +89,13 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 return;
 
             DeviceListFragment listFragment = (DeviceListFragment) activity.getFragmentManager().findFragmentById(R.id.frag_list);
-            LinearLayout ll = (LinearLayout) listFragment.getView();
-            int c = ll.getChildCount();
+            ConstraintLayout ll = (ConstraintLayout) listFragment.getView();
+            int c = Objects.requireNonNull(ll).getChildCount();
 
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
             if (networkInfo.isConnected()) {
+                mIsConnected = true;
+
                 // we are connected with the other device, request connection
                 // info to find group owner IP
                 DeviceDetailFragment fragment = (DeviceDetailFragment) activity.getFragmentManager().findFragmentById(R.id.frag_detail);
@@ -102,24 +108,23 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 for (int i = 0; i < c; i++) {
                     ll.getChildAt(i).setEnabled(false);
                     if (i == 1) {
-                        CardView cv = (CardView)ll.getChildAt(i);
-                        RelativeLayout rl = (RelativeLayout) cv.getChildAt(0);
-                        int cc = rl.getChildCount();
-                        for (int j = 0; j < cc; j++)
-                            rl.getChildAt(j).setEnabled(false);
+                        ConstraintLayout cl = (ConstraintLayout)ll.getChildAt(i);
+                        int cl_vc = cl.getChildCount();
+                        for (int j = 0; j < cl_vc; j++)
+                            cl.getChildAt(j).setEnabled(false);
                     }
                 }
             } else {
+                mIsConnected = false;
                 // It's a disconnect. enable view elements
                 activity.resetData();
                 for (int i = 0; i < c; i++) {
                     ll.getChildAt(i).setEnabled(true);
                     if (i == 1) {
-                        CardView cv = (CardView)ll.getChildAt(i);
-                        RelativeLayout rl = (RelativeLayout) cv.getChildAt(0);
-                        int cc = rl.getChildCount();
-                        for (int j = 0; j < cc; j++)
-                            rl.getChildAt(j).setEnabled(true);
+                        ConstraintLayout cl = (ConstraintLayout)ll.getChildAt(i);
+                        int clvc = cl.getChildCount();
+                        for (int j = 0; j < clvc; j++)
+                            cl.getChildAt(j).setEnabled(true);
                     }
                 }
             }
@@ -129,31 +134,31 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    private synchronized void startCountDownIfNecessary(Context context) {
-        /*
-         * We should do our battery related optimisation things here.
-         * Thus, this part has HIGH priority.
-         *
-         * get charging status and/or battery level from {@link batteryInfoBroadcastReceiver}
-         * before starting {@see CountDownService} and creating its object on memory.
-         */
-
-        SharedPreferences timerPreference = PreferenceManager.getDefaultSharedPreferences(context);
-        if (timerPreference.getBoolean("pref_show_advanced_confs", false) &&
-            timerPreference.getBoolean("pref_enable_countdown", false))
-        {
-            float level = BatteryPowerConnectionReceiver.getLevel();
-            int chargePlugType = BatteryPowerConnectionReceiver.getChargePlugType();
-
-            Intent countDownServiceIntent = new Intent(context, CountDownService.class);
-            if (BatteryPowerConnectionReceiver.isCharging()) {
-                countDownServiceIntent.putExtra("battery_charge_level", level);
-                countDownServiceIntent.putExtra("battery_charge_type", chargePlugType);
-            } else {
-                countDownServiceIntent.putExtra("battery_charge_level", level);
-                countDownServiceIntent.putExtra("battery_charge_type", -1);
-            }
-            context.startService(countDownServiceIntent);
-        }
-    }
+//    private synchronized void startCountDownIfNecessary(Context context) {
+//        /*
+//         * We should do our battery related optimisation things here.
+//         * Thus, this part has HIGH priority.
+//         *
+//         * get charging status and/or battery level from {@link batteryInfoBroadcastReceiver}
+//         * before starting {@see CountDownService} and creating its object on memory.
+//         */
+//
+//        SharedPreferences timerPreference = PreferenceManager.getDefaultSharedPreferences(context);
+//        if (timerPreference.getBoolean("pref_show_advanced_confs", false) &&
+//            timerPreference.getBoolean("pref_enable_countdown", false))
+//        {
+//            float level = BatteryPowerConnectionReceiver.getLevel();
+//            int chargePlugType = BatteryPowerConnectionReceiver.getChargePlugType();
+//
+//            Intent countDownServiceIntent = new Intent(context, CountDownService.class);
+//            if (BatteryPowerConnectionReceiver.isCharging()) {
+//                countDownServiceIntent.putExtra("battery_charge_level", level);
+//                countDownServiceIntent.putExtra("battery_charge_type", chargePlugType);
+//            } else {
+//                countDownServiceIntent.putExtra("battery_charge_level", level);
+//                countDownServiceIntent.putExtra("battery_charge_type", -1);
+//            }
+//            context.startService(countDownServiceIntent);
+//        }
+//    }
 }
