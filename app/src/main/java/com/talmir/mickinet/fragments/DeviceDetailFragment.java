@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,8 +25,8 @@ import com.talmir.mickinet.helpers.MixedUtils;
 import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 import com.talmir.mickinet.helpers.background.IP;
-import com.talmir.mickinet.helpers.background.tasks.FileReceiverAsyncTask;
-import com.talmir.mickinet.helpers.background.tasks.FileSenderAsyncTask;
+import com.talmir.mickinet.helpers.background.tasks.FileReceiver;
+import com.talmir.mickinet.helpers.background.tasks.FileSender;
 
 import java.io.File;
 import java.io.IOException;
@@ -157,6 +158,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Uri uri;
         final String authority = getActivity().getApplicationContext().getPackageName() + ".provider";
         String[] params = new String[3];
         params[0] = deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : IP.getClientIpAddress();
@@ -165,13 +167,12 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         switch (requestCode) {
             case ACTION_TAKE_PICTURE_RESULT_CODE:
                 // User has taken a picture. Transfer it to group owner i.e peer using FileTransferService
-                if (data != null && data.getData() != null) {
-                    Uri uri = data.getData();
+                if (data != null && (uri = data.getData()) != null) {
                     params[1] = uri.toString();
                     params[2] = MixedUtils.getFileName(getActivity(), uri);
-                    new FileSenderAsyncTask(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     try {
-                        Uri _uri_ = FileProvider.getUriForFile(getActivity(), authority, new File(MixedUtils.getRealPathFromUri(getActivity(), uri)));
+                        Uri _uri_ = FileProvider.getUriForFile(getActivity(), authority, new File(params[2]));
                         MixedUtils.copyFileToDir(
                             getActivity(),
                             _uri_,
@@ -180,6 +181,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     } catch (IOException ignored) {
                     }
                 } else {
+                    Log.e("photo result", (data != null) + "");
                     Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
                     t.setGravity(Gravity.CENTER, 0, 0);
                     t.show();
@@ -187,13 +189,16 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 break;
             case ACTION_TAKE_VIDEO_RESULT_CODE:
                 // User has taken a video_camera. Transfer it to group owner i.e peer using FileTransferService.
-                if (data != null && data.getData() != null) {
-                    Uri uri = data.getData();
+                if (data != null && (uri = data.getData()) != null) {
                     params[1] = uri.toString();
                     params[2] = MixedUtils.getFileName(getActivity(), uri);
-                    new FileSenderAsyncTask(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     try {
-                        Uri _uri_ = FileProvider.getUriForFile(getActivity(), authority, new File(MixedUtils.getRealPathFromUri(getActivity(), uri)));
+                        Uri _uri_ = FileProvider.getUriForFile(
+                            getActivity(),
+                            authority,
+                            new File(Objects.requireNonNull(MixedUtils.getFilePath(getActivity(), uri)))
+                        );
                         MixedUtils.copyFileToDir(
                             getActivity(),
                             _uri_,
@@ -209,12 +214,15 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 break;
             case ACTION_CHOOSE_MEDIA_FILE_RESULT_CODE:
                 // User has picked a media file. Transfer it to group owner i.e peer using FileTransferService.
-                if (data != null && data.getData() != null) {
-                    Uri uri = data.getData();
+                if (data != null && (uri = data.getData()) != null) {
                     params[1] = uri.toString();
                     params[2] = MixedUtils.getFileName(getActivity(), uri);
                     try {
-                        Uri _uri_ = FileProvider.getUriForFile(getActivity(), authority, new File(MixedUtils.getRealPathFromUri(getActivity(), uri)));
+                        Uri _uri_ = FileProvider.getUriForFile(
+                            getActivity(),
+                            authority,
+                            new File(Objects.requireNonNull(MixedUtils.getFilePath(getActivity(), uri)))
+                        );
                         MixedUtils.copyFileToDir(
                             getActivity(),
                             _uri_,
@@ -222,7 +230,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         );
                     } catch (IOException ignored) {
                     }
-                    new FileSenderAsyncTask(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 } else {
                     Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
                     t.setGravity(Gravity.CENTER, 0, 0);
@@ -231,11 +239,10 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 break;
             case ACTION_CHOOSE_FILE_RESULT_CODE:
                 // User has picked a file. Transfer it to group owner i.e peer using FileTransferService.
-                if (data != null && data.getData() != null) {
-                    Uri uri = data.getData();
+                if (data != null && (uri = data.getData()) != null) {
                     params[1] = uri.toString();
                     params[2] = MixedUtils.getFileName(getActivity(), uri);
-                    new FileSenderAsyncTask(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     try {
                         String inner;
                         String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(params[2].substring(params[2].lastIndexOf('.') + 1));
@@ -256,7 +263,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         Uri _uri_ = FileProvider.getUriForFile(
                             getActivity(),
                             authority,
-                            new File(MixedUtils.getRealPathFromUri(getActivity(), uri))
+                            new File(Objects.requireNonNull(MixedUtils.getFilePath(getActivity(), uri)))
                         );
                         MixedUtils.copyFileToDir(
                             getActivity(),
@@ -279,7 +286,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         params[1] = "file://" + apk_dir;
                         params[2] = apk_name + ".apk";
 //                        Log.e("apk dir: ", params[1] + "/" + params[2]);
-                        new FileSenderAsyncTask(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                         try {
                             MixedUtils.copyFileToDir(
                                 getActivity(),
@@ -310,7 +317,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         DeviceDetailFragment.info = info;
         Objects.requireNonNull(getView()).setVisibility(View.VISIBLE);
 
-        new FileReceiverAsyncTask(getActivity(), getView().findViewById(R.id.root)).execute();
+        new FileReceiver(getActivity(), getView().findViewById(R.id.root)).execute();
 
         if (info.groupFormed && info.isGroupOwner) {
             Thread ipReceiverThread = IP.receiveIpAddress();

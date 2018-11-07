@@ -25,7 +25,7 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * <p>
- *     ZipperAsyncTask class represents zipping process
+ *     Zipper class represents zipping process
  *     when multiple files selected to share from other
  *     applications. If user's device does not have a
  *     connection, proper methods will be executed. After
@@ -40,7 +40,7 @@ import java.util.zip.ZipOutputStream;
  * @author miri
  * @since 8/25/2018
  */
-public class ZipperAsyncTask extends AsyncTask<Void, Integer, Boolean> {
+public class Zipper extends AsyncTask<Void, Integer, Boolean> {
     private static WeakReference<Context> _contextRef;
     private String[] _input_files;
     private static String _output_file;
@@ -52,7 +52,7 @@ public class ZipperAsyncTask extends AsyncTask<Void, Integer, Boolean> {
     private NotificationCompat.Builder mBuilder;
     private static final String NOTIFICATION_ACTION = "notification_action";
 
-    public ZipperAsyncTask(@NotNull WeakReference<Context> contextReference, String[] files, String zipFileName, long totalFileLength, boolean workOffline) {
+    public Zipper(@NotNull WeakReference<Context> contextReference, String[] files, String zipFileName, long totalFileLength, boolean workOffline) {
         _contextRef = contextReference;
         _input_files = files;
         _output_file = zipFileName;
@@ -104,7 +104,7 @@ public class ZipperAsyncTask extends AsyncTask<Void, Integer, Boolean> {
                 }
             }
         } catch (Exception e) {
-            Log.e(ZipperAsyncTask.class.getName(), e.getMessage());
+            Log.e(Zipper.class.getName(), e.getMessage());
         }
         return false;
     }
@@ -136,7 +136,7 @@ public class ZipperAsyncTask extends AsyncTask<Void, Integer, Boolean> {
             };
             mNotifyManager.cancel(id);
 
-            new FileSenderAsyncTask(_contextRef.get(), _input_files, params).executeOnExecutor(THREAD_POOL_EXECUTOR);
+            new FileSender(_contextRef.get(), _input_files, params).executeOnExecutor(THREAD_POOL_EXECUTOR);
         }
     }
 

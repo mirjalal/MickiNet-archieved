@@ -37,7 +37,7 @@
     <string name="cancel">Cancel</string>
     <string name="label_peers">Nearby devices</string>
     <string name="my_machine" translatable="false">my_machine</string>
-    <string name="name">Name:\u00A0</string>
+    <string name="name"><b>Name:</b>\u00A0</string>
     <string name="status">Status:\u00A0</string>
     <string name="mac_address">MAC Address:\u00A0</string>
     <string name="is_group_owner">Is group owner?\u00A0</string>

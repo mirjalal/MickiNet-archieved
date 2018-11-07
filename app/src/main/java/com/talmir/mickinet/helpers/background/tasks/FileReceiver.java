@@ -42,7 +42,7 @@ import java.util.Date;
  * A custom class that receives stream and saves it
  * as file in device storage.
  */
-public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
+public class FileReceiver extends AsyncTask<Void, Void, String> {
 
     private WeakReference<Context> contextRef;
     private WeakReference<View> viewRef;
@@ -62,7 +62,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
 
     private ReceivedFilesEntity rfe;
 
-    public FileReceiverAsyncTask(Context context, View view) {
+    public FileReceiver(Context context, View view) {
         contextRef = new WeakReference<>(context);
         viewRef = new WeakReference<>(view);
     }
@@ -289,7 +289,7 @@ public class FileReceiverAsyncTask extends AsyncTask<Void, Void, String> {
                 rfe.r_f_operation_status = "1";
             } else {
                 // received file is archive file; unzip it to the /.temp/ folder
-                new UnzipperAsyncTask(contextRef, "/storage/emulated/0/MickiNet/.temp/tempBackupZip.mickinet_arch").executeOnExecutor(THREAD_POOL_EXECUTOR);
+                new Unzipper(contextRef, "/storage/emulated/0/MickiNet/.temp/tempBackupZip.mickinet_arch").executeOnExecutor(THREAD_POOL_EXECUTOR);
             }
         } else {
             mBuilder.setContentText(contextRef.get().getString(R.string.file_receive_fail))

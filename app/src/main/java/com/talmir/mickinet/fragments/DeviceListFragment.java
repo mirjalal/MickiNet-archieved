@@ -1,5 +1,6 @@
 package com.talmir.mickinet.fragments;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ListFragment;
 import android.app.ProgressDialog;
@@ -48,12 +49,12 @@ import static android.os.Looper.getMainLooper;
  * handle user interaction events
  */
 public class DeviceListFragment extends ListFragment implements WifiP2pManager.PeerListListener {
-    ProgressDialog progressDialog = null;
-    View mContentView = null;
+    private ProgressDialog progressDialog = null;
+    private View mContentView = null;
     private List<WifiP2pDevice> peers = new ArrayList<>();
     private WifiP2pDevice device; // this device
-    public static WifiP2pDevice connectedDevice = null; // connected device (used in WiFiDirectBroadcastReceiver class)
-    public static WeakReference<ConstraintLayout> deviceDetailConstratintLayoutRef;
+    private WifiP2pDevice connectedDevice = null; // connected device (used in WiFiDirectBroadcastReceiver class)
+    public static WeakReference<ConstraintLayout> deviceDetailConstraintLayoutRef;
 
     @NonNull
     private String getDeviceStatus(int deviceStatus) {
@@ -79,11 +80,12 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
         setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.row_devices, peers));
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(R.layout.fragment_device_list, null);
         ConstraintLayout deviceDetailConstraintLayout = mContentView.findViewById(R.id.this_device);
-        deviceDetailConstratintLayoutRef = new WeakReference<>(deviceDetailConstraintLayout);
+        deviceDetailConstraintLayoutRef = new WeakReference<>(deviceDetailConstraintLayout);
         deviceDetailConstraintLayout.setOnClickListener(v -> changeDeviceName());
         return mContentView;
     }
@@ -110,55 +112,13 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
         alertDialog.setTitle(R.string.connect_to_device).setCancelable(false);
         connectedDevice = (WifiP2pDevice) getListAdapter().getItem(position);
 
-        if (batteryPct <= 0.20) {
-            alertDialog
-                    .setMessage("Battery about die. Do you really want to connect?\n\n" +
-                        Html.fromHtml(
-                                String.format(
-                                        "<b>" + getString(R.string.name) + "</b>%1$s<br>" +
-                                        "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
-                                        "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
-                                        "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
-                                        connectedDevice.deviceName,
-                                        getDeviceStatus(connectedDevice.status),
-                                        connectedDevice.deviceAddress,
-                                        connectedDevice.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
-                                )
-                        )
-                    );
-        } else if (batteryPct < 0.33 && batteryPct > 0.20) {
-            alertDialog
-                    .setMessage("Wi-Fi Direct drains battery fast. Do you really want to connect?\n\n" +
-                            Html.fromHtml(
-                                    String.format(
-                                            "<b>" + getString(R.string.name) + "</b>%1$s<br>" +
-                                            "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
-                                            "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
-                                            "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
-                                            connectedDevice.deviceName,
-                                            getDeviceStatus(connectedDevice.status),
-                                            connectedDevice.deviceAddress,
-                                            connectedDevice.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
-                                    )
-                            )
-                    );
-        } else {
-            alertDialog
-                    .setMessage(
-                            Html.fromHtml(
-                                    String.format(
-                                            "<b>" + getString(R.string.name) + "</b>%1$s<br>" +
-                                            "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
-                                            "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
-                                            "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
-                                            connectedDevice.deviceName,
-                                            getDeviceStatus(connectedDevice.status),
-                                            connectedDevice.deviceAddress,
-                                            connectedDevice.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
-                                    )
-                            )
-                    );
-        }
+        if (batteryPct <= 0.20)
+            alertDialog.setMessage("Battery about die. Do you really want to connect?\n\n" + get_connection_dialog_title());
+        else if (batteryPct < 0.33)
+            alertDialog.setMessage("Wi-Fi Direct drains battery fast. Do you really want to connect?\n\n" + get_connection_dialog_title());
+        else
+            alertDialog.setMessage(get_connection_dialog_title());
+
         alertDialog
                 .setPositiveButton(R.string.connect, (dialogInterface, i) -> {
                     final WifiP2pConfig config = new WifiP2pConfig();
@@ -173,6 +133,21 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
                 })
                 .setNegativeButton(R.string.cancel, (dialog, id1) -> dialog.cancel())
                 .show();
+    }
+
+    private CharSequence get_connection_dialog_title() {
+        return Html.fromHtml(
+                String.format(
+                        "<b>" + getString(R.string.name) + "</b>%1$s<br>" +
+                        "<b>" + getString(R.string.status) + "</b>%2$s<br>" +
+                        "<b>" + getString(R.string.mac_address) + "</b>%3$s<br>" +
+                        "<b>" + getString(R.string.is_group_owner) + "</b>%4$s",
+                        device.deviceName,
+                        getDeviceStatus(device.status),
+                        device.deviceAddress,
+                        device.isGroupOwner() ? getString(R.string.yes) : getString(R.string.no)
+                )
+        );
     }
 
     /**
@@ -257,7 +232,6 @@ public class DeviceListFragment extends ListFragment implements WifiP2pManager.P
     /**
      * Changes device name with entered text.
      *
-     * @return true if device name successfully changed, false otherwise.
      */
     private void changeDeviceName() {
         final AlertDialog alert = new AlertDialog.Builder(getActivity()).create();

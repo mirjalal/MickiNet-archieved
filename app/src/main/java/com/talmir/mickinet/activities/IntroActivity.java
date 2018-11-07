@@ -1,6 +1,5 @@
 package com.talmir.mickinet.activities;
 
-import android.Manifest;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -9,20 +8,13 @@ import android.support.design.widget.Snackbar;
 import android.view.View;
 
 import com.talmir.mickinet.R;
+import com.talmir.mickinet.helpers.PermissionUtils;
 
 import agency.tango.materialintroscreen.MaterialIntroActivity;
 import agency.tango.materialintroscreen.MessageButtonBehaviour;
 import agency.tango.materialintroscreen.SlideFragmentBuilder;
 
 public class IntroActivity extends MaterialIntroActivity {
-
-    private static final String[] CAMERA_PERMISSIONS = {
-            Manifest.permission.CAMERA
-    };
-    private static final String[] STORAGE_PERMISSION = {
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
-
     @Override
     protected synchronized void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +40,7 @@ public class IntroActivity extends MaterialIntroActivity {
         addSlide(new SlideFragmentBuilder()
                         .backgroundColor(R.color.colorAccentDarkRipple)
                         .buttonsColor(R.color.colorPrimary)
-                        .neededPermissions(STORAGE_PERMISSION)
+                        .neededPermissions(PermissionUtils.STORAGE_PERMISSION)
 //                        .title("We provide best tools")
 //                        .description("EVER")
                         .title(getString(R.string.slide3_title))
@@ -58,7 +50,7 @@ public class IntroActivity extends MaterialIntroActivity {
         addSlide(new SlideFragmentBuilder()
                         .backgroundColor(R.color.colorAccentRipple)
                         .buttonsColor(R.color.colorPrimary)
-                        .neededPermissions(CAMERA_PERMISSIONS)
+                        .neededPermissions(PermissionUtils.CAMERA_PERMISSIONS)
                         .title(getString(R.string.slide4_title))
                         .description(getString(R.string.slide4_description))
                         .build());

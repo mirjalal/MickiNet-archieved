@@ -1,7 +1,18 @@
 package com.talmir.mickinet.activities;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
@@ -9,6 +20,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -16,10 +28,14 @@ import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -44,8 +60,8 @@ import com.talmir.mickinet.helpers.adapters.SentFilesListAdapter;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
 import com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver;
 import com.talmir.mickinet.helpers.background.services.CountDownService;
-import com.talmir.mickinet.helpers.background.tasks.FileSenderAsyncTask;
-import com.talmir.mickinet.helpers.background.tasks.ZipperAsyncTask;
+import com.talmir.mickinet.helpers.background.tasks.FileSender;
+import com.talmir.mickinet.helpers.background.tasks.Zipper;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesViewModel;
 import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 
@@ -62,7 +78,7 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
 
-public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener {
+public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     // +++++++++++++++++++++++++++ WiFi Direct specific ++++++++++++++++++++++++++++++++ //
     private final IntentFilter intentFilter = new IntentFilter();
@@ -194,7 +210,10 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     // --------------------------- WiFi Direct specific -------------------------------- //
 
 
+    private static final int LOCATION_REQUEST = 1249;
+
     private BroadcastReceiver batteryInfoBroadcastReceiver = null;
+    private GoogleApiClient googleApiClient;
     private FloatingActionButton start_discovery;
 
     private static SentFilesListAdapter mSentFilesListAdapter;
@@ -223,7 +242,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         return mReceivedFilesListAdapter;
     }
 
-    // Great article!
     // https://medium.com/@chrisbanes/appcompat-v23-2-age-of-the-vectors-91cbafa87c88#.59mn8eem4
     static {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -243,7 +261,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         if (prefs.getBoolean("firstTimeRun?", Boolean.TRUE)) {
             new MaterialShowcaseView.Builder(this)
-                    .setTarget(DeviceListFragment.deviceDetailConstratintLayoutRef.get())
+                    .setTarget(DeviceListFragment.deviceDetailConstraintLayoutRef.get())
                     .setDismissOnTargetTouch(true)
                     .setMaskColour(R.color.colorAccent)
                     .setShapePadding(32)
@@ -281,7 +299,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
         MixedUtils.createNestedFolders();
 
-        copyRawFile(R.raw.file_receive);
+        copyRawFile();
 
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -425,7 +443,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
     /**
-     * register the BroadcastReceiver with the intent values to be matched
+     * Register the BroadcastReceiver with the intent values to be matched
      */
     @Override
     public void onResume() {
@@ -456,6 +474,90 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
         super.onDestroy();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode)
+        {
+            case LOCATION_REQUEST:
+                switch (resultCode)
+                {
+                    case Activity.RESULT_OK:
+                        // TODO: check for permissions
+                        // if location permission granted start discovery
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // the user was asked to change settings, but chose not to
+                        Toast.makeText(getApplicationContext(), "Location not enabled, user cancelled.", Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default: break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void checkLocationSettings() {
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this).build();
+            googleApiClient.connect();
+        }
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(30 * 1000);
+        locationRequest.setFastestInterval(5 * 1000);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+        //**************************
+        builder.setAlwaysShow(true); //this is the key ingredient
+        //**************************
+
+        Task<LocationSettingsResponse> result = LocationServices.getSettingsClient(this).checkLocationSettings(builder.build());
+        result.addOnCompleteListener(task -> {
+            try {
+                LocationSettingsResponse response = task.getResult(ApiException.class);
+                // All location settings are satisfied. The client can initialize location
+                // requests here.
+
+                // TODO: check for location permission(s)
+            } catch (ApiException exception) {
+                switch (exception.getStatusCode()) {
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied. But could be fixed by showing the
+                        // user a dialog.
+                        try {
+                            // Cast to a resolvable exception.
+                            ResolvableApiException resolvable = (ResolvableApiException) exception;
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            resolvable.startResolutionForResult(HomeActivity.this, LOCATION_REQUEST);
+                        } catch (IntentSender.SendIntentException ignored) {
+                            // Ignore the error.
+                        } catch (ClassCastException ignored) {
+                            // Ignore, should be an impossible error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        Toast.makeText(getApplicationContext(), "Location settings are not satisfied. However, we have no way to fix the settings.", Toast.LENGTH_SHORT).show();
+                        // Location settings are not satisfied. However, we have no way to fix the
+                        // settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
+    }
+
     private void handleData(@NotNull Intent intent, String procName, boolean handleOffline) {
         final String action = intent.getAction();
         final String type = intent.getType();
@@ -471,7 +573,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             params[1] = uri.toString();
             params[2] = MixedUtils.getFileName(this, uri);
 
-            new FileSenderAsyncTask(this, params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new FileSender(this, params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             try {
                 String inner;
                 String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(params[2].substring(params[2].lastIndexOf('.') + 1));
@@ -516,7 +618,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 filePaths[i] = _f.getAbsolutePath();
             }
 
-            new ZipperAsyncTask(
+            new Zipper(
                     new WeakReference<>(getApplicationContext()),
                     filePaths,
                     backupPath + "/" + procName + ".mickinet_arch",
@@ -527,8 +629,13 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
     public String getRealPathFromUri(Uri contentUri) {
-        String[] proj = { MediaStore.Files.FileColumns.DATA };
-        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+        Cursor cursor = getContentResolver().query(
+            contentUri,
+            new String[] { MediaStore.Files.FileColumns.DATA },
+            null,
+            null,
+            null
+        );
         cursor.moveToFirst();
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA);
         String _s = cursor.getString(column_index);
@@ -538,35 +645,35 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     /**
      * Copies a raw resource into the alarms directory on the device's shared storage
-     *
-     * @param resID The resource ID of the raw resource to copy, in the form of R.raw.*
      */
-    private void copyRawFile(int resID) {
+    private void copyRawFile() {
         // Make sure the shared storage is currently writable
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
             return;
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_NOTIFICATIONS);
         path.mkdirs(); // make sure the directory exists
         File outFile = new File(path, "MickiNet default.mp3");
-        InputStream inputStream = null;
-        FileOutputStream outputStream = null;
-        try {
-            inputStream = getResources().openRawResource(resID);
-            outputStream = new FileOutputStream(outFile);
+        try (InputStream inputStream = getResources().openRawResource(R.raw.file_receive); FileOutputStream outputStream = new FileOutputStream(outFile)) {
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) > 0)
                 outputStream.write(buffer, 0, bytesRead);
         } catch (Exception ignored) {
-        } finally {
-            try {
-                if (inputStream != null)
-                    inputStream.close();
-                if (outputStream != null)
-                    outputStream.close();
-            } catch (IOException e) {
-                // Means there was an error trying to close the streams, so do nothing
-            }
         }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 }

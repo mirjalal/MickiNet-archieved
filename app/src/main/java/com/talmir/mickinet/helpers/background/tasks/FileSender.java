@@ -39,7 +39,7 @@ import java.util.Date;
  * @author miri
  * @since 8/12/2018
  */
-public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
+public class FileSender extends AsyncTask<Void, Void, Boolean> {
     private WeakReference<Context> contextRef;
 
     private static final int id = 871;
@@ -66,7 +66,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
     private String PARAM_FILE_PATH;
     private String PARAM_FILE_NAME;
 
-    public FileSenderAsyncTask(Context context, @NotNull String... params) {
+    public FileSender(Context context, @NotNull String... params) {
         contextRef = new WeakReference<>(context);
 
         PARAM_GROUP_OWNER_ADDRESS = params[0];
@@ -79,7 +79,7 @@ public class FileSenderAsyncTask extends AsyncTask<Void, Void, Boolean> {
         sfe = new SentFilesEntity();
     }
 
-    FileSenderAsyncTask(Context context, @NotNull String[] fileList, @NotNull String... params) {
+    FileSender(Context context, @NotNull String[] fileList, @NotNull String... params) {
         _isArchFile = true;
 
         contextRef = new WeakReference<>(context);
