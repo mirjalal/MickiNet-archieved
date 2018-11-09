@@ -24,12 +24,14 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.support.constraint.ConstraintLayout;
+import android.util.Log;
 
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
 
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -103,6 +105,19 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
 //                if (!CountDownService.isRunning())
 //                    startCountDownIfNecessary(context);
+
+                Log.e("", "executeCommand");
+                Runtime runtime = Runtime.getRuntime();
+                try
+                {
+                    Process  mIpAddrProcess = runtime.exec("/system/bin/ping -c 1 192.168.49.1");
+                    Log.e("onReceive: q", "" + mIpAddrProcess.waitFor());
+                }
+                catch (InterruptedException | IOException e)
+                {
+                    e.printStackTrace();
+                    Log.e(""," Exception:"+e);
+                }
 
                 // disable views
                 for (int i = 0; i < c; i++) {

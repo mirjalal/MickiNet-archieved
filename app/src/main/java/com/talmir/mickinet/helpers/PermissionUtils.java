@@ -9,7 +9,7 @@ import android.support.annotation.RequiresApi;
 import static android.os.Build.VERSION_CODES.M;
 import static android.os.Build.VERSION_CODES.O;
 
-public class PermissionUtils {
+public final class PermissionUtils {
 
     public static final String[] CAMERA_PERMISSIONS = { Manifest.permission.CAMERA };
 

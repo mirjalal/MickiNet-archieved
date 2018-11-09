@@ -45,6 +45,18 @@ public final class MixedUtils {
         return result;
     }
 
+    public static String getRealPathFromUri(@NotNull Context context, Uri uri) {
+        String path = "";
+        Cursor cursor = context.getContentResolver().query(uri, new String[] { "_data" }, null, null, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex("_data");
+            path = cursor.getString(idx);
+            cursor.close();
+        }
+        return path;
+    }
+    
     public static String getFilePath(Context context, Uri uri) {
         String selection = null;
         String[] selectionArgs = null;
@@ -119,6 +131,10 @@ public final class MixedUtils {
         }
     }
 
+    public static void mimeTypeChecker() {
+    
+    }
+    
     public static void createNestedFolders() {
         File rootDir = new File("/storage/emulated/0/MickiNet/");
         rootDir.mkdirs();

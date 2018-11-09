@@ -11,7 +11,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +23,7 @@ import com.talmir.mickinet.activities.ApkShareActivity;
 import com.talmir.mickinet.helpers.MixedUtils;
 import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.background.IDeviceActionListener;
-import com.talmir.mickinet.helpers.background.IP;
+import com.talmir.mickinet.helpers.background.IPService;
 import com.talmir.mickinet.helpers.background.tasks.FileReceiver;
 import com.talmir.mickinet.helpers.background.tasks.FileSender;
 
@@ -42,7 +41,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
 
     private static WifiP2pInfo info;
     public static String getIpAddressByDeviceType() {
-        return deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : IP.getClientIpAddress();
+        return deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : IPService.getClientIpAddress();
     }
 
     public ProgressDialog progressDialog = null;
@@ -67,7 +66,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 photoAction.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(photoAction, ACTION_TAKE_PICTURE_RESULT_CODE);
             } else {
-                if (IP.getClientIpAddress().equals(""))
+                if (IPService.getClientIpAddress().equals(""))
                     Toast.makeText(getActivity(), R.string.sorry_for_conection, Toast.LENGTH_LONG).show();
                 else {
                     Intent photoAction = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -83,7 +82,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 videoAction.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(videoAction, ACTION_TAKE_VIDEO_RESULT_CODE);
             } else {
-                if (IP.getClientIpAddress().equals(""))
+                if (IPService.getClientIpAddress().equals(""))
                     Toast.makeText(getActivity(), R.string.sorry_for_conection, Toast.LENGTH_LONG).show();
                 else {
                     Intent videoAction = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -101,7 +100,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 mediaFileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(mediaFileIntent, ACTION_CHOOSE_MEDIA_FILE_RESULT_CODE);
             } else {
-                if (IP.getClientIpAddress().equals(""))
+                if (IPService.getClientIpAddress().equals(""))
                     Toast.makeText(getActivity(), R.string.sorry_for_conection, Toast.LENGTH_LONG).show();
                 else {
                     Intent mediaFileIntent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -121,7 +120,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(fileIntent, ACTION_CHOOSE_FILE_RESULT_CODE);
             } else {
-                if (IP.getClientIpAddress().equals(""))
+                if (IPService.getClientIpAddress().equals(""))
                     Toast.makeText(getActivity(), R.string.sorry_for_conection, Toast.LENGTH_LONG).show();
                 else {
                     Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -139,7 +138,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 getApp.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(getApp, ACTION_CHOOSE_APP_RESULT_CODE);
             } else {
-                if (IP.getClientIpAddress().equals(""))
+                if (IPService.getClientIpAddress().equals(""))
                     Toast.makeText(getActivity(), R.string.sorry_for_conection, Toast.LENGTH_LONG).show();
                 else {
                     Intent getApp = new Intent(getActivity(), ApkShareActivity.class);
@@ -161,7 +160,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         Uri uri;
         final String authority = getActivity().getApplicationContext().getPackageName() + ".provider";
         String[] params = new String[3];
-        params[0] = deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : IP.getClientIpAddress();
+        params[0] = deviceType == 1 ? info.groupOwnerAddress.getHostAddress() : IPService.getClientIpAddress();
         final String path = "/storage/emulated/0/MickiNet/";
 
         switch (requestCode) {
@@ -170,9 +169,15 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 if (data != null && (uri = data.getData()) != null) {
                     params[1] = uri.toString();
                     params[2] = MixedUtils.getFileName(getActivity(), uri);
+                    
                     new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    
                     try {
-                        Uri _uri_ = FileProvider.getUriForFile(getActivity(), authority, new File(params[2]));
+                        Uri _uri_ = FileProvider.getUriForFile(
+                            getActivity(),
+                            authority,
+                            new File(MixedUtils.getRealPathFromUri(getActivity(), uri))
+                        );
                         MixedUtils.copyFileToDir(
                             getActivity(),
                             _uri_,
@@ -181,7 +186,6 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                     } catch (IOException ignored) {
                     }
                 } else {
-                    Log.e("photo result", (data != null) + "");
                     Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
                     t.setGravity(Gravity.CENTER, 0, 0);
                     t.show();
@@ -192,12 +196,14 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 if (data != null && (uri = data.getData()) != null) {
                     params[1] = uri.toString();
                     params[2] = MixedUtils.getFileName(getActivity(), uri);
+                    
                     new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    
                     try {
                         Uri _uri_ = FileProvider.getUriForFile(
                             getActivity(),
                             authority,
-                            new File(Objects.requireNonNull(MixedUtils.getFilePath(getActivity(), uri)))
+                            new File(MixedUtils.getRealPathFromUri(getActivity(), uri))
                         );
                         MixedUtils.copyFileToDir(
                             getActivity(),
@@ -230,7 +236,9 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         );
                     } catch (IOException ignored) {
                     }
+                    
                     new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    
                 } else {
                     Toast t = Toast.makeText(getActivity(), R.string.pick_a_file, Toast.LENGTH_LONG);
                     t.setGravity(Gravity.CENTER, 0, 0);
@@ -242,7 +250,9 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                 if (data != null && (uri = data.getData()) != null) {
                     params[1] = uri.toString();
                     params[2] = MixedUtils.getFileName(getActivity(), uri);
+                    
                     new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    
                     try {
                         String inner;
                         String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(params[2].substring(params[2].lastIndexOf('.') + 1));
@@ -263,7 +273,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         Uri _uri_ = FileProvider.getUriForFile(
                             getActivity(),
                             authority,
-                            new File(Objects.requireNonNull(MixedUtils.getFilePath(getActivity(), uri)))
+                            new File(MixedUtils.getRealPathFromUri(getActivity(), uri))
                         );
                         MixedUtils.copyFileToDir(
                             getActivity(),
@@ -286,7 +296,9 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
                         params[1] = "file://" + apk_dir;
                         params[2] = apk_name + ".apk";
 //                        Log.e("apk dir: ", params[1] + "/" + params[2]);
+	                    
                         new FileSender(getActivity(), params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        
                         try {
                             MixedUtils.copyFileToDir(
                                 getActivity(),
@@ -320,7 +332,7 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
         new FileReceiver(getActivity(), getView().findViewById(R.id.root)).execute();
 
         if (info.groupFormed && info.isGroupOwner) {
-            Thread ipReceiverThread = IP.receiveIpAddress();
+            Thread ipReceiverThread = IPService.receiveIpAddress();
             ipReceiverThread.setPriority(10);
             ipReceiverThread.start();
 
@@ -329,7 +341,11 @@ public class DeviceDetailFragment extends Fragment implements WifiP2pManager.Con
             if (!ipReceiverThread.isInterrupted())
                 ipReceiverThread.interrupt();
         } else if (info.groupFormed) {
-            Thread ipSenderThread = IP.sendIpAddress();
+//            if (!IPService.isRemoteAddressReachable("192.168.49.1")) {
+//                Toast.makeText(getActivity(), "Oops. Something went wrong. Unable to connect device.", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+            Thread ipSenderThread = IPService.sendIpAddress();
             ipSenderThread.setPriority(10);
             ipSenderThread.start();
 

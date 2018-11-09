@@ -4,7 +4,6 @@ import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
@@ -16,6 +15,7 @@ import android.webkit.MimeTypeMap;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.activities.HomeActivity;
 import com.talmir.mickinet.helpers.MixedUtils;
+import com.talmir.mickinet.helpers.NotificationUtils;
 import com.talmir.mickinet.helpers.background.CrashReport;
 import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
 import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
@@ -51,7 +51,7 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
      * see {@link com.talmir.mickinet.helpers.background.broadcastreceivers.WiFiDirectBroadcastReceiver}
      * for usages
      */
-    public static boolean getIsTaskRunning() { return isTaskRunning; }
+//    public static boolean getIsTaskRunning() { return isTaskRunning; }
 
     private boolean _isArchFile;
     private ArrayList<String> fileDirList;
@@ -73,7 +73,7 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
         PARAM_FILE_PATH = params[1];
         PARAM_FILE_NAME = params[2];
 
-        mBuilder = new NotificationCompat.Builder(contextRef.get(), null);
+        mBuilder = new NotificationCompat.Builder(contextRef.get(), "mickinet_file_sender_notification_channel");
         mNotifyManager = (NotificationManager) contextRef.get().getSystemService(Context.NOTIFICATION_SERVICE);
 
         sfe = new SentFilesEntity();
@@ -193,31 +193,12 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
 
             SharedPreferences notificationSettings = PreferenceManager.getDefaultSharedPreferences(contextRef.get());
             if (notificationSettings.getBoolean("notifications_new_file_send", false)) {
-                mBuilder.setSound(
-                    Uri.parse(
-                        PreferenceManager.getDefaultSharedPreferences(contextRef.get()).getString(
-                            "notifications_new_file_send_ringtone",
-                            "android.resource://" + contextRef.get().getPackageName() + "/" + R.raw.file_receive)
-                    )
-                );
-
-                if (notificationSettings.getBoolean("notifications_new_file_send_vibrate", true))
-                    mBuilder.setVibrate(new long[]{500});
-
-                mBuilder.setLights(
-                    Color.parseColor("#" + notificationSettings.getString("notifications_new_file_send_led_light", contextRef.get().getString(R.string.cyan_color))),
-                    700,
-                    500
-                );
-            } else {
-                mBuilder.setSound(
-                    Uri.parse("android.resource://" + contextRef.get().getPackageName() + "/" + R.raw.file_receive)
-                );
-
-                mBuilder.setLights(
-                    Color.parseColor("#" + contextRef.get().getString(R.string.cyan_color)), 700, 500
-                );
-            }
+	            NotificationUtils.setNotificationSound(mBuilder, contextRef.get(), "send");
+	            NotificationUtils.setNotificationVibration(mBuilder, notificationSettings, "send");
+	            NotificationUtils.setNotificationLight(mBuilder, notificationSettings, contextRef.get(), "send");
+            } else
+                NotificationUtils.setNotificationDefaults(mBuilder, contextRef.get());
+            
             mNotifyManager.notify(id, mBuilder.build());
 
             if (_isArchFile) {
@@ -249,6 +230,7 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
                         sfe.s_f_type = "5";
                         destDir = "/storage/emulated/0/MickiNet/Others/Sent/" + fileName;
                     }
+                    
                     sfe.s_f_operation_status = "1";
                     sfe.s_f_time = d;
                     sfvm.insert(sfe);
@@ -330,7 +312,7 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
     private void sendFile(InputStream inputStream, OutputStream out, @NotNull Context context) {
         // Q) Why 8192 ?
         // A) http://stackoverflow.com/a/19561265/4057688
-        byte buffer[] = new byte[2048];
+        byte buffer[] = new byte[8192];
         int len;
         try {
             while ((len = inputStream.read(buffer)) != -1)

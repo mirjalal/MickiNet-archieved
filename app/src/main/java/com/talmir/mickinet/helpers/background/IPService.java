@@ -4,18 +4,20 @@ import android.support.annotation.NonNull;
 
 import org.jetbrains.annotations.Contract;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * Gets and sets client IP address. When connection established,
+ * Gets and sets client IPService address. When connection established,
  * proper methods will be execute.
  *
  * @author miri
  * @since 8/15/2018
  */
-public final class IP {
+public final class IPService {
 
     private static String clientIpAddress = "";
 
@@ -31,12 +33,11 @@ public final class IP {
     /**
      * This method performs simple socket connection
      * between client device and server one. On the server
-     * side we could get that IP address.
+     * side we could get that IPService address.
      *
      * @return  a new thread that sends client's
-     *          Wi-Fi Direct IP address to the server.
+     *          Wi-Fi Direct IPService address to the server.
      */
-    @NonNull
     public static synchronized Thread sendIpAddress() {
         return new Thread(() -> {
             Socket socket = null;
@@ -65,7 +66,7 @@ public final class IP {
      * and gets remote socket address of the client.
      *
      * @return  a new thread that receives clients'
-     *          Wi-Fi Direct IP addresses
+     *          Wi-Fi Direct IPService addresses
      */
     @NonNull
     public static synchronized Thread receiveIpAddress() {
@@ -89,5 +90,13 @@ public final class IP {
                 }
             }
         });
+    }
+
+    public static synchronized boolean isRemoteAddressReachable(String remoteAddress) {
+        try {
+            return InetAddress.getByAddress(remoteAddress.getBytes()).isReachable(5000);
+        } catch (IOException e) {
+            return false;
+        }
     }
 }

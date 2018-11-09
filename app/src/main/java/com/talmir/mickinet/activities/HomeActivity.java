@@ -1,17 +1,5 @@
 package com.talmir.mickinet.activities;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.analytics.FirebaseAnalytics;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.arch.lifecycle.ViewModelProviders;
@@ -22,7 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -32,7 +19,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -51,6 +37,17 @@ import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.talmir.mickinet.R;
 import com.talmir.mickinet.fragments.DeviceDetailFragment;
 import com.talmir.mickinet.fragments.DeviceListFragment;
@@ -68,15 +65,15 @@ import com.talmir.mickinet.helpers.room.sent.SentFilesViewModel;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import uk.co.deanwild.materialshowcaseview.IShowcaseListener;
-import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
+
+import uk.co.deanwild.materialshowcaseview.IShowcaseListener;
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
 
 public class HomeActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, IDeviceActionListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
@@ -484,8 +481,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 switch (resultCode)
                 {
                     case Activity.RESULT_OK:
-                        // TODO: check for permissions
-                        // if location permission granted start discovery
+                        // TODO: start discovery
                         break;
                     case Activity.RESULT_CANCELED:
                         // the user was asked to change settings, but chose not to
@@ -530,7 +526,7 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 // All location settings are satisfied. The client can initialize location
                 // requests here.
 
-                // TODO: check for location permission(s)
+                // TODO: start discovery
             } catch (ApiException exception) {
                 switch (exception.getStatusCode()) {
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
@@ -542,10 +538,8 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                             // Show the dialog by calling startResolutionForResult(),
                             // and check the result in onActivityResult().
                             resolvable.startResolutionForResult(HomeActivity.this, LOCATION_REQUEST);
-                        } catch (IntentSender.SendIntentException ignored) {
+                        } catch (IntentSender.SendIntentException | ClassCastException ignored) {
                             // Ignore the error.
-                        } catch (ClassCastException ignored) {
-                            // Ignore, should be an impossible error.
                         }
                         break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
@@ -606,14 +600,18 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
             String backupPath = getFilesDir().toString() + "/backup";
             final File backupDBFolder = new File(backupPath);
-            backupDBFolder.mkdirs();
+            backupDBFolder.mkdir();
 
             String[] filePaths = new String[clipSize];
             File _f;
             long filesTotalLength = 0;
             for (int i = 0; i < clipSize; i++) {
                 uri = intent.getClipData().getItemAt(i).getUri();
-                _f = new File(uri.toString().startsWith("file:///") ? uri.toString().replace("file:///", "") : getRealPathFromUri(uri));
+                _f = new File(
+                    uri.toString().startsWith("file:///") ?
+			                uri.toString().replace("file:///", "") :
+			                MixedUtils.getRealPathFromUri(getApplicationContext(), uri)
+                );
                 filesTotalLength += _f.length();
                 filePaths[i] = _f.getAbsolutePath();
             }
@@ -626,21 +624,6 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
                     handleOffline
             ).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
-    }
-
-    public String getRealPathFromUri(Uri contentUri) {
-        Cursor cursor = getContentResolver().query(
-            contentUri,
-            new String[] { MediaStore.Files.FileColumns.DATA },
-            null,
-            null,
-            null
-        );
-        cursor.moveToFirst();
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA);
-        String _s = cursor.getString(column_index);
-        cursor.close();
-        return _s;
     }
 
     /**
