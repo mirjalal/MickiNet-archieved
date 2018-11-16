@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
  * @since 7/26/2018
  */
 public class ReceivedFilesRepository {
-    private static ReceivedFilesDao mReceivedFilesDao;
+    private static IReceivedFilesDao mReceivedFilesDao;
     private LiveData<List<ReceivedFilesEntity>> mAllReceivedFiles;
 
     ReceivedFilesRepository(Application application) {
@@ -31,9 +31,9 @@ public class ReceivedFilesRepository {
     }
 
     private static class insertAsyncTask extends AsyncTask<ReceivedFilesEntity, Void, Void> {
-        private ReceivedFilesDao mAsyncTaskDao;
+        private IReceivedFilesDao mAsyncTaskDao;
 
-        insertAsyncTask(ReceivedFilesDao dao) {
+        insertAsyncTask(IReceivedFilesDao dao) {
             mAsyncTaskDao = dao;
         }
 
@@ -58,9 +58,9 @@ public class ReceivedFilesRepository {
     }
 
     private static class deleteAllRecordsAsyncTask extends AsyncTask<Void, Void, Boolean> {
-        private ReceivedFilesDao dao;
+        private IReceivedFilesDao dao;
 
-        deleteAllRecordsAsyncTask(ReceivedFilesDao dao) {
+        deleteAllRecordsAsyncTask(IReceivedFilesDao dao) {
             this.dao = dao;
         }
 

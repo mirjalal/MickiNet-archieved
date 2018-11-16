@@ -114,27 +114,6 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected Boolean doInBackground(Void... voids) {
-        if (!_isArchFile) {
-            sfe.s_f_name = PARAM_FILE_NAME;
-            sfe.s_f_time = new Date();
-
-            // get mimetype to determine that in which folder will be used
-            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(PARAM_FILE_NAME.substring(PARAM_FILE_NAME.lastIndexOf('.') + 1));
-            if (mimeType != null) {
-                if (mimeType.startsWith("image"))
-                    sfe.s_f_type = "1";
-                else if (mimeType.startsWith("video"))
-                    sfe.s_f_type = "2";
-                else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
-                    sfe.s_f_type = "3";
-                else if (mimeType.equals("application/vnd.android.package-archive"))
-                    sfe.s_f_type = "4";
-                else
-                    sfe.s_f_type = "5";
-            } else
-                sfe.s_f_type = "5";
-        }
-
         // put all data to stream
         Socket socket = new Socket();
         try {
@@ -182,8 +161,15 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected void onPostExecute(Boolean result) {
         SentFilesViewModel sfvm = HomeActivity.getSentFilesViewModel();//ViewModelProviders.of((FragmentActivity) contextRef.get()).get(SentFilesViewModel.class);
-        final Date d = new Date();
-        if (_res) { // _res = true cond.
+        final Date now = new Date();
+    
+        try {
+            MixedUtils.copyFileToDir(contextRef.get(), Uri.parse(PARAM_FILE_PATH), new File("/storage/emulated/0/MickiNet/Media/Sent/" + PARAM_FILE_NAME));
+        } catch (IOException e) {
+            Log.e("failed to copy file", "" + e);
+        }
+    
+        if (_res) {
             // When the loop is finished, updates the notification
             mBuilder.setTicker(contextRef.get().getString(R.string.successful))
                     .setContentText(contextRef.get().getString(R.string.file_sent))
@@ -232,10 +218,9 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
                     }
                     
                     sfe.s_f_operation_status = "1";
-                    sfe.s_f_time = d;
-                    sfvm.insert(sfe);
-
-                    // after inserting file information to db, copy that file to proper dir
+                    sfe.s_f_time = now;
+                    
+                    // first, copy files to proper dirs
                     try {
                         MixedUtils.copyFileToDir(
                             contextRef.get(),
@@ -244,10 +229,44 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
                         );
                         // TODO: test the line below
                         // TODO: user her hansisa bir anda butun qovluqlari silse, fışdırdı...
-                    } catch (IOException ignored) {  }
+                    } catch (Exception ignored) {  }
+                    
+                    // after copy insert data to db
+                    sfvm.insert(sfe);
                 }
             } else {
+                sfe.s_f_name = PARAM_FILE_NAME;
+    
+                // get mimetype to determine that in which folder will be used
+                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(PARAM_FILE_NAME.substring(PARAM_FILE_NAME.lastIndexOf('.') + 1));
+                if (mimeType != null) {
+                    if (mimeType.startsWith("image"))
+                        sfe.s_f_type = "1";
+                    else if (mimeType.startsWith("video"))
+                        sfe.s_f_type = "2";
+                    else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                        sfe.s_f_type = "3";
+                    else if (mimeType.equals("application/vnd.android.package-archive"))
+                        sfe.s_f_type = "4";
+                    else
+                        sfe.s_f_type = "5";
+                } else
+                    sfe.s_f_type = "5";
+                
                 sfe.s_f_operation_status = "1";
+                sfe.s_f_time = now;
+    
+                // after inserting file information to db, copy that file to proper dir
+//                try {
+//                    MixedUtils.copyFileToDir(
+//                            contextRef.get(),
+//                            Uri.parse(),
+//                            new File(destDir)
+//                    );
+//                    // TODO: test the line below
+//                    // TODO: user her hansisa bir anda butun qovluqlari silse, fışdırdı...
+//                } catch (Exception ignored) {  }
+
                 sfvm.insert(sfe);
             }
         } else {
@@ -280,11 +299,30 @@ public class FileSender extends AsyncTask<Void, Void, Boolean> {
                         sfe.s_f_type = "5";
 
                     sfe.s_f_operation_status = "0";
-                    sfe.s_f_time = d;
+                    sfe.s_f_time = now;
                     sfvm.insert(sfe);
                 }
             } else {
+                sfe.s_f_name = PARAM_FILE_NAME;
+    
+                // get mimetype to determine that in which folder will be used
+                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(PARAM_FILE_NAME.substring(PARAM_FILE_NAME.lastIndexOf('.') + 1));
+                if (mimeType != null) {
+                    if (mimeType.startsWith("image"))
+                        sfe.s_f_type = "1";
+                    else if (mimeType.startsWith("video"))
+                        sfe.s_f_type = "2";
+                    else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+                        sfe.s_f_type = "3";
+                    else if (mimeType.equals("application/vnd.android.package-archive"))
+                        sfe.s_f_type = "4";
+                    else
+                        sfe.s_f_type = "5";
+                } else
+                    sfe.s_f_type = "5";
+                
                 sfe.s_f_operation_status = "0";
+                sfe.s_f_time = now;
                 sfvm.insert(sfe);
             }
         }

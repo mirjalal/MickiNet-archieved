@@ -28,7 +28,7 @@ import java.util.zip.ZipInputStream;
 
 /**
  * <p>
- *     UnZipperAsyncTask class represents unzipping
+ *     UnZipper class represents unzipping
  *     process. Unzips received archive file contents
  *     to the same folder. We should do unzip process
  *     as fast as we can.
@@ -37,7 +37,7 @@ import java.util.zip.ZipInputStream;
  * @author miri
  * @since 8/25/2018
  */
-public class Unzipper extends AsyncTask<Void, Void, Boolean> {
+public class UnZipper extends AsyncTask<Void, Void, Boolean> {
     private WeakReference<Context> _context_ref;
     private String _mickinet_arch_file;
     private final String _extract_dest = "/storage/emulated/0/MickiNet/.temp/";
@@ -47,7 +47,7 @@ public class Unzipper extends AsyncTask<Void, Void, Boolean> {
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
 
-    Unzipper(@NotNull WeakReference<Context> contextReference, String zipLocation) {
+    UnZipper(@NotNull WeakReference<Context> contextReference, String zipLocation) {
         _context_ref = contextReference;
         _mickinet_arch_file = zipLocation;
 

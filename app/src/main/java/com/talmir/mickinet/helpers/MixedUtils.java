@@ -26,23 +26,30 @@ import java.util.Objects;
  */
 public final class MixedUtils {
     public static String getFileName(@NotNull Activity activity, @NotNull Uri uri) {
-        String result = null;
-        if (uri.getScheme().equals("content")) {
-            try {
-                Cursor cursor = activity.getContentResolver().query(uri, null, null, null, null);
-                if (cursor != null && cursor.moveToFirst()) {
-                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                    cursor.close();
-                }
-            } catch (NullPointerException ignored) {  }
-        }
-        if (result == null) {
-            result = uri.getPath();
-            int cut = result.lastIndexOf('/');
-            if (cut != -1)
-                result = result.substring(cut + 1);
-        }
-        return result;
+//        String result = null;
+//        if (uri.getScheme().equals("content")) {
+//            try {
+//                Cursor cursor = activity.getContentResolver().query(uri, null, null, null, null);
+//                if (cursor != null && cursor.moveToFirst()) {
+//                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+//                    cursor.close();
+//                }
+//            } catch (NullPointerException ignored) {  }
+//        }
+//        if (result == null) {
+//            result = uri.getPath();
+//            int cut = result.lastIndexOf('/');
+//            if (cut != -1)
+//                result = result.substring(cut + 1);
+//        }
+//        return result;
+        Cursor returnCursor = activity.getContentResolver().query(uri, null, null, null, null);
+        assert returnCursor != null;
+        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        returnCursor.moveToFirst();
+        String name = returnCursor.getString(nameIndex);
+        returnCursor.close();
+        return name;
     }
 
     public static String getRealPathFromUri(@NotNull Context context, Uri uri) {

@@ -13,7 +13,7 @@ import java.util.List;
  * @since 7/29/2018
  */
 @Dao
-public interface SentFilesDao {
+public interface ISentFilesDao {
     // LiveData is a data holder class that can be observed within a given lifecycle.
     // Always holds/caches latest version of data. Notifies its active observers when the
     // data has changed. Since we are getting all the contents of the database,

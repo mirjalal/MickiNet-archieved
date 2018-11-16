@@ -18,7 +18,8 @@ import java.net.Socket;
  * @since 8/15/2018
  */
 public final class IPService {
-
+    
+    private static Socket socket = null;
     private static String clientIpAddress = "";
 
     @Contract(pure = true)
@@ -40,20 +41,21 @@ public final class IPService {
      */
     public static synchronized Thread sendIpAddress() {
         return new Thread(() -> {
-            Socket socket = null;
             try {
-                socket = new Socket();
-                socket.bind(null);
-                socket.connect((new InetSocketAddress("192.168.49.1", 10000)), 5000);
+                if (socket == null)
+                    socket = new Socket();
+                if (!socket.isBound())
+                    socket.bind(null);
+                if (!socket.isConnected() && !socket.isClosed())
+                    socket.connect((new InetSocketAddress("192.168.49.1", 10000)), 5000);
             } catch (Exception e) {
                 e.printStackTrace();
-            } finally {
                 if (socket != null) {
                     if (!socket.isClosed()) {
                         try {
                             socket.close();
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
                         }
                     }
                 }

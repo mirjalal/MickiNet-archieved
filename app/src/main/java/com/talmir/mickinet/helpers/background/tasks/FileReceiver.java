@@ -160,7 +160,7 @@ public class FileReceiver extends AsyncTask<Void, Void, String> {
                 rfe.r_f_operation_status = "1";
             } else {
                 // received file is archive file; unzip it to the /.temp/ folder
-                new Unzipper(contextRef, "/storage/emulated/0/MickiNet/.temp/tempBackupZip.mickinet_arch").executeOnExecutor(THREAD_POOL_EXECUTOR);
+                new UnZipper(contextRef, "/storage/emulated/0/MickiNet/.temp/tempBackupZip.mickinet_arch").executeOnExecutor(THREAD_POOL_EXECUTOR);
             }
         } else {
             mBuilder.setContentText(contextRef.get().getString(R.string.file_receive_fail))

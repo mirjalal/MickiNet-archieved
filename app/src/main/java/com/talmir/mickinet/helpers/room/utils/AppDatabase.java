@@ -1,15 +1,13 @@
 package com.talmir.mickinet.helpers.room.utils;
 
-import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
-import android.support.annotation.NonNull;
 
-import com.talmir.mickinet.helpers.room.received.ReceivedFilesDao;
+import com.talmir.mickinet.helpers.room.received.IReceivedFilesDao;
 import com.talmir.mickinet.helpers.room.received.ReceivedFilesEntity;
-import com.talmir.mickinet.helpers.room.sent.SentFilesDao;
+import com.talmir.mickinet.helpers.room.sent.ISentFilesDao;
 import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
 
 /**
@@ -19,8 +17,8 @@ import com.talmir.mickinet.helpers.room.sent.SentFilesEntity;
 @Database(entities = {SentFilesEntity.class, ReceivedFilesEntity.class}, version = 1, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
-    public abstract ReceivedFilesDao mReceivedFilesDao();
-    public abstract SentFilesDao mSentFilesDao();
+    public abstract IReceivedFilesDao mReceivedFilesDao();
+    public abstract ISentFilesDao mSentFilesDao();
 
     private static AppDatabase DATABASE_INSTANCE;
 

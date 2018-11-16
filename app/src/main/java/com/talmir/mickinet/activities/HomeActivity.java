@@ -33,7 +33,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -67,7 +66,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
@@ -568,30 +566,30 @@ public class HomeActivity extends AppCompatActivity implements WifiP2pManager.Ch
             params[2] = MixedUtils.getFileName(this, uri);
 
             new FileSender(this, params).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            try {
-                String inner;
-                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(params[2].substring(params[2].lastIndexOf('.') + 1));
-                if (mimeType != null) {
-                    if (mimeType.startsWith("image"))
-                        inner = "Photos/";
-                    else if (mimeType.startsWith("video"))
-                        inner = "Videos/";
-                    else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
-                        inner = "Media/";
-                    else if (mimeType.equals("application/vnd.android.package-archive"))
-                        inner = "APKs/";
-                    else
-                        inner = "Others/";
-                } else
-                    inner = "Others/";
-
-                MixedUtils.copyFileToDir(
-                    this,
-                    uri,
-                    new File(path + inner + "Sent/" + params[2])
-                );
-            } catch (IOException ignored) {
-            }
+//            try {
+//                String inner;
+//                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(params[2].substring(params[2].lastIndexOf('.') + 1));
+//                if (mimeType != null) {
+//                    if (mimeType.startsWith("image"))
+//                        inner = "Photos/";
+//                    else if (mimeType.startsWith("video"))
+//                        inner = "Videos/";
+//                    else if (mimeType.startsWith("music") || mimeType.startsWith("audio"))
+//                        inner = "Media/";
+//                    else if (mimeType.equals("application/vnd.android.package-archive"))
+//                        inner = "APKs/";
+//                    else
+//                        inner = "Others/";
+//                } else
+//                    inner = "Others/";
+//
+//                MixedUtils.copyFileToDir(
+//                    this,
+//                    uri,
+//                    new File(path + inner + "Sent/" + params[2])
+//                );
+//            } catch (IOException ignored) {
+//            }
         }
 
         // multiple files selected from other application
